@@ -10,7 +10,7 @@ const BlockNoteEditor = dynamic(
   { ssr: false }
 );
 
-export default function WritePage() {
+export default function WritePage({ slug }) {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [coverImage, setCoverImage] = useState(null);
