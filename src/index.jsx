@@ -7,7 +7,7 @@ export default function App() {
   return (
     <>
    <div className="fixed top-0 left-0 w-full h-16 border-b-2 border-[#1D202A] flex items-center bg-[#030712] z-1000">
-        <div className="absolute left-3 h-10 w-10 rounded-full bg-cover" style={{backgroundImage: "url(../IMAGES/logo.png)"}}></div>
+        <div className="absolute left-3 h-10 w-10 rounded-full bg-cover" style={{backgroundImage: "url(/logo.png)"}}></div>
         <p className="absolute left-[5%] text-3xl font-bold font-kanit text-white cursor-pointer">LixBlogs</p>
 
         <div className="absolute left-[70%] text-white text-lg cursor-pointer px-2 py-1 bg-[#10141E] border border-[#7ba8f0] rounded-2xl"> <ion-icon name="pencil"></ion-icon> Write</div>
@@ -26,7 +26,7 @@ export default function App() {
             </div>
             <div className="relative top-0 h-[250px] w-full bg-transparent border-b-[5px] border-b-[#1D202A] border-l border-l-[#1D202A] border-r border-r-[#1D202A] overflow-hidden flex-wrap z-10 section-striped">
                 <p className="absolute top-[20%] left-[4%] w-[90%] transform -translate-y-1/2 font-kanit text-5xl font-medium text-[#f4eaeae6] z-10">Write Read and Endulge into creativity, enjoy the power of AI and Imagination.</p>
-                <div className="absolute left-[90%] h-full aspect-square transform scale-150 overflow-hidden bg-cover opacity-50 z-0" style={{backgroundImage: "url(../IMAGES/mainframeDesign.png)"}}></div>
+                <div className="absolute left-[90%] h-full aspect-square transform scale-150 overflow-hidden bg-cover opacity-50 z-0" style={{backgroundImage: "url(/mainframeDesign.png)"}}></div>
             </div>
             <div className="relative top-0 h-[100px] w-full bg-transparent border-b border-b-[#1D202A] border-l border-l-[#1D202A] border-r border-r-[#1D202A] overflow-hidden flex-wrap" style={{backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.171) 2px, transparent 0)", backgroundSize: "30px 30px", backgroundPosition: "-5px -5px"}}>
                 <div className="absolute left-[35%] top-1/2 transform -translate-y-1/2 scale-125 border-none outline-none bg-[#3a3a3a] w-[120px] h-10 text-lg text-white font-semibold rounded-2xl flex justify-center items-center cursor-pointer transition-all readBlogsBtn">
