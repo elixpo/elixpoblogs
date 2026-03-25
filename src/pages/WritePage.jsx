@@ -371,7 +371,7 @@ export default function WritePage({ slug }) {
                 <button
                   key={opt}
                   onClick={() => setPublishAs(opt)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                     publishAs === opt ? 'bg-[#7ba8f0] text-[#030712]' : 'bg-[#1D202A] text-[#888] hover:text-white'
                   }`}
                 >
@@ -383,13 +383,13 @@ export default function WritePage({ slug }) {
 
           {/* Tags */}
           <div>
-            <label className="text-xs text-[#888] mb-1.5 block">Tags (up to 5)</label>
-            <div className="flex flex-wrap gap-1.5 mb-1.5">
+            <label className="text-sm text-[#888] mb-2 block">Tags (up to 5)</label>
+            <div className="flex flex-wrap gap-2 mb-2">
               {tags.map((tag) => (
-                <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-[#1D202A] rounded-full text-xs text-[#7ba8f0]">
+                <span key={tag} className="flex items-center gap-1 px-3 py-1 bg-[#1D202A] rounded-full text-sm text-[#7ba8f0]">
                   #{tag}
-                  <button onClick={() => removeTag(tag)} className="text-[#888] hover:text-white">
-                    <ion-icon name="close" style={{ fontSize: '10px' }} />
+                  <button onClick={() => removeTag(tag)} className="text-[#888] hover:text-white ml-1">
+                    <ion-icon name="close" style={{ fontSize: '12px' }} />
                   </button>
                 </span>
               ))}
@@ -401,43 +401,43 @@ export default function WritePage({ slug }) {
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
                 placeholder="Add a tag..."
-                className="w-full bg-[#1D202A] text-white rounded-lg px-3 py-1.5 outline-none text-xs border border-[#333] focus:border-[#7ba8f0] transition-colors"
+                className="w-full bg-[#1D202A] text-white rounded-lg px-4 py-2 outline-none text-sm border border-[#333] focus:border-[#7ba8f0] transition-colors"
               />
             )}
           </div>
 
           {/* URL Slug */}
           <div>
-            <label className="text-xs text-[#888] mb-1.5 block">URL Slug</label>
+            <label className="text-sm text-[#888] mb-2 block">URL Slug</label>
             <div className="flex items-center bg-[#1D202A] rounded-lg border border-[#333] overflow-hidden">
-              <span className="text-[#555] text-xs px-2.5">/b/</span>
+              <span className="text-[#555] text-sm px-3">/b/</span>
               <input
                 type="text"
                 defaultValue={slug || ''}
                 placeholder="auto-generated-from-title"
-                className="flex-1 bg-transparent text-white py-1.5 pr-2.5 outline-none text-xs"
+                className="flex-1 bg-transparent text-white py-2 pr-3 outline-none text-sm"
               />
             </div>
           </div>
 
           {/* Preview Card */}
           <div>
-            <label className="text-xs text-[#888] mb-1.5 block">Preview</label>
-            <div className="bg-[#1D202A] rounded-xl p-3">
+            <label className="text-sm text-[#888] mb-2 block">Preview</label>
+            <div className="bg-[#1D202A] rounded-xl p-4">
               {coverPreview && (
-                <img src={coverPreview} alt="Cover" className="w-full h-[100px] object-cover rounded-lg mb-2" />
+                <img src={coverPreview} alt="Cover" className="w-full h-[120px] object-cover rounded-lg mb-3" />
               )}
-              <p className="font-bold text-sm leading-tight">{title || 'Your blog title'}</p>
-              <p className="text-[#888] text-xs mt-0.5">{subtitle || 'Your subtitle here'}</p>
-              <div className="flex items-center gap-2 mt-2 text-[10px] text-[#555]">
+              <p className="font-bold text-lg leading-tight">{title || 'Your blog title'}</p>
+              <p className="text-[#888] text-sm mt-1">{subtitle || 'Your subtitle here'}</p>
+              <div className="flex items-center gap-3 mt-3 text-xs text-[#555]">
                 <span>{readTime} min read</span>
                 <span>&middot;</span>
                 <span>{wordCount} words</span>
               </div>
               {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
+                <div className="flex flex-wrap gap-1 mt-2">
                   {tags.map((tag) => (
-                    <span key={tag} className="text-[10px] text-[#7ba8f0]">#{tag}</span>
+                    <span key={tag} className="text-xs text-[#7ba8f0]">#{tag}</span>
                   ))}
                 </div>
               )}
@@ -445,11 +445,11 @@ export default function WritePage({ slug }) {
           </div>
         </div>
 
-        <div className="p-4 border-t border-[#1D202A]">
+        <div className="p-5 border-t border-[#1D202A]">
           <button
             onClick={handlePublish}
             disabled={!title.trim()}
-            className="w-full py-2.5 bg-[#7ba8f0] text-[#030712] font-bold rounded-xl text-xs hover:bg-[#9dc0ff] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-[#7ba8f0] text-[#030712] font-bold rounded-xl text-sm hover:bg-[#9dc0ff] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Publish now
           </button>
