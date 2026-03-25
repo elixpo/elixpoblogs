@@ -176,39 +176,39 @@ export default function WritePage({ slug }) {
   return (
     <div className="min-h-screen bg-[#030712] text-white">
       {/* Header */}
-      <header className="fixed top-0 left-0 w-full h-[52px] border-b border-[#1D202A] flex items-center justify-between px-5 bg-[#030712]/95 backdrop-blur-sm z-50">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-7 w-7 shrink-0 rounded-full bg-[url('/logo.png')] bg-cover" />
-          <p className="text-base font-bold font-[Kanit,serif] shrink-0">LixBlogs</p>
-          <span className="text-[#444] text-xs mx-1">/</span>
-          <span className="text-[#666] text-xs truncate">
+      <header className="fixed top-0 left-0 w-full h-[60px] border-b border-[#1D202A] flex items-center justify-between px-6 bg-[#030712]/95 backdrop-blur-sm z-50">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-8 w-8 shrink-0 rounded-full bg-[url('/logo.png')] bg-cover" />
+          <p className="text-xl font-bold font-[Kanit,serif] shrink-0">LixBlogs</p>
+          <span className="text-[#444] text-sm mx-0.5">/</span>
+          <span className="text-[#555] text-sm truncate">
             @{username}/{truncateSlug(slug)}
           </span>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <span className="text-[#555] text-[11px]">
-            {wordCount}w &middot; {readTime}m
+        <div className="flex items-center gap-3">
+          <span className="text-[#555] text-xs">
+            {wordCount} words &middot; {readTime} min read
           </span>
           {lastSaved && (
-            <span className="text-[#444] text-[11px]">{formatSavedTime(lastSaved)}</span>
+            <span className="text-[#444] text-xs">{formatSavedTime(lastSaved)}</span>
           )}
-          <span className="text-[#666] text-[11px] px-1.5 py-0.5 rounded bg-[#1D202A]">Draft</span>
+          <span className="text-[#666] text-xs px-2 py-0.5 rounded bg-[#1D202A]">Draft</span>
 
           {/* Publish split button */}
           <div className="relative">
             <div className="flex items-center">
               <button
                 onClick={() => setShowPublishPanel(!showPublishPanel)}
-                className="px-4 py-1 bg-[#7ba8f0] text-[#030712] font-semibold rounded-l-full text-xs hover:bg-[#9dc0ff] transition-colors"
+                className="px-5 py-1.5 bg-[#7ba8f0] text-[#030712] font-semibold rounded-l-full text-sm hover:bg-[#9dc0ff] transition-colors"
               >
                 Publish
               </button>
               <button
                 onClick={() => setShowPublishMenu(!showPublishMenu)}
-                className="px-1.5 py-1 bg-[#7ba8f0] text-[#030712] rounded-r-full border-l border-[#030712]/20 hover:bg-[#9dc0ff] transition-colors"
+                className="px-2 py-1.5 bg-[#7ba8f0] text-[#030712] rounded-r-full border-l border-[#030712]/20 hover:bg-[#9dc0ff] transition-colors"
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </button>
@@ -217,17 +217,17 @@ export default function WritePage({ slug }) {
             {showPublishMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowPublishMenu(false)} />
-                <div className="absolute right-0 top-full mt-1.5 w-44 bg-[#10141E] border border-[#1D202A] rounded-xl shadow-2xl z-50 overflow-hidden py-1">
-                  <button onClick={handleSaveDraft} className="w-full px-3 py-2 text-left text-xs text-[#e4e4e7] hover:bg-[#1D202A] flex items-center gap-2 transition-colors">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <div className="absolute right-0 top-full mt-2 w-48 bg-[#10141E] border border-[#1D202A] rounded-xl shadow-2xl z-50 overflow-hidden py-1">
+                  <button onClick={handleSaveDraft} className="w-full px-4 py-2.5 text-left text-sm text-[#e4e4e7] hover:bg-[#1D202A] flex items-center gap-2 transition-colors">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Save Draft
                   </button>
-                  <button onClick={handlePublish} disabled={!title.trim()} className="w-full px-3 py-2 text-left text-xs text-[#e4e4e7] hover:bg-[#1D202A] flex items-center gap-2 transition-colors disabled:opacity-40">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  <button onClick={handlePublish} disabled={!title.trim()} className="w-full px-4 py-2.5 text-left text-sm text-[#e4e4e7] hover:bg-[#1D202A] flex items-center gap-2 transition-colors disabled:opacity-40">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     Publish
                   </button>
-                  <button onClick={handlePublishBeta} disabled={!title.trim()} className="w-full px-3 py-2 text-left text-xs text-[#888] hover:bg-[#1D202A] flex items-center gap-2 transition-colors disabled:opacity-40">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <button onClick={handlePublishBeta} disabled={!title.trim()} className="w-full px-4 py-2.5 text-left text-sm text-[#888] hover:bg-[#1D202A] flex items-center gap-2 transition-colors disabled:opacity-40">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     Publish Beta
                   </button>
                 </div>
@@ -235,15 +235,15 @@ export default function WritePage({ slug }) {
             )}
           </div>
 
-          <div className="h-7 w-7 rounded-full bg-[#1D202A] flex items-center justify-center cursor-pointer hover:bg-[#282c3a] transition-colors">
-            <ion-icon name="ellipsis-horizontal" style={{ color: '#888', fontSize: '14px' }} />
+          <div className="h-8 w-8 rounded-full bg-[#1D202A] flex items-center justify-center cursor-pointer hover:bg-[#282c3a] transition-colors">
+            <ion-icon name="ellipsis-horizontal" style={{ color: '#888', fontSize: '16px' }} />
           </div>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="pt-[52px] flex justify-center">
-        <div className={`w-full max-w-[720px] px-6 py-8 ${showPublishPanel ? 'mr-[380px]' : ''} transition-all`}>
+      <main className="pt-[60px] flex justify-center">
+        <div className={`w-full max-w-[720px] px-6 py-8 ${showPublishPanel ? 'mr-[400px]' : ''} transition-all`}>
 
           {/* Mode icons */}
           <div className="flex items-center gap-0.5 mb-5">
@@ -351,21 +351,21 @@ export default function WritePage({ slug }) {
 
       {/* Publish Side Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-[380px] bg-[#10141E] border-l border-[#1D202A] z-50 flex flex-col shadow-2xl transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full w-[400px] bg-[#10141E] border-l border-[#1D202A] z-50 flex flex-col shadow-2xl transition-transform duration-300 ${
           showPublishPanel ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-[#1D202A]">
-          <h2 className="text-sm font-bold">Publish Settings</h2>
+        <div className="flex items-center justify-between p-5 border-b border-[#1D202A]">
+          <h2 className="text-lg font-bold">Publish Settings</h2>
           <button onClick={() => setShowPublishPanel(false)} className="text-[#888] hover:text-white transition-colors">
-            <ion-icon name="close" style={{ fontSize: '18px' }} />
+            <ion-icon name="close" style={{ fontSize: '22px' }} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {/* Publish As */}
           <div>
-            <label className="text-xs text-[#888] mb-1.5 block">Publish as</label>
+            <label className="text-sm text-[#888] mb-2 block">Publish as</label>
             <div className="flex gap-2">
               {['personal', 'organization'].map((opt) => (
                 <button
