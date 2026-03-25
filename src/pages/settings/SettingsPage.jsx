@@ -410,132 +410,14 @@ function OrganizationTab({ user }) {
 }
 
 // ── Subscription Tab ──
-function SubscriptionTab({ user }) {
-  // TODO: check user.subscription from API
-  const isPaid = false;
-
+function SubscriptionTab() {
   return (
-    <div>
-      {isPaid ? (
-        // ── Paid subscriber view ──
-        <div>
-          <div className="bg-gradient-to-br from-[#9b7bf714] to-[#0d1117] border border-[#9b7bf730] rounded-xl p-6 mb-8">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-[#9b7bf720] flex items-center justify-center">
-                <ion-icon name="diamond" style={{ fontSize: '20px', color: '#9b7bf7' }} />
-              </div>
-              <div>
-                <p className="text-[15px] text-white font-semibold">LixBlogs Pro</p>
-                <p className="text-[12px] text-[#9b7bf7]">Active subscription</p>
-              </div>
-            </div>
-            <div className="h-px bg-[#1a1d27] my-4" />
-            <div className="grid grid-cols-2 gap-4 text-[13px]">
-              <div>
-                <p className="text-[#666]">Plan</p>
-                <p className="text-[#e0e0e0] font-medium">Monthly</p>
-              </div>
-              <div>
-                <p className="text-[#666]">Next billing date</p>
-                <p className="text-[#e0e0e0] font-medium">Apr 25, 2026</p>
-              </div>
-              <div>
-                <p className="text-[#666]">Amount</p>
-                <p className="text-[#e0e0e0] font-medium">$5.00/mo</p>
-              </div>
-              <div>
-                <p className="text-[#666]">Payment method</p>
-                <p className="text-[#e0e0e0] font-medium">Visa ending 4242</p>
-              </div>
-            </div>
-          </div>
-
-          <SettingRow
-            title="Manage payment method"
-            description="Update your card or billing details."
-            right={
-              <button className="text-[13px] text-[#9b7bf7] hover:text-[#b69aff] transition-colors font-medium">
-                Update
-              </button>
-            }
-          />
-          <SettingRow
-            title="Billing history"
-            description="View and download past invoices."
-            right={
-              <button className="text-[13px] text-[#9b7bf7] hover:text-[#b69aff] transition-colors font-medium">
-                View
-              </button>
-            }
-          />
-          <SettingRow
-            title="Cancel subscription"
-            description="You'll keep access until the end of your current billing period."
-            right={
-              <button className="text-[13px] text-red-400 hover:text-red-300 transition-colors font-medium">
-                Cancel
-              </button>
-            }
-            border={false}
-          />
-        </div>
-      ) : (
-        // ── Free user view ──
-        <div>
-          <div className="text-center py-8 mb-8">
-            <div className="w-14 h-14 rounded-full bg-[#9b7bf714] flex items-center justify-center mx-auto mb-4">
-              <ion-icon name="diamond-outline" style={{ fontSize: '28px', color: '#9b7bf7' }} />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Upgrade to LixBlogs Pro</h3>
-            <p className="text-[#777] text-[14px] max-w-md mx-auto">Get the most out of LixBlogs with unlimited access, custom domains, advanced analytics, and more.</p>
-          </div>
-
-          {/* Pricing cards */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-[#0d1117] border border-[#1a1d27] rounded-xl p-6 hover:border-[#333] transition-colors">
-              <p className="text-[13px] text-[#777] font-medium mb-1">Monthly</p>
-              <p className="text-3xl font-bold text-white mb-1">$5<span className="text-[14px] text-[#777] font-normal">/mo</span></p>
-              <p className="text-[12px] text-[#555] mb-5">Billed monthly</p>
-              <button className="w-full py-2.5 text-[13px] font-semibold text-[#030712] bg-[#e8e8e8] hover:bg-white rounded-lg transition-colors">
-                Get Monthly
-              </button>
-            </div>
-            <div className="bg-[#0d1117] border border-[#9b7bf730] rounded-xl p-6 relative overflow-hidden">
-              <span className="absolute top-3 right-3 text-[10px] font-bold text-[#9b7bf7] bg-[#9b7bf714] px-2 py-0.5 rounded-full">SAVE 17%</span>
-              <p className="text-[13px] text-[#777] font-medium mb-1">Annual</p>
-              <p className="text-3xl font-bold text-white mb-1">$50<span className="text-[14px] text-[#777] font-normal">/yr</span></p>
-              <p className="text-[12px] text-[#555] mb-5">$4.17/mo billed annually</p>
-              <button className="w-full py-2.5 text-[13px] font-semibold text-[#030712] bg-[#9b7bf7] hover:bg-[#b69aff] rounded-lg transition-colors">
-                Get Annual
-              </button>
-            </div>
-          </div>
-
-          {/* Features list */}
-          <div className="bg-[#0d1117] border border-[#1a1d27] rounded-xl p-6">
-            <h4 className="text-[14px] font-semibold text-[#e0e0e0] mb-4">What's included in Pro</h4>
-            <div className="space-y-3">
-              {[
-                'Unlimited reading across all of LixBlogs',
-                'Custom domain for your profile',
-                'Advanced analytics and insights',
-                'Priority support',
-                'Early access to new features',
-                'No ads on your published stories',
-                'Custom publication themes',
-                'Audio versions of your stories',
-              ].map((feature) => (
-                <div key={feature} className="flex items-start gap-3">
-                  <svg className="w-4 h-4 text-[#9b7bf7] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-[13px] text-[#b0b0b0]">{feature}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="flex flex-col items-center justify-center py-20">
+      <div className="w-14 h-14 rounded-full bg-[#9b7bf714] flex items-center justify-center mb-5">
+        <ion-icon name="diamond-outline" style={{ fontSize: '28px', color: '#9b7bf7' }} />
+      </div>
+      <h3 className="text-lg font-bold text-white mb-2">Subscription</h3>
+      <p className="text-[#777] text-[14px] text-center max-w-sm">Pricing and subscription management is coming soon. Stay tuned for LixBlogs Pro.</p>
     </div>
   );
 }
@@ -600,7 +482,7 @@ export default function SettingsPage() {
         {activeTab === 1 && <PublishingTab user={user} />}
         {activeTab === 2 && <NotificationsTab />}
         {activeTab === 3 && <OrganizationTab user={user} />}
-        {activeTab === 4 && <SubscriptionTab user={user} />}
+        {activeTab === 4 && <SubscriptionTab />}
       </div>
     </AppShell>
   );
