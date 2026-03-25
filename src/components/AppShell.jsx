@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +12,121 @@ const NAV_ITEMS = [
   { label: 'Stories', icon: 'book-outline', href: '/stories' },
   { label: 'Stats', icon: 'stats-chart-outline', href: '/stats' },
 ];
+
+function ProfileDropdown({ user, logout }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  const initial = (user.display_name || user.username || '?')[0].toUpperCase();
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-1 py-1 rounded-full hover:bg-[#ffffff08] transition-colors"
+      >
+        {user.avatar_url ? (
+          <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+        ) : (
+          <div className="h-8 w-8 rounded-full bg-[#2a2d3a] flex items-center justify-center text-[13px] text-[#b0b0b0] font-medium">
+            {initial}
+          </div>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-[264px] bg-[#0d1117] border border-[#1a1d27] rounded-xl shadow-2xl z-50 overflow-hidden">
+          {/* User info header */}
+          <Link
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-5 py-4 hover:bg-[#ffffff06] transition-colors"
+          >
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt="" className="h-11 w-11 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="h-11 w-11 rounded-full bg-[#2a2d3a] flex-shrink-0 flex items-center justify-center text-lg text-[#b0b0b0] font-medium">
+                {initial}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-[14px] text-[#e8e8e8] font-semibold truncate">{user.display_name || user.username}</p>
+              <p className="text-[12px] text-[#9b7bf7] mt-0.5">View profile</p>
+            </div>
+          </Link>
+
+          <div className="h-px bg-[#1a1d27]" />
+
+          {/* Main links */}
+          <div className="py-1.5">
+            <Link
+              href="/settings"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-5 py-2.5 text-[14px] text-[#c8c8c8] hover:text-white hover:bg-[#ffffff06] transition-colors"
+            >
+              <ion-icon name="settings-outline" style={{ fontSize: '18px', color: '#888' }} />
+              Settings
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-5 py-2.5 text-[14px] text-[#c8c8c8] hover:text-white hover:bg-[#ffffff06] transition-colors"
+            >
+              <ion-icon name="help-circle-outline" style={{ fontSize: '18px', color: '#888' }} />
+              Help
+            </Link>
+          </div>
+
+          <div className="h-px bg-[#1a1d27]" />
+
+          {/* Pricing */}
+          <div className="py-1.5">
+            <Link
+              href="/pricing"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-5 py-2.5 text-[14px] text-[#c8c8c8] hover:text-white hover:bg-[#ffffff06] transition-colors"
+            >
+              <ion-icon name="diamond-outline" style={{ fontSize: '18px', color: '#888' }} />
+              Pricing
+            </Link>
+          </div>
+
+          <div className="h-px bg-[#1a1d27]" />
+
+          {/* Sign out */}
+          <div className="py-1.5">
+            <button
+              onClick={() => { setOpen(false); logout(); }}
+              className="flex items-center gap-3 w-full px-5 py-2.5 text-[14px] text-[#c8c8c8] hover:text-white hover:bg-[#ffffff06] transition-colors"
+            >
+              <ion-icon name="log-out-outline" style={{ fontSize: '18px', color: '#888' }} />
+              Sign out
+            </button>
+            <p className="px-5 pb-1 text-[11px] text-[#555] truncate">{user.email}</p>
+          </div>
+
+          <div className="h-px bg-[#1a1d27]" />
+
+          {/* Footer links */}
+          <div className="px-5 py-3 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-[#555]">
+            <Link href="/about" className="hover:text-[#888] transition-colors">About</Link>
+            <Link href="/blog" className="hover:text-[#888] transition-colors">Blog</Link>
+            <span className="hover:text-[#888] cursor-pointer transition-colors">Privacy</span>
+            <span className="hover:text-[#888] cursor-pointer transition-colors">Terms</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
@@ -52,26 +168,7 @@ export default function AppShell({ children }) {
             {loading ? (
               <div className="h-8 w-8 rounded-full bg-[#1a1d27] animate-pulse" />
             ) : user ? (
-              <div className="relative group">
-                <button className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-[#ffffff08] transition-colors">
-                  {user.avatar_url ? (
-                    <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-[#2a2d3a] flex items-center justify-center text-[13px] text-[#b0b0b0] font-medium">
-                      {(user.display_name || user.username || '?')[0].toUpperCase()}
-                    </div>
-                  )}
-                </button>
-                <div className="absolute right-0 top-full mt-1 w-48 bg-[#0d1117] border border-[#1a1d27] rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-xl z-50">
-                  <div className="px-3 py-2 border-b border-[#1a1d27]">
-                    <p className="text-[13px] text-[#e0e0e0] font-medium truncate">{user.display_name || user.username}</p>
-                    <p className="text-[11px] text-[#666] truncate">@{user.username}</p>
-                  </div>
-                  <Link href="/profile" className="block px-3 py-2 text-[13px] text-[#b0b0b0] hover:text-white hover:bg-[#ffffff06] transition-colors">Profile</Link>
-                  <Link href="/settings" className="block px-3 py-2 text-[13px] text-[#b0b0b0] hover:text-white hover:bg-[#ffffff06] transition-colors">Settings</Link>
-                  <button onClick={logout} className="block w-full text-left px-3 py-2 text-[13px] text-[#b0b0b0] hover:text-white hover:bg-[#ffffff06] transition-colors">Sign Out</button>
-                </div>
-              </div>
+              <ProfileDropdown user={user} logout={logout} />
             ) : (
               <>
                 <button onClick={handleLogin} className="text-[14px] text-[#b0b0b0] hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-[#ffffff08]">

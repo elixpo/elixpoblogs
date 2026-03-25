@@ -37,12 +37,13 @@ export default function ProfilePage() {
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto px-6 py-8">
-        {/* Banner */}
-        <div className="relative w-full h-48 rounded-xl bg-[#1a1d27] overflow-hidden mb-16">
-          {user.banner_r2_key && (
-            <img src={`/api/media/${user.banner_r2_key}`} alt="" className="w-full h-full object-cover" />
-          )}
-          {/* Avatar */}
+        {/* Banner + Avatar */}
+        <div className="relative mb-16">
+          <div className="w-full h-48 rounded-xl bg-[#1a1d27] overflow-hidden">
+            {user.banner_r2_key && (
+              <img src={`/api/media/${user.banner_r2_key}`} alt="" className="w-full h-full object-cover" />
+            )}
+          </div>
           <div className="absolute -bottom-12 left-6">
             {user.avatar_url ? (
               <img src={user.avatar_url} alt="" className="h-24 w-24 rounded-full border-4 border-[#030712] object-cover" />
