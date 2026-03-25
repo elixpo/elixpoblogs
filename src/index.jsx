@@ -1,178 +1,336 @@
-import './App.css';
-import './styles/homepage/header.css'
-import './styles/homepage/innerLayout.css'
-import './styles/homepage/innerLayoutPseudo.css'
-import './styles/homepage/responsive.css'
-export default function App() {
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+
+const TOPICS = [
+  { label: 'For You', icon: 'sparkles', active: true },
+  { label: 'Following', icon: null, active: false },
+  { label: 'Web Development', icon: null, active: false },
+  { label: 'Machine Learning', icon: null, active: false },
+  { label: 'DevOps', icon: null, active: false },
+  { label: 'System Design', icon: null, active: false },
+  { label: 'Open Source', icon: null, active: false },
+  { label: 'Startups', icon: null, active: false },
+];
+
+const MOCK_POSTS = [
+  {
+    id: 1,
+    org: 'Write A Catalyst',
+    author: 'Dr. Patricia Schmidt',
+    title: 'As a Neuroscientist, I Quit These 5 Morning Habits That Destroy Your Brain',
+    subtitle: 'Most people do #1 within 10 minutes of waking (and it sabotages your entire day)',
+    date: 'Jan 15',
+    likes: '41K',
+    comments: '780',
+    readTime: '8 min read',
+    tag: 'Neuroscience',
+  },
+  {
+    id: 2,
+    org: 'Generative AI',
+    author: 'Adham Khaled',
+    title: 'Stanford Just Killed Prompt Engineering With 8 Words (And I Can\'t Believe It Worked)',
+    subtitle: 'ChatGPT keeps giving you the same boring response? This new technique unlocks 2x more creativity from ANY AI model',
+    date: 'Oct 20',
+    likes: '25K',
+    comments: '685',
+    readTime: '6 min read',
+    tag: 'AI',
+  },
+  {
+    id: 3,
+    org: 'Level Up Coding',
+    author: 'Kusireddy',
+    title: 'I Stopped Using ChatGPT for 30 Days. What Happened to My Brain Was Terrifying.',
+    subtitle: '91% of you will abandon 2026 resolutions by January 10th. Here\'s how to be in the 9% who actually win.',
+    date: 'Dec 28',
+    likes: '11.7K',
+    comments: '430',
+    readTime: '5 min read',
+    tag: 'Productivity',
+  },
+  {
+    id: 4,
+    org: null,
+    author: 'Jacob Bennett',
+    title: 'The 5 paid subscriptions I actually use in 2026 as a Staff Software Engineer',
+    subtitle: 'Tools that are (usually) cheaper than Netflix',
+    date: 'Mar 5',
+    likes: '8.2K',
+    comments: '312',
+    readTime: '4 min read',
+    tag: 'Engineering',
+  },
+  {
+    id: 5,
+    org: 'Better Programming',
+    author: 'Sarah Chen',
+    title: 'Why Every Senior Dev I Know Is Mass-Deleting Their npm Packages',
+    subtitle: 'The supply chain attack that changed everything about how we think about dependencies',
+    date: 'Mar 12',
+    likes: '6.4K',
+    comments: '201',
+    readTime: '7 min read',
+    tag: 'Security',
+  },
+];
+
+const STAFF_PICKS = [
+  {
+    id: 1,
+    author: 'L. Marie Dare',
+    org: 'Modern Women',
+    title: 'I Tried Standup Comedy in Midlife — and Immediately Froze',
+    date: '2d ago',
+  },
+  {
+    id: 2,
+    author: 'Amanda Amble',
+    org: null,
+    title: 'Not Everyone Wants a Dead Mouse in the Mail',
+    date: '3d ago',
+  },
+  {
+    id: 3,
+    author: 'Arpad Nagy',
+    org: 'The Memoirist',
+    title: 'My Father Died at 58, and I Never Knew That He Was Young',
+    date: '5d ago',
+  },
+];
+
+const RECOMMENDED_TOPICS = [
+  'Programming', 'Self Improvement', 'Data Science', 'Writing',
+  'Relationships', 'Technology', 'Politics', 'Design',
+];
+
+const NAV_ITEMS = [
+  { label: 'Home', icon: 'home-outline', href: '/', active: true },
+  { label: 'Library', icon: 'bookmark-outline', href: '/library' },
+  { label: 'Profile', icon: 'person-outline', href: '/profile' },
+  { label: 'Stories', icon: 'book-outline', href: '/stats' },
+  { label: 'Stats', icon: 'stats-chart-outline', href: '/stats' },
+];
+
+function FeedCard({ post }) {
   return (
-    <>
-   <div className="fixed top-0 left-0 w-full h-16 border-b-2 border-[#1D202A] flex items-center bg-[#030712] z-1000">
-        <div className="absolute left-3 h-10 w-10 rounded-full bg-cover" style={{backgroundImage: "url(/logo.png)"}}></div>
-        <p className="absolute left-[5%] text-3xl font-bold font-kanit text-white cursor-pointer">LixBlogs</p>
-
-        <div className="absolute left-[70%] text-white text-lg cursor-pointer px-2 py-1 bg-[#10141E] border border-[#7ba8f0] rounded-2xl"> <ion-icon name="pencil"></ion-icon> Write</div>
-        <div className="absolute left-[78%] text-white text-lg cursor-pointer">Sign-In</div>
-        <button className="absolute left-[85%] cursor-pointer font-medium text-sm rounded-full text-white bg-gradient-to-b from-[#8d49fd] via-[#7f56f3] to-[#5691f3] px-6 py-3 getStartedBtn">
-            <span>Get started</span>
-        </button>
-        <ion-icon name="logo-github" className="absolute left-[95%] text-[#888] text-2xl"></ion-icon>
-    </div>
-    <div className="absolute top-0 left-0 h-full w-full overflow-x-hidden overflow-y-auto bg-[#030712]" id="container">
-
-
-        <div className="relative top-16 w-full h-auto bg-transparent overflow-hidden">
-            <div className="relative top-0 h-[90px] w-full bg-transparent border-b-[5px] border-b-[#1D202A] border-l border-l-[#1D202A] border-r border-r-[#1D202A] section-striped">
-                <div className="absolute top-[80%] left-[4%] transform -translate-y-1/2 font-kanit text-sm text-[#c6c0c091] z-10">console.log("A place to read write and enjoy the creative aspect");</div>
-            </div>
-            <div className="relative top-0 h-[250px] w-full bg-transparent border-b-[5px] border-b-[#1D202A] border-l border-l-[#1D202A] border-r border-r-[#1D202A] overflow-hidden flex-wrap z-10 section-striped">
-                <p className="absolute top-[20%] left-[4%] w-[90%] transform -translate-y-1/2 font-kanit text-5xl font-medium text-[#f4eaeae6] z-10">Write Read and Endulge into creativity, enjoy the power of AI and Imagination.</p>
-                <div className="absolute left-[90%] h-full aspect-square transform scale-150 overflow-hidden bg-cover opacity-50 z-0" style={{backgroundImage: "url(/mainframeDesign.png)"}}></div>
-            </div>
-            <div className="relative top-0 h-[100px] w-full bg-transparent border-b border-b-[#1D202A] border-l border-l-[#1D202A] border-r border-r-[#1D202A] overflow-hidden flex-wrap" style={{backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.171) 2px, transparent 0)", backgroundSize: "30px 30px", backgroundPosition: "-5px -5px"}}>
-                <div className="absolute left-[35%] top-1/2 transform -translate-y-1/2 scale-125 border-none outline-none bg-[#3a3a3a] w-[120px] h-10 text-lg text-white font-semibold rounded-2xl flex justify-center items-center cursor-pointer transition-all readBlogsBtn">
-                    <span className="block px-1.5 py-1.5 rounded-2xl overflow-hidden relative bg-gradient-to-b from-[#e9d1ff] to-transparent bg-no-repeat z-0 font-kanit font-medium text-base">{`>`} Read Blogs</span>
-                    <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[106%] h-[130%] overflow-hidden rounded-2xl will-change-transform z-[-2] blur-[10px] transition-all">
-                        <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[105%] aspect-square rounded-3xl transition-all bg-gradient-to-r from-cyan-400 to-cyan-300 animate-spin filter blur-[10px]"></span>
-                    </span>
-                </div>
-                <div className="absolute left-[55%] top-1/2 transform -translate-y-1/2 scale-125 border-none outline-none bg-[#3a3a3a] w-[120px] h-10 text-lg text-white font-semibold rounded-2xl flex justify-center items-center cursor-pointer transition-all starGithub">
-                    <span className="block px-1.5 py-1.5 rounded-2xl overflow-hidden relative bg-gradient-to-b from-[#e9d1ff] to-transparent bg-no-repeat z-0 font-kanit font-medium text-base">⭐ GitHub Star</span>
-                </div>
-            </div>
-
-            <div className="relative top-0 h-[450px] w-full bg-transparent border-l border-l-[#1D202A] border-r border-r-[#1D202A] overflow-hidden section-striped">
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-full w-[94%] bg-[#1D202A]">
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-3xl h-[95%] w-[98%] bg-[#030712] border border-[#616678] overflow-hidden">
-                        <ion-icon name="document-outline" className="absolute top-[5%] left-[5%] text-5xl text-white font-medium"></ion-icon>
-                        <div className="absolute left-[12%] top-[5%] text-2xl text-white font-kanit">Easy UI For Quick Production</div>
-                        <div className="absolute top-[15%] left-[12%] text-[#888] w-[40%] flex-wrap font-kanit">Ultimately, our goal is to deepen our collective understanding of the world through the power of writing.</div>
-
-                        <div className="absolute top-[30%] w-[97%] left-[1.5%] h-full bg-[#030712] border border-[#555] rounded-3xl overflow-x-hidden" style={{backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.171) 1px, transparent 0)", backgroundSize: "10px 10px", backgroundPosition: "-5px -5px"}}>
-                            <div className="absolute left-[3%] top-0 bg-[#030712] rounded-2xl overflow-hidden w-[1180px] m-5">
-                                <div className="flex justify-between items-center bg-[#030712] p-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex gap-1">
-                                            <span className="w-3 h-3 rounded-full bg-[#353941]"></span>
-                                            <span className="w-3 h-3 rounded-full bg-[#353941]"></span>
-                                            <span className="w-3 h-3 rounded-full bg-[#353941]"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="min-h-[280px] bg-[#10141E] w-[99%] left-0.5 relative rounded-2xl">
-                                    <div className="relative top-5 left-1/2 transform -translate-x-1/2 w-[90%] h-[50px] flex gap-2 mb-5 pointer-events-none">
-                                        <input type="text" placeholder="You know, where you are at!" className="border-none bg-transparent w-[90%] outline-none indent-2.5 text-[#888] placeholder-[#888] text-2xl" /> 
-                                    </div>
-                                    <div className="relative top-5 left-1/2 transform -translate-x-1/2 w-[90%] h-auto flex gap-2 pointer-events-none">
-                                        <ion-icon name="add-circle-outline" className="text-3xl text-[#888]"></ion-icon>
-                                        <div className="border-none bg-transparent w-[90%] outline-none indent-2.5 text-[#888] text-lg font-kanit">
-                                            Welcome to LixBlogs! Your go-to platform for reading, writing, and indulging
-                                            in creativity. Enjoy the power of AI and imagination.
-                                            Explore a wide range of topics, from technology to lifestyle, and connect
-                                            with a community of like-minded individuals.
-                                            Start your journey today and unleash your creative potential with LixBlogs.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="relative top-0 h-[450px] w-full bg-transparent border-b-[5px] border-b-[#1D202A] border-l border-l-[#1D202A] border-r border-r-[#1D202A] overflow-hidden section-striped">
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-full w-[94%] bg-[#1D202A] flex">
-                    <div className="absolute top-1/2 left-[1%] transform -translate-y-1/2 rounded-3xl h-[95%] w-[48%] bg-[#030712] border border-[#616678] overflow-hidden">
-                        <ion-icon name="chatbox-ellipses-outline" className="absolute top-[5%] left-[5%] text-5xl text-white font-medium"></ion-icon>
-                        <div className="absolute left-[12%] top-[5%] text-2xl text-white font-kanit">Quick Elixpo AI Co-pilot </div>
-                        <div className="absolute top-[15%] left-[12%] text-[#888] w-[40%] flex-wrap font-kanit">I'm your AI Search Engine, ready to help you with any questions or tasks you have.</div>
-
-                        <div className="absolute top-[20%] w-[90%] left-[5%] h-auto" style={{backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.171) 1px, transparent 0)", backgroundSize: "10px 10px", backgroundPosition: "-5px -5px"}}>
-                            <div className="w-full">
-                                <input type="text" className="border-none bg-transparent w-full outline-none indent-2.5 text-[#888] placeholder-[#888]" placeholder="Search anything..." value="Starlink Latest Purchase of OpenAI" readOnly spellCheck="false" autoComplete="off" />
-                                <div className="flex gap-4 absolute top-[50%] right-[5%] transform -translate-y-1/2">
-                                    <ion-icon name="refresh-outline" className="text-[#888]"></ion-icon>
-                                </div>
-                            </div>
-
-                            <button className="absolute top-[50px] left-[30px] w-12 h-12 rounded-lg border border-[#616678] flex justify-center items-center cursor-pointer text-lg text-[#888] bg-transparent hover:bg-[#1D202A]">
-                                <ion-icon name="newspaper-outline"></ion-icon>
-                            </button>
-                            <button className="absolute top-[50px] left-[90px] w-12 h-12 rounded-lg border border-[#616678] flex justify-center items-center cursor-pointer text-lg text-[#888] bg-transparent hover:bg-[#1D202A]">
-                                <ion-icon name="code-outline"></ion-icon>
-                            </button>
-                            <button className="absolute top-[50px] left-[150px] w-12 h-12 rounded-lg border border-[#616678] flex justify-center items-center cursor-pointer text-lg text-[#888] bg-transparent hover:bg-[#1D202A]">
-                                <ion-icon name="reader-outline"></ion-icon>
-                            </button>
-                            <button className="absolute top-[50px] left-[210px] w-12 h-12 rounded-lg border border-[#616678] flex justify-center items-center cursor-pointer text-lg text-[#888] bg-transparent hover:bg-[#1D202A]">
-                                <ion-icon name="text"></ion-icon>
-                            </button>
-                            <button className="absolute top-[50px] left-[270px] w-12 h-12 rounded-lg border border-[#616678] flex justify-center items-center cursor-pointer text-lg text-[#888] bg-transparent hover:bg-[#1D202A]">
-                                <ion-icon name="calculator-outline"></ion-icon>
-                            </button>
-                        </div>
-                    </div>
-                    <div className="absolute top-1/2 right-[1%] transform -translate-y-1/2 rounded-3xl h-[95%] w-[48%] bg-[#030712] border border-[#616678] overflow-hidden">
-                        <ion-icon name="aperture" className="absolute top-[5%] left-[5%] text-5xl text-white font-medium"></ion-icon>
-                        <div className="absolute left-[12%] top-[5%] text-2xl text-white font-kanit">Text to Image Integration</div>
-                        <div className="absolute top-[15%] left-[12%] text-[#888] w-[40%] flex-wrap font-kanit">Transform your thoughts into embedded arts inside your blogs in one click</div>
-                        <div className="absolute top-[35%] w-[90%] left-[5%] h-auto" style={{backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.171) 2px, transparent 0)", backgroundSize: "20px 20px", backgroundPosition: "-5px -5px"}}>
-                            <div className="relative w-full h-16 flex items-center">
-                                <input type="text" name="text" className="border-none bg-transparent w-full outline-none indent-2.5 text-[#888] placeholder-[#888]" placeholder="" value="Type in Your Prompt" readOnly spellCheck="false" autoComplete="off" />
-                                <div className="absolute right-[5%] top-1/2 transform -translate-y-1/2 cursor-pointer text-2xl text-[#888]">
-                                    <ion-icon name="sparkles"></ion-icon>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 mt-8 flex-wrap">
-                                <div className="w-32 h-32 rounded-lg bg-gradient-to-br from-[#1D202A] to-[#030712] border border-[#616678]"></div>
-                                <div className="w-32 h-32 rounded-lg bg-gradient-to-br from-[#1D202A] to-[#030712] border border-[#616678]"></div>
-                                <div className="w-32 h-32 rounded-lg bg-gradient-to-br from-[#1D202A] to-[#030712] border border-[#616678]"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="relative top-0 w-full bg-transparent border-l border-l-[#1D202A] border-r border-r-[#1D202A] overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-auto w-[94%] bg-[#1D202A]">
-                    <div className="absolute top-1/2 left-[1%] right-[1%] transform -translate-y-1/2 rounded-3xl h-auto w-[98%] bg-[#030712] border border-[#616678] overflow-hidden py-12 px-8" style={{backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.171) 2px, transparent 0)", backgroundSize: "30px 30px", backgroundPosition: "-5px -5px"}}>
-                        <div className="absolute top-[5%] left-[5%]">
-                            <ion-icon name="triangle-outline" className="text-4xl text-white"></ion-icon>
-                            <ion-icon name="triangle-outline" className="absolute text-4xl text-[#888] blur-sm"></ion-icon>
-                            <ion-icon name="ellipse-outline" className="absolute text-4xl text-white mt-12"></ion-icon>
-                            <ion-icon name="ellipse-outline" className="absolute text-4xl text-[#888] blur-sm mt-12"></ion-icon>
-                            <ion-icon name="square-outline" className="absolute text-4xl text-white mt-24"></ion-icon>
-                            <ion-icon name="square-outline" className="absolute text-4xl text-[#888] blur-sm mt-24"></ion-icon>
-                        </div>
-                        <div className="absolute left-20 top-[5%] font-kanit text-xl text-white font-medium">Inkflow - Collaborative Workspace for Creative Ones</div>
-                        <div className="absolute top-[12%] left-20 text-[#888] font-kanit w-[50%] text-sm">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Corrupti dolores vero totam voluptatem tenetur</div>
-                        <div className="absolute top-[30%] left-[5%] w-[90%] h-[60%] rounded-2xl border border-[#616678] overflow-hidden flex items-center justify-center">
-                            <div className="w-full h-full bg-gradient-to-br from-[#1D202A] to-[#030712] rounded-2xl"></div>
-                        </div>
-                    </div>
-                
-
-                    <div className="absolute top-1/2 right-[1%] transform -translate-y-1/2 rounded-3xl h-auto w-[98%] bg-[#030712] border border-[#616678] overflow-hidden py-12 px-8">
-                        <div className="font-kanit text-xl text-white font-medium mb-4">Create ASCII Art Visuals directly from text</div>
-                        <div className="text-[#888] font-kanit text-sm mb-6">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptates neque nisi numquam veritatis sit error</div>
-                        <div className="text-white text-2xl mb-6">
-                            <ion-icon name="aperture-outline"></ion-icon>
-                        </div>
-
-                        <div className="w-full">
-                            <textarea className="w-full h-32 bg-[#10141E] border border-[#616678] rounded-lg p-4 text-[#888] resize-none font-mono text-sm" defaultValue="A Car Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime fuga vero esse earum quaerat provident asperiores soluta quae at eum dignissimos excepturi aliquam dolorum cumque facere, dolores unde fugiat neque?" readOnly></textarea>
-                            <pre className="w-full bg-[#10141E] border border-[#616678] rounded-lg p-4 mt-4 text-[#888] font-mono text-xs overflow-auto max-h-48">
-{`                            ______
-                            /|_||_\`.__
-                           (   _    _ _\\
-                           =\`-(_)--(_)-'`}
-                            </pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <article className="group py-7 border-b border-[#1a1d27] last:border-b-0 cursor-pointer">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-6 w-6 rounded-full bg-[#2a2d3a] flex-shrink-0" />
+        <span className="text-[13px] text-[#b0b0b0]">
+          {post.org && <><span className="text-[#c8c8c8] hover:underline">in {post.org}</span><span className="mx-1.5 text-[#555]">·</span></>}
+          <span className="text-[#c8c8c8] hover:underline">{post.author}</span>
+        </span>
+      </div>
+      <div className="flex gap-6">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-[20px] font-bold text-[#e8e8e8] leading-[1.3] mb-1.5 group-hover:text-white transition-colors font-serif tracking-[-0.01em]">
+            {post.title}
+          </h2>
+          <p className="text-[15px] text-[#888] leading-[1.5] line-clamp-2 mb-4">
+            {post.subtitle}
+          </p>
+          <div className="flex items-center gap-4 text-[13px] text-[#777]">
+            <span className="text-[#9b7bf7] text-[12px] bg-[#9b7bf714] px-2.5 py-0.5 rounded-full font-medium">{post.tag}</span>
+            <span>{post.date}</span>
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+              {post.likes}
+            </span>
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+              {post.comments}
+            </span>
+            <span className="ml-auto flex items-center gap-3">
+              <button className="hover:text-[#b0b0b0] transition-colors p-1" title="Save">
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+              </button>
+              <button className="hover:text-[#b0b0b0] transition-colors p-1" title="More">
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+              </button>
+            </span>
+          </div>
         </div>
+        <div className="w-[120px] h-[120px] bg-[#1a1d27] rounded-md flex-shrink-0 hidden sm:block" />
+      </div>
+    </article>
+  );
+}
 
+function StaffPickCard({ pick }) {
+  return (
+    <div className="py-4 cursor-pointer group">
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className="h-5 w-5 rounded-full bg-[#2a2d3a] flex-shrink-0" />
+        <span className="text-[12px] text-[#b0b0b0]">
+          {pick.org && <><span className="hover:underline">in {pick.org}</span><span className="mx-1 text-[#555]">·</span></>}
+          <span className="hover:underline">{pick.author}</span>
+        </span>
+      </div>
+      <h3 className="text-[15px] font-bold text-[#d0d0d0] leading-[1.35] group-hover:text-white transition-colors font-serif">
+        {pick.title}
+      </h3>
+      <span className="text-[12px] text-[#666] mt-1 block">{pick.date}</span>
     </div>
-    </>
+  );
+}
+
+export default function App() {
+  const [activeTopic, setActiveTopic] = useState(0);
+
+  return (
+    <div className="min-h-screen bg-[#030712]">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-[#030712]/95 backdrop-blur-md border-b border-[#1a1d27]">
+        <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-cover bg-center" style={{ backgroundImage: "url(/logo.png)" }} />
+            <span className="text-xl font-bold text-white tracking-tight" style={{ fontFamily: "'Kanit', sans-serif" }}>LixBlogs</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/write" className="flex items-center gap-1.5 text-[14px] text-[#b0b0b0] hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-[#ffffff08]">
+              <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              Write
+            </Link>
+            <Link href="/auth/login" className="text-[14px] text-[#b0b0b0] hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-[#ffffff08]">
+              Sign In
+            </Link>
+            <Link href="/auth/register" className="text-[14px] font-medium text-[#030712] bg-[#e8e8e8] hover:bg-white transition-colors px-4 py-1.5 rounded-full">
+              Get Started
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Layout */}
+      <div className="max-w-[1400px] mx-auto flex">
+        {/* Left Sidebar - Navigation */}
+        <aside className="hidden lg:flex flex-col w-[220px] flex-shrink-0 sticky top-14 h-[calc(100vh-56px)] border-r border-[#1a1d27] px-4 py-6 justify-between">
+          <nav className="flex flex-col gap-1">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] transition-colors ${
+                  item.active
+                    ? 'text-white bg-[#ffffff0a]'
+                    : 'text-[#888] hover:text-[#c8c8c8] hover:bg-[#ffffff06]'
+                }`}
+              >
+                <ion-icon name={item.icon} style={{ fontSize: '18px' }} />
+                {item.label}
+              </Link>
+            ))}
+            <div className="mt-3 border-t border-[#1a1d27] pt-3">
+              <Link
+                href="/following"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] text-[#888] hover:text-[#c8c8c8] hover:bg-[#ffffff06] transition-colors"
+              >
+                <ion-icon name="people-outline" style={{ fontSize: '18px' }} />
+                Following
+              </Link>
+            </div>
+          </nav>
+          <div className="px-3 py-3 rounded-xl bg-[#0d1117] border border-[#1a1d27]">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-full bg-[#2a2d3a] flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[13px] text-[#e0e0e0] font-medium truncate">Guest</p>
+                <p className="text-[11px] text-[#666] truncate">Sign in to personalize</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Center Feed */}
+        <main className="flex-1 min-w-0 border-r border-[#1a1d27]">
+          {/* Topic Tabs */}
+          <div className="sticky top-14 z-40 bg-[#030712]/95 backdrop-blur-md border-b border-[#1a1d27]">
+            <div className="flex items-center gap-0 px-6 overflow-x-auto scrollbar-none">
+              {TOPICS.map((topic, i) => (
+                <button
+                  key={topic.label}
+                  onClick={() => setActiveTopic(i)}
+                  className={`flex items-center gap-1.5 px-4 py-3 text-[13px] font-medium whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${
+                    i === activeTopic
+                      ? 'text-white border-white'
+                      : 'text-[#777] border-transparent hover:text-[#b0b0b0] hover:border-[#333]'
+                  }`}
+                >
+                  {topic.icon && <ion-icon name={topic.icon} style={{ fontSize: '14px' }} />}
+                  {topic.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Feed Cards */}
+          <div className="px-6">
+            {MOCK_POSTS.map((post) => (
+              <FeedCard key={post.id} post={post} />
+            ))}
+          </div>
+        </main>
+
+        {/* Right Sidebar */}
+        <aside className="hidden xl:block w-[340px] flex-shrink-0 sticky top-14 h-[calc(100vh-56px)] overflow-y-auto px-8 py-6 scrollbar-thin">
+          {/* Staff Picks */}
+          <div className="mb-8">
+            <h3 className="text-[14px] font-bold text-[#e0e0e0] mb-1 tracking-wide">Staff Picks</h3>
+            <div className="divide-y divide-[#1a1d27]">
+              {STAFF_PICKS.map((pick) => (
+                <StaffPickCard key={pick.id} pick={pick} />
+              ))}
+            </div>
+            <button className="text-[13px] text-[#9b7bf7] hover:text-[#b69aff] transition-colors mt-2 font-medium">
+              See the full list
+            </button>
+          </div>
+
+          {/* Recommended Topics */}
+          <div className="mb-8">
+            <h3 className="text-[14px] font-bold text-[#e0e0e0] mb-3 tracking-wide">Recommended Topics</h3>
+            <div className="flex flex-wrap gap-2">
+              {RECOMMENDED_TOPICS.map((topic) => (
+                <button
+                  key={topic}
+                  className="px-3.5 py-1.5 rounded-full text-[13px] text-[#b0b0b0] bg-[#0d1117] border border-[#1a1d27] hover:border-[#333] hover:text-white transition-colors"
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Writing Prompt */}
+          <div className="bg-[#0d1117] border border-[#1a1d27] rounded-xl p-5">
+            <h3 className="text-[14px] font-bold text-[#e0e0e0] mb-1">Writing on LixBlogs</h3>
+            <ul className="text-[13px] text-[#888] space-y-1.5 mt-3">
+              <li className="hover:text-[#b0b0b0] cursor-pointer transition-colors">New to LixBlogs? Start here</li>
+              <li className="hover:text-[#b0b0b0] cursor-pointer transition-colors">Read LixBlogs writing tips</li>
+              <li className="hover:text-[#b0b0b0] cursor-pointer transition-colors">Get practical writing advice</li>
+            </ul>
+            <Link
+              href="/write"
+              className="inline-block mt-4 px-5 py-2 text-[13px] font-medium text-[#030712] bg-[#e8e8e8] hover:bg-white rounded-full transition-colors"
+            >
+              Start writing
+            </Link>
+          </div>
+
+          {/* Footer Links */}
+          <div className="mt-8 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#555]">
+            <span className="hover:text-[#888] cursor-pointer transition-colors">Help</span>
+            <span className="hover:text-[#888] cursor-pointer transition-colors">Status</span>
+            <span className="hover:text-[#888] cursor-pointer transition-colors">About</span>
+            <span className="hover:text-[#888] cursor-pointer transition-colors">Blog</span>
+            <span className="hover:text-[#888] cursor-pointer transition-colors">Privacy</span>
+            <span className="hover:text-[#888] cursor-pointer transition-colors">Terms</span>
+          </div>
+        </aside>
+      </div>
+    </div>
   );
 }
