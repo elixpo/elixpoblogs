@@ -21,8 +21,33 @@ const BlogCodeView = dynamic(
   { ssr: false }
 );
 
+const STORAGE_KEY_PREFIX = 'lixblogs_draft_';
+
+function getDraftKey(slug) {
+  return STORAGE_KEY_PREFIX + (slug || 'new');
+}
+
+function loadDraft(slug) {
+  try {
+    const raw = localStorage.getItem(getDraftKey(slug));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(slug, data) {
+  try {
+    localStorage.setItem(getDraftKey(slug), JSON.stringify({
+      ...data,
+      savedAt: Date.now(),
+    }));
+  } catch { /* storage full, ignore */ }
+}
+
 export default function WritePage({ slug }) {
   const editorRef = useRef(null);
+  const autoSaveTimer = useRef(null);
   const [mode, setMode] = useState('edit');
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -32,10 +57,45 @@ export default function WritePage({ slug }) {
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [showPublishPanel, setShowPublishPanel] = useState(false);
+  const [showPublishMenu, setShowPublishMenu] = useState(false);
   const [editorContent, setEditorContent] = useState(null);
   const [previewHtml, setPreviewHtml] = useState('');
   const [markdown, setMarkdown] = useState('');
   const [wordCount, setWordCount] = useState(0);
+  const [lastSaved, setLastSaved] = useState(null);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const draft = loadDraft(slug);
+    if (draft) {
+      if (draft.title) setTitle(draft.title);
+      if (draft.subtitle) setSubtitle(draft.subtitle);
+      if (draft.tags) setTags(draft.tags);
+      if (draft.publishAs) setPublishAs(draft.publishAs);
+      if (draft.coverPreview) setCoverPreview(draft.coverPreview);
+      if (draft.editorContent) setEditorContent(draft.editorContent);
+      if (draft.savedAt) setLastSaved(draft.savedAt);
+    }
+  }, [slug]);
+
+  // Auto-save to localStorage every 5s when content changes
+  useEffect(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      if (title || editorContent) {
+        saveDraft(slug, {
+          title,
+          subtitle,
+          tags,
+          publishAs,
+          coverPreview,
+          editorContent,
+        });
+        setLastSaved(Date.now());
+      }
+    }, 5000);
+    return () => clearTimeout(autoSaveTimer.current);
+  }, [title, subtitle, tags, publishAs, coverPreview, editorContent, slug]);
 
   const handleCoverUpload = (e) => {
     const file = e.target.files?.[0];
@@ -72,7 +132,6 @@ export default function WritePage({ slug }) {
 
   const handleEditorChange = useCallback((blocks) => {
     setEditorContent(blocks);
-    // Count words from block text content
     const text = blocks
       .map((b) => {
         if (b.content && Array.isArray(b.content)) {
@@ -81,8 +140,7 @@ export default function WritePage({ slug }) {
         return '';
       })
       .join(' ');
-    const words = text.trim().split(/\s+/).filter(Boolean).length;
-    setWordCount(words);
+    setWordCount(text.trim().split(/\s+/).filter(Boolean).length);
   }, []);
 
   const switchMode = useCallback(async (newMode) => {
@@ -94,27 +152,43 @@ export default function WritePage({ slug }) {
         ]);
         setPreviewHtml(html);
         setMarkdown(md);
-      } catch {
-        // Editor may not be ready
-      }
+      } catch { /* editor not ready */ }
     }
     setMode(newMode);
   }, []);
 
+  const handleSaveDraft = () => {
+    saveDraft(slug, { title, subtitle, tags, publishAs, coverPreview, editorContent });
+    setLastSaved(Date.now());
+    setShowPublishMenu(false);
+    // TODO: sync to cloud via API
+    console.log('Draft saved locally');
+  };
+
   const handlePublish = () => {
-    const blogData = {
-      title,
-      subtitle,
-      content: editorContent,
-      tags,
-      publishAs,
-      coverImage,
-    };
+    const blogData = { title, subtitle, content: editorContent, tags, publishAs, coverImage };
     console.log('Publishing blog:', blogData);
+    setShowPublishMenu(false);
     // TODO: API call to publish
   };
 
+  const handlePublishBeta = () => {
+    const blogData = { title, subtitle, content: editorContent, tags, publishAs, coverImage, status: 'unlisted' };
+    console.log('Publishing beta (unlisted):', blogData);
+    setShowPublishMenu(false);
+    // TODO: API call to publish as unlisted
+  };
+
   const readTime = Math.max(1, Math.ceil(wordCount / 250));
+
+  const formatSavedTime = (ts) => {
+    if (!ts) return null;
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 10) return 'Just saved';
+    if (diff < 60) return `Saved ${diff}s ago`;
+    if (diff < 3600) return `Saved ${Math.floor(diff / 60)}m ago`;
+    return `Saved ${Math.floor(diff / 3600)}h ago`;
+  };
 
   return (
     <div className="min-h-screen bg-[#030712] text-white">
@@ -125,39 +199,76 @@ export default function WritePage({ slug }) {
           <p className="text-xl font-bold font-[Kanit,serif]">LixBlogs</p>
         </div>
 
-        {/* Mode Tabs */}
-        <div className="flex items-center bg-[#10141E] rounded-lg p-1 gap-1">
-          {[
-            { key: 'edit', label: 'Edit', icon: 'create-outline' },
-            { key: 'preview', label: 'Preview', icon: 'eye-outline' },
-            { key: 'code', label: 'Code', icon: 'code-slash-outline' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => switchMode(tab.key)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                mode === tab.key
-                  ? 'bg-[#7ba8f0] text-[#030712]'
-                  : 'text-[#888] hover:text-white'
-              }`}
-            >
-              <ion-icon name={tab.icon} style={{ fontSize: '15px' }} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         <div className="flex items-center gap-3">
           <span className="text-[#555] text-xs">
             {wordCount} words &middot; {readTime} min read
           </span>
+          {lastSaved && (
+            <span className="text-[#444] text-xs">{formatSavedTime(lastSaved)}</span>
+          )}
           <span className="text-[#888] text-sm px-2 py-0.5 rounded bg-[#1D202A]">Draft</span>
-          <button
-            onClick={() => setShowPublishPanel(!showPublishPanel)}
-            className="px-5 py-1.5 bg-[#7ba8f0] text-[#030712] font-semibold rounded-full text-sm hover:bg-[#9dc0ff] transition-colors"
-          >
-            Publish
-          </button>
+
+          {/* Publish button with dropdown */}
+          <div className="relative">
+            <div className="flex items-center">
+              <button
+                onClick={() => setShowPublishPanel(!showPublishPanel)}
+                className="px-5 py-1.5 bg-[#7ba8f0] text-[#030712] font-semibold rounded-l-full text-sm hover:bg-[#9dc0ff] transition-colors"
+              >
+                Publish
+              </button>
+              <button
+                onClick={() => setShowPublishMenu(!showPublishMenu)}
+                className="px-2 py-1.5 bg-[#7ba8f0] text-[#030712] rounded-r-full border-l border-[#030712]/20 hover:bg-[#9dc0ff] transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+            </div>
+
+            {showPublishMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowPublishMenu(false)} />
+                <div className="absolute right-0 top-full mt-2 w-48 bg-[#10141E] border border-[#1D202A] rounded-xl shadow-2xl z-50 overflow-hidden">
+                  <button
+                    onClick={handleSaveDraft}
+                    className="w-full px-4 py-2.5 text-left text-sm text-[#e4e4e7] hover:bg-[#1D202A] flex items-center gap-2 transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                      <polyline points="17 21 17 13 7 13 7 21" />
+                      <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                    Save Draft
+                  </button>
+                  <button
+                    onClick={handlePublish}
+                    disabled={!title.trim()}
+                    className="w-full px-4 py-2.5 text-left text-sm text-[#e4e4e7] hover:bg-[#1D202A] flex items-center gap-2 transition-colors disabled:opacity-40"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Publish
+                  </button>
+                  <button
+                    onClick={handlePublishBeta}
+                    disabled={!title.trim()}
+                    className="w-full px-4 py-2.5 text-left text-sm text-[#888] hover:bg-[#1D202A] flex items-center gap-2 transition-colors disabled:opacity-40"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Publish Beta
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
           <div className="h-8 w-8 rounded-full bg-[#1D202A] flex items-center justify-center cursor-pointer hover:bg-[#282c3a] transition-colors">
             <ion-icon name="ellipsis-horizontal" style={{ color: '#888', fontSize: '16px' }} />
           </div>
@@ -167,6 +278,43 @@ export default function WritePage({ slug }) {
       {/* Main Content Area */}
       <main className="pt-[60px] flex justify-center">
         <div className={`w-full max-w-[820px] px-6 py-10 ${showPublishPanel ? 'mr-[400px]' : ''} transition-all`}>
+
+          {/* Mode tabs inside editor area */}
+          <div className="flex items-center gap-1 mb-6">
+            {[
+              { key: 'edit', icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              )},
+              { key: 'preview', icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )},
+              { key: 'code', icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="16 18 22 12 16 6" />
+                  <polyline points="8 6 2 12 8 18" />
+                </svg>
+              )},
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => switchMode(tab.key)}
+                className={`p-2 rounded-lg transition-all ${
+                  mode === tab.key
+                    ? 'bg-[#1D202A] text-[#7ba8f0]'
+                    : 'text-[#555] hover:text-[#888] hover:bg-[#1D202A]/50'
+                }`}
+                title={tab.key.charAt(0).toUpperCase() + tab.key.slice(1)}
+              >
+                {tab.icon}
+              </button>
+            ))}
+          </div>
 
           {/* === EDIT MODE === */}
           {mode === 'edit' && (
@@ -215,8 +363,12 @@ export default function WritePage({ slug }) {
               />
 
               {/* Block Editor */}
-              <div className="min-h-[500px]">
-                <BlockNoteEditor ref={editorRef} onChange={handleEditorChange} />
+              <div className="min-h-[500px] editor-aligned">
+                <BlockNoteEditor
+                  ref={editorRef}
+                  onChange={handleEditorChange}
+                  initialContent={editorContent}
+                />
               </div>
             </>
           )}
@@ -350,7 +502,7 @@ export default function WritePage({ slug }) {
           </div>
         </div>
 
-        {/* Publish Button */}
+        {/* Publish Button in panel */}
         <div className="p-5 border-t border-[#1D202A]">
           <button
             onClick={handlePublish}

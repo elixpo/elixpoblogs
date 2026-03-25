@@ -1,3 +1,9 @@
+/* ===== Align editor text with title ===== */
+
+.editor-aligned .blog-editor-wrapper {
+  margin-left: -54px;
+}
+
 /* ===== BlogEditor (BlockNote) Dark Theme ===== */
 
 .blog-editor-wrapper .bn-editor {
@@ -5,6 +11,7 @@
   color: #e4e4e7;
   font-size: 1.125rem;
   line-height: 1.8;
+  padding-left: 0;
 }
 
 .blog-editor-wrapper .bn-container {
