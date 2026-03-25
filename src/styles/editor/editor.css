@@ -60,11 +60,39 @@
 }
 
 /* Slash menu / dropdown */
-.blog-editor-wrapper .mantine-Menu-dropdown {
+.blog-editor-wrapper .mantine-Menu-dropdown,
+.blog-editor-wrapper .bn-suggestion-menu {
   background: #10141E !important;
   border: 1px solid #1D202A !important;
   border-radius: 12px !important;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5) !important;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2e3a transparent;
+}
+
+.blog-editor-wrapper .bn-suggestion-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.blog-editor-wrapper .bn-suggestion-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.blog-editor-wrapper .bn-suggestion-menu::-webkit-scrollbar-thumb {
+  background: #2a2e3a;
+  border-radius: 3px;
+}
+
+.blog-editor-wrapper .bn-suggestion-menu::-webkit-scrollbar-thumb:hover {
+  background: #3a3f4f;
+}
+
+/* Slash menu group headers */
+.blog-editor-wrapper .bn-suggestion-menu [class*="group"] {
+  color: #555 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
 }
 
 .blog-editor-wrapper .mantine-Menu-item {
@@ -159,6 +187,31 @@
 /* Selection highlight */
 .blog-editor-wrapper ::selection {
   background: rgba(123, 168, 240, 0.3);
+}
+
+/* ===== Dark scrollbar (used in emoji picker, editor dropdowns) ===== */
+
+.dark-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background: #2a2e3a;
+  border-radius: 3px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #3a3f4f;
+}
+
+/* Firefox */
+.dark-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2e3a transparent;
 }
 
 /* ===== Preview Prose Styles ===== */

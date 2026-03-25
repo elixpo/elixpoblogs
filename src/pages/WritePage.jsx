@@ -26,6 +26,11 @@ const CoverUploadModal = dynamic(
   { ssr: false }
 );
 
+const EmojiPicker = dynamic(
+  () => import('../components/Editor/EmojiPicker'),
+  { ssr: false }
+);
+
 const STORAGE_KEY_PREFIX = 'lixblogs_draft_';
 
 function getDraftKey(slug) {
@@ -341,22 +346,11 @@ export default function WritePage({ slug }) {
 
               {/* Emoji Picker */}
               {showEmojiPicker && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
-                  <div className="relative z-50 mb-4 w-[320px] bg-[#10141E] border border-[#1D202A] rounded-xl shadow-2xl p-3">
-                    <div className="grid grid-cols-8 gap-1 max-h-[200px] overflow-y-auto">
-                      {['😀','😂','🥹','😍','🤩','😎','🧐','🤔','🫡','🤗','😶','🙄','😴','🤯','🥳','😇','🫠','🔥','✨','💡','📝','🚀','💻','🎨','📚','🧠','💬','🌍','⚡','🎯','🛠️','📊','🔒','🧪','🎉','❤️','💜','💙','🤍','🖤','👋','👀','🙌','💪','🤝','✌️','🫶','👏'].map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => { setPageEmoji(emoji); setShowEmojiPicker(false); }}
-                          className="text-2xl h-9 w-9 flex items-center justify-center rounded-lg hover:bg-[#1D202A] transition-colors"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
+                <EmojiPicker
+                  onSelect={(emoji) => { setPageEmoji(emoji); setShowEmojiPicker(false); }}
+                  onRemove={() => { setPageEmoji(null); setShowEmojiPicker(false); }}
+                  onClose={() => setShowEmojiPicker(false)}
+                />
               )}
 
               {/* Cover Upload Modal */}
