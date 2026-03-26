@@ -238,6 +238,103 @@
   scrollbar-color: #2a2e3a transparent;
 }
 
+/* ===== AI Command Menu (space trigger) ===== */
+
+.ai-command-menu {
+  width: 260px;
+  background: #0d1117;
+  border: 1px solid #1a1d27;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  padding: 6px;
+  overflow: hidden;
+  animation: aiMenuFadeIn 0.12s ease-out;
+}
+
+@keyframes aiMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-command-group {
+  margin-bottom: 2px;
+}
+
+.ai-command-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+  padding: 8px 10px 4px;
+}
+
+.ai-command-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: #c8c8c8;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  text-align: left;
+}
+
+.ai-command-item:hover,
+.ai-command-item-active {
+  background: #1a1d27;
+  color: #fff;
+}
+
+.ai-command-item-active .ai-command-icon {
+  color: #9b7bf7;
+}
+
+.ai-command-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #151922;
+  border: 1px solid #1a1d27;
+  color: #777;
+  flex-shrink: 0;
+  font-size: 16px;
+  transition: color 0.1s;
+}
+
+.ai-command-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== AI slash menu icon sparkle tint ===== */
+
+.ai-slash-icon {
+  color: #9b7bf7;
+}
+
+/* ===== Slash menu group labels for Media / AI ===== */
+
+.blog-editor-wrapper .bn-suggestion-menu [data-group="Media"] .bn-suggestion-menu-group-label,
+.blog-editor-wrapper .bn-suggestion-menu [data-group="AI Generate"] .bn-suggestion-menu-group-label {
+  color: #9b7bf7 !important;
+}
+
 /* ===== Preview Prose Styles ===== */
 
 .blog-preview-content h1 {
