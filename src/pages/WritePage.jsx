@@ -410,7 +410,7 @@ export default function WritePage({ slugid }) {
       </header>
 
       {/* Main Content Area */}
-      <main className="pt-14 flex justify-center">
+      <main className="pt-14 flex justify-center editor-texture-bg">
         <div className={`w-full max-w-[720px] px-6 py-8 ${showPublishPanel ? 'mr-[400px]' : ''} transition-all`}>
 
           {/* Mode icons */}
@@ -627,11 +627,12 @@ export default function WritePage({ slugid }) {
                           zIndex: 10,
                         }}
                       >
-                        <div className="relative w-fit" onClick={() => setShowEmojiPicker(true)}>
-                          <span className="text-7xl cursor-pointer select-none drop-shadow-lg block bg-[#0e121b]leading-none relative z-[1]">
-                            {pageEmoji}
-                          </span>
-                          <div className="absolute inset-[-3px] rounded-[50%] border border-[#232d3f] z-0" />
+                        <div
+                          className="w-[72px] h-[72px] rounded-full bg-[#0e121b] border-[3px] border-[#0e121b] shadow-lg flex items-center justify-center cursor-pointer relative"
+                          onClick={() => setShowEmojiPicker(true)}
+                        >
+                          <span className="text-[55px] leading-none select-none">{pageEmoji}</span>
+                          <div className="absolute inset-[-2px] rounded-full" />
                         </div>
                         <button onClick={() => setPageEmoji(null)} className="absolute -top-1 -right-3 opacity-0 group-hover:opacity-100 h-5 w-5 rounded-full bg-[#232d3f] border border-[#333] flex items-center justify-center text-[#888] hover:text-white transition-all text-[10px]">&times;</button>
                       </div>
@@ -714,7 +715,7 @@ export default function WritePage({ slugid }) {
           )}
 
           {mode === 'preview' && (
-            <BlogPreview title={title} subtitle={subtitle} coverPreview={coverPreview} tags={tags} html={previewHtml} />
+            <BlogPreview title={title} subtitle={subtitle} coverPreview={coverPreview} coverZoom={coverZoom} coverPos={coverPos} pageEmoji={pageEmoji} tags={tags} html={previewHtml} user={user} wordCount={wordCount} />
           )}
 
           {mode === 'code' && (
