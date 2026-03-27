@@ -215,6 +215,32 @@ function isCurrentBlockEmpty(editor) {
   }
 }
 
+// ── Parse markdown text into BlockNote blocks ──
+
+function parseMarkdownToBlocks(text) {
+  const lines = text.split('\n');
+  const blocks = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+    if (headingMatch) {
+      blocks.push({ type: 'heading', props: { level: headingMatch[1].length.toString() }, content: [{ type: 'text', text: headingMatch[2] }] });
+      continue;
+    }
+    if (trimmed.match(/^[-*]\s+/)) {
+      blocks.push({ type: 'bulletListItem', content: [{ type: 'text', text: trimmed.replace(/^[-*]\s+/, '') }] });
+      continue;
+    }
+    if (trimmed.match(/^\d+\.\s+/)) {
+      blocks.push({ type: 'numberedListItem', content: [{ type: 'text', text: trimmed.replace(/^\d+\.\s+/, '') }] });
+      continue;
+    }
+    blocks.push({ type: 'paragraph', content: [{ type: 'text', text: trimmed }] });
+  }
+  return blocks.length > 0 ? blocks : [{ type: 'paragraph', content: [] }];
+}
+
 // ── BlogEditor ──
 
 const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, ref) {
@@ -222,7 +248,13 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
   const [aiMenuPos, setAiMenuPos] = useState({ top: 0, left: 0 });
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiGeneratingBlockId, setAiGeneratingBlockId] = useState(null);
+  const [aiBlockIds, setAiBlockIds] = useState(new Set());
+  const [showAIActions, setShowAIActions] = useState(false);
+  const [aiActionsPos, setAiActionsPos] = useState({ top: 0, left: 0 });
   const aiAbortRef = useRef(null);
+  const aiBlockIdsRef = useRef(new Set());
+  const aiBlockCountRef = useRef(0);
+  const aiAnchorIdRef = useRef(null);
   const wrapperRef = useRef(null);
 
   const editor = useCreateBlockNote({
@@ -310,27 +342,119 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
     }
     setAiGenerating(false);
     setAiGeneratingBlockId(null);
+
+    // Scroll to the AI-generated content and show keep/discard
+    const ids = aiBlockIdsRef.current;
+    if (ids && ids.size > 0) {
+      setShowAIActions(true);
+      requestAnimationFrame(() => {
+        const firstId = [...ids][0];
+        const el = wrapperRef.current?.querySelector(`[data-id="${firstId}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
   }, []);
+
+  // Highlight AI blocks in the DOM with lavender class
+  const highlightAiBlocks = useCallback((ids) => {
+    wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
+      el.classList.remove('ai-generated-highlight');
+    });
+    for (const id of ids) {
+      const el = wrapperRef.current?.querySelector(`[data-id="${id}"]`);
+      if (el) el.classList.add('ai-generated-highlight');
+    }
+  }, []);
+
+  // Get current AI block IDs by position relative to anchor
+  const getAiBlockIds = useCallback(() => {
+    const anchorId = aiAnchorIdRef.current;
+    const count = aiBlockCountRef.current;
+    if (!anchorId || count === 0) return [];
+    const doc = editor.document;
+    const idx = doc.findIndex((b) => b.id === anchorId);
+    if (idx === -1) return [];
+    return doc.slice(idx + 1, idx + 1 + count).map((b) => b.id);
+  }, [editor]);
+
+  const handleAIKeep = useCallback(() => {
+    // Remove highlights, keep the text
+    wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
+      el.classList.remove('ai-generated-highlight');
+    });
+    setAiBlockIds(new Set());
+    aiBlockIdsRef.current = new Set();
+    aiBlockCountRef.current = 0;
+    aiAnchorIdRef.current = null;
+    setShowAIActions(false);
+  }, []);
+
+  const handleAIDiscard = useCallback(() => {
+    // Remove AI-generated blocks
+    const ids = getAiBlockIds();
+    if (ids.length > 0) {
+      try { editor.removeBlocks(ids); } catch {}
+    }
+    setAiBlockIds(new Set());
+    aiBlockIdsRef.current = new Set();
+    aiBlockCountRef.current = 0;
+    aiAnchorIdRef.current = null;
+    setShowAIActions(false);
+  }, [editor, getAiBlockIds]);
+
+  // Click on AI content to show keep/discard
+  useEffect(() => {
+    if (aiBlockIds.size === 0) return;
+
+    function handleClick(e) {
+      const blockEl = e.target.closest?.('.ai-generated-highlight');
+      if (blockEl) {
+        const rect = blockEl.getBoundingClientRect();
+        const wrapperRect = wrapperRef.current?.getBoundingClientRect();
+        if (wrapperRect) {
+          setAiActionsPos({
+            top: rect.top - wrapperRect.top - 36,
+            left: rect.left - wrapperRect.left + rect.width / 2,
+          });
+        }
+        setShowAIActions(true);
+      } else if (!e.target.closest?.('.ai-inline-actions')) {
+        setShowAIActions(false);
+      }
+    }
+
+    const wrapper = wrapperRef.current;
+    wrapper?.addEventListener('click', handleClick);
+    return () => wrapper?.removeEventListener('click', handleClick);
+  }, [aiBlockIds]);
 
   const handleAISubmit = useCallback(async (userPrompt) => {
     setShowAIMenu(false);
+    setShowAIActions(false);
     const cursor = editor.getTextCursorPosition();
     if (!cursor?.block) return;
 
-    // Insert an empty block — no "Generating..." text
-    const placeholderBlock = { type: 'paragraph', content: [] };
-    editor.insertBlocks([placeholderBlock], cursor.block, 'after');
+    const anchorBlockId = cursor.block.id;
+    aiAnchorIdRef.current = anchorBlockId;
 
-    // Get the inserted block (it's the one after cursor)
+    // Insert initial placeholder
+    editor.insertBlocks([{ type: 'paragraph', content: [] }], cursor.block, 'after');
     const doc = editor.document;
-    const cursorIdx = doc.findIndex((b) => b.id === cursor.block.id);
+    const cursorIdx = doc.findIndex((b) => b.id === anchorBlockId);
     const insertedBlock = doc[cursorIdx + 1];
     if (!insertedBlock) return;
+
+    aiBlockCountRef.current = 1;
+    let currentIds = [insertedBlock.id];
+    aiBlockIdsRef.current = new Set(currentIds);
 
     setAiGenerating(true);
     setAiGeneratingBlockId(insertedBlock.id);
     const abortController = new AbortController();
     aiAbortRef.current = abortController;
+
+    // Apply initial highlight
+    requestAnimationFrame(() => highlightAiBlocks(currentIds));
 
     try {
       const { streamAI } = await import('../../ai/stream');
@@ -341,49 +465,71 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
         userPrompt,
         signal: abortController.signal,
         onChunk: (chunk, fullText) => {
-          // Update the block in real-time — text scales naturally
+          const newBlocks = parseMarkdownToBlocks(fullText);
+          const oldIds = getAiBlockIds();
+
+          if (oldIds.length === 0) return;
+
           try {
-            editor.updateBlock(insertedBlock.id, {
-              content: [{ type: 'text', text: fullText }],
-            });
+            if (newBlocks.length !== aiBlockCountRef.current) {
+              // Block structure changed — replace all
+              editor.replaceBlocks(oldIds, newBlocks);
+              aiBlockCountRef.current = newBlocks.length;
+              currentIds = getAiBlockIds();
+              aiBlockIdsRef.current = new Set(currentIds);
+            } else {
+              // Same structure — just update the last block text
+              const lastId = oldIds[oldIds.length - 1];
+              const lastBlock = newBlocks[newBlocks.length - 1];
+              editor.updateBlock(lastId, {
+                type: lastBlock.type,
+                props: lastBlock.props || {},
+                content: lastBlock.content,
+              });
+              currentIds = oldIds;
+              aiBlockIdsRef.current = new Set(currentIds);
+            }
+            requestAnimationFrame(() => highlightAiBlocks(currentIds));
           } catch { /* block may have been removed */ }
         },
         onDone: (fullText) => {
+          // Final parse into proper blocks
+          const newBlocks = parseMarkdownToBlocks(fullText);
+          const oldIds = getAiBlockIds();
+
+          try {
+            if (oldIds.length > 0) {
+              editor.replaceBlocks(oldIds, newBlocks);
+              aiBlockCountRef.current = newBlocks.length;
+              currentIds = getAiBlockIds();
+            }
+          } catch {}
+
+          const finalIds = new Set(currentIds);
+          aiBlockIdsRef.current = finalIds;
+          setAiBlockIds(finalIds);
           setAiGenerating(false);
           setAiGeneratingBlockId(null);
           aiAbortRef.current = null;
-          // Parse the result into proper blocks
-          const lines = fullText.split('\n').filter((l) => l.trim());
-          if (lines.length <= 1) {
-            try {
-              editor.updateBlock(insertedBlock.id, {
-                content: [{ type: 'text', text: fullText.trim() }],
-              });
-            } catch {}
-            return;
-          }
-          const newBlocks = lines.map((line) => {
-            const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
-            if (headingMatch) {
-              return { type: 'heading', props: { level: headingMatch[1].length.toString() }, content: [{ type: 'text', text: headingMatch[2] }] };
-            }
-            if (line.match(/^[-*]\s+/)) {
-              return { type: 'bulletListItem', content: [{ type: 'text', text: line.replace(/^[-*]\s+/, '') }] };
-            }
-            return { type: 'paragraph', content: [{ type: 'text', text: line }] };
+
+          // Highlight and scroll to the content
+          requestAnimationFrame(() => {
+            highlightAiBlocks(currentIds);
+            const firstEl = wrapperRef.current?.querySelector(`[data-id="${currentIds[0]}"]`);
+            if (firstEl) firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           });
-          try {
-            editor.replaceBlocks([insertedBlock.id], newBlocks);
-          } catch {}
         },
         onError: (err) => {
           setAiGenerating(false);
           setAiGeneratingBlockId(null);
           aiAbortRef.current = null;
           try {
-            editor.updateBlock(insertedBlock.id, {
-              content: [{ type: 'text', text: `Error: ${err.message}` }],
-            });
+            const ids = getAiBlockIds();
+            if (ids.length > 0) {
+              editor.updateBlock(ids[0], {
+                content: [{ type: 'text', text: `Error: ${err.message}` }],
+              });
+            }
           } catch {}
         },
       });
@@ -393,12 +539,15 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
       aiAbortRef.current = null;
       if (err.name === 'AbortError') return;
       try {
-        editor.updateBlock(insertedBlock.id, {
-          content: [{ type: 'text', text: `Error: ${err.message}` }],
-        });
+        const ids = getAiBlockIds();
+        if (ids.length > 0) {
+          editor.updateBlock(ids[0], {
+            content: [{ type: 'text', text: `Error: ${err.message}` }],
+          });
+        }
       } catch {}
     }
-  }, [editor]);
+  }, [editor, getAiBlockIds, highlightAiBlocks]);
 
   return (
     <div className="blog-editor-wrapper" ref={wrapperRef} style={{ position: 'relative' }}>
@@ -422,11 +571,13 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
         />
       )}
 
-      {/* AI generating stop button */}
+      {/* AI generating bar with shimmer animation */}
       {aiGenerating && (
         <div className="ai-generating-bar">
-          <div className="ai-generating-bar-inner">
-            <div className="ai-generating-pulse" />
+          <div className="ai-generating-bar-inner ai-generating-shimmer">
+            <div className="ai-generating-dots">
+              <span /><span /><span />
+            </div>
             <span className="ai-generating-label">AI is writing...</span>
             <button className="ai-stop-btn" onClick={handleAIStop}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
@@ -435,6 +586,31 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
               Stop
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Inline keep/discard actions for AI content */}
+      {showAIActions && !aiGenerating && aiBlockIds.size > 0 && (
+        <div
+          className="ai-inline-actions"
+          style={{
+            position: 'absolute',
+            top: aiActionsPos.top,
+            left: aiActionsPos.left,
+            transform: 'translateX(-50%)',
+            zIndex: 100,
+          }}
+        >
+          <button className="ai-action-keep" onClick={handleAIKeep} title="Keep AI text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+          <button className="ai-action-discard" onClick={handleAIDiscard} title="Discard AI text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
       )}
 

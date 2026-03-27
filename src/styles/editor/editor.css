@@ -362,24 +362,54 @@
   font-size: 1em;
 }
 
-/* ===== AI Edit Diff Styles ===== */
+/* ===== AI Generated Block Highlight ===== */
+
+.ai-generated-highlight {
+  background: rgba(196, 181, 253, 0.08) !important;
+  border-left: 3px solid rgba(196, 181, 253, 0.4) !important;
+  border-radius: 0 6px 6px 0;
+  padding-left: 12px !important;
+  transition: background 0.3s ease, border-color 0.3s ease;
+  position: relative;
+}
+
+.ai-generated-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(196, 181, 253, 0.05) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: 0 6px 6px 0;
+}
+
+.ai-generated-highlight .bn-inline-content {
+  color: #ddd6fe !important;
+}
+
+/* ===== AI Edit Diff Styles (lavender theme) ===== */
 
 .ai-diff-deleted {
   text-decoration: line-through;
-  color: #f8717180;
-  text-decoration-color: #f87171;
+  color: rgba(196, 181, 253, 0.45);
+  text-decoration-color: rgba(196, 181, 253, 0.6);
+  background: rgba(196, 181, 253, 0.06);
+  border-radius: 2px;
+  padding: 0 2px;
 }
 
 .ai-diff-added {
-  color: #93c5fd;
-  background: rgba(147, 197, 253, 0.06);
+  color: #c4b5fd;
+  background: rgba(196, 181, 253, 0.1);
   border-radius: 2px;
   padding: 0 2px;
 }
 
 .ai-streaming-cursor::after {
   content: '|';
-  color: #9b7bf7;
+  color: #c4b5fd;
   animation: aiCursorBlink 0.8s infinite;
   font-weight: 300;
 }
@@ -387,6 +417,58 @@
 @keyframes aiCursorBlink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
+}
+
+/* ===== AI Inline Keep/Discard Actions ===== */
+
+.ai-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #141a26;
+  border: 1px solid rgba(196, 181, 253, 0.25);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  animation: aiActionsIn 0.15s ease-out;
+}
+
+@keyframes aiActionsIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.ai-action-keep,
+.ai-action-discard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ai-action-keep {
+  background: rgba(134, 239, 172, 0.1);
+  color: #86efac;
+}
+
+.ai-action-keep:hover {
+  background: rgba(134, 239, 172, 0.2);
+  color: #bbf7d0;
+}
+
+.ai-action-discard {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+}
+
+.ai-action-discard:hover {
+  background: rgba(248, 113, 113, 0.2);
+  color: #fca5a5;
 }
 
 /* ===== AI Generating Bar & Stop Button ===== */
@@ -408,18 +490,64 @@
   align-items: center;
   gap: 10px;
   background: #141a26;
-  border: 1px solid #232d3f;
+  border: 1px solid rgba(196, 181, 253, 0.2);
   border-radius: 10px;
   padding: 8px 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(196, 181, 253, 0.05);
   pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-generating-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(196, 181, 253, 0.06), transparent);
+  animation: aiShimmer 2s infinite;
+  pointer-events: none;
+}
+
+@keyframes aiShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.ai-generating-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.ai-generating-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c4b5fd;
+  animation: aiDotBounce 1.4s ease-in-out infinite;
+}
+
+.ai-generating-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.ai-generating-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes aiDotBounce {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
 }
 
 .ai-generating-pulse {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #9b7bf7;
+  background: #c4b5fd;
   animation: aiPulse 1.2s ease-in-out infinite;
 }
 
@@ -430,7 +558,8 @@
 
 .ai-generating-label {
   font-size: 13px;
-  color: #9ca3af;
+  color: #c4b5fd;
+  font-weight: 500;
 }
 
 .ai-stop-btn {

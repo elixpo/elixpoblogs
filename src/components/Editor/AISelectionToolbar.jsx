@@ -286,7 +286,7 @@ export default function AISelectionToolbar({ editor }) {
               {selectedText && (
                 <div className="mb-3">
                   <p className="text-[10px] text-[#6b7a8d] uppercase tracking-wider mb-1.5 font-bold">Original</p>
-                  <div className="text-[13px] text-[#f8717180] leading-relaxed line-through decoration-[#f87171] whitespace-pre-wrap">
+                  <div className="text-[13px] leading-relaxed whitespace-pre-wrap ai-diff-deleted">
                     {selectedText}
                   </div>
                 </div>
@@ -297,11 +297,15 @@ export default function AISelectionToolbar({ editor }) {
                 <p className="text-[10px] text-[#6b7a8d] uppercase tracking-wider mb-1.5 font-bold flex items-center gap-1.5">
                   AI Edit
                   {mode === 'streaming' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#9b7bf7] animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c4b5fd] animate-pulse" />
                   )}
                 </p>
-                <div className="text-[13px] text-[#93c5fd] leading-relaxed whitespace-pre-wrap bg-[#93c5fd08] rounded-lg px-3 py-2 border-l-2 border-[#93c5fd40]">
-                  {streamingText || <span className="text-[#6b7a8d] italic">Generating...</span>}
+                <div className="text-[13px] text-[#c4b5fd] leading-relaxed whitespace-pre-wrap bg-[#c4b5fd08] rounded-lg px-3 py-2 border-l-2 border-[#c4b5fd40]">
+                  {streamingText ? (
+                    <span className={mode === 'streaming' ? 'ai-streaming-cursor' : ''}>{streamingText}</span>
+                  ) : (
+                    <span className="text-[#6b7a8d] italic">Generating...</span>
+                  )}
                 </div>
               </div>
             </div>
