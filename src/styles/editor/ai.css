@@ -1,7 +1,7 @@
 /* ===== AI Generated Block Highlight ===== */
 
 .ai-generated-highlight {
-  background: rgba(167, 139, 250, 0.40) !important;
+  background: rgba(167, 139, 250, 0.15) !important;
   border-left: 3px solid rgba(167, 139, 250, 0.7) !important;
   border-radius: 0 6px 6px 0;
   margin-left: -3px;
@@ -19,14 +19,27 @@
   border-radius: 4px;
 }
 
-/* Smooth text appearance during AI streaming */
+/* Smooth text appearance during AI streaming — word-level fade in effect */
 .ai-generated-highlight .bn-inline-content {
-  animation: aiTextFadeIn 0.25s ease-out;
+  animation: aiTextFadeIn 0.4s ease-out;
+}
+
+.ai-generated-highlight .bn-inline-content span,
+.ai-generated-highlight .bn-inline-content a,
+.ai-generated-highlight .bn-inline-content code,
+.ai-generated-highlight .bn-inline-content strong,
+.ai-generated-highlight .bn-inline-content em {
+  animation: aiWordFadeIn 0.35s ease-out both;
 }
 
 @keyframes aiTextFadeIn {
-  from { opacity: 0.4; }
-  to { opacity: 1; }
+  from { opacity: 0.3; filter: blur(2px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
+@keyframes aiWordFadeIn {
+  from { opacity: 0; transform: translateY(4px); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
 /* Force lavender color on ALL text inside AI blocks — use broad selectors to beat inline styles */
@@ -34,8 +47,17 @@
 .ai-generated-highlight *,
 [data-node-type="blockContainer"].ai-generated-highlight *,
 .ai-generated-highlight .bn-inline-content,
-.ai-generated-highlight .bn-inline-content * {
+.ai-generated-highlight .bn-inline-content *,
+.ai-generated-highlight [data-content-type] *,
+.ai-generated-highlight p,
+.ai-generated-highlight span,
+.ai-generated-highlight strong,
+.ai-generated-highlight em,
+.ai-generated-highlight code,
+.ai-generated-highlight a,
+.ai-generated-highlight li {
   color: #c4b5fd !important;
+  caret-color: #c4b5fd !important;
 }
 
 /* ===== AI Edit Diff Styles (lavender theme) ===== */

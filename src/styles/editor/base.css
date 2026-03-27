@@ -206,6 +206,9 @@
   border: 1px solid #2a2e3a;
   border-radius: 8px;
   margin-right: 16px;
+  height: 28px;
+  align-items: center;
+  align-self: flex-start;
 }
 
 .blog-editor-wrapper .bn-drag-handle {

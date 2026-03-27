@@ -221,7 +221,7 @@ function isCurrentBlockEmpty(editor) {
 
 // ── BlogEditor ──
 
-const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, onReady }, ref) {
+const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, onReady, onTitleChange }, ref) {
   const [showMentionMenu, setShowMentionMenu] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionPos, setMentionPos] = useState({ top: 0, left: 0 });
@@ -337,8 +337,8 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         range.collapse(true);
         const rect = range.getBoundingClientRect();
         if (rect.width !== undefined && rect.height > 0) {
-          star.style.left = (rect.left + 4) + 'px';
-          star.style.top = (rect.top - 5) + 'px';
+          star.style.left = (rect.right) + 'px';
+          star.style.top = (rect.top + rect.height / 2 - 15) + 'px';
           star.style.display = 'block';
           return;
         }
@@ -612,6 +612,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const handleAISubmit = useCallback(async (userPrompt) => {
     setShowAIMenu(false);
     setShowAIActions(false);
+
+    // Detect title-related prompts
+    const titleKeywords = /\b(title|heading|name.*blog|blog.*name)\b/i;
+    const isTitlePrompt = titleKeywords.test(userPrompt);
+
     const cursor = editor.getTextCursorPosition();
     if (!cursor?.block) return;
 
@@ -725,6 +730,27 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           } catch { /* block may have been removed */ }
         },
         onDone: (fullText) => {
+          // Check for title directive
+          if (fullText.trim().startsWith('TITLE:')) {
+            const newTitle = fullText.trim().replace(/^TITLE:\s*/, '').trim();
+            if (onTitleChange && newTitle) {
+              onTitleChange(newTitle);
+            }
+            // Remove placeholder block
+            const oldIds = getAiBlockIds();
+            try { if (oldIds.length > 0) editor.removeBlocks(oldIds); } catch {}
+            setAiGenerating(false);
+            setAiPhase('idle');
+            setAiGeneratingBlockId(null);
+            aiAbortRef.current = null;
+            hideSparkle();
+            aiBlockIdsRef.current = new Set();
+            aiBlockCountRef.current = 0;
+            setAiBlockIds(new Set());
+            setShowAIActions(false);
+            return;
+          }
+
           // Final parse into proper blocks
           const newBlocks = parseMarkdownToBlocks(fullText);
           const oldIds = getAiBlockIds();
