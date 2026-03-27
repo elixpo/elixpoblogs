@@ -220,6 +220,9 @@ function isCurrentBlockEmpty(editor) {
 const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, ref) {
   const [showAIMenu, setShowAIMenu] = useState(false);
   const [aiMenuPos, setAiMenuPos] = useState({ top: 0, left: 0 });
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiGeneratingBlockId, setAiGeneratingBlockId] = useState(null);
+  const aiAbortRef = useRef(null);
   const wrapperRef = useRef(null);
 
   const editor = useCreateBlockNote({
@@ -300,13 +303,22 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
     }
   }, [editor]);
 
+  const handleAIStop = useCallback(() => {
+    if (aiAbortRef.current) {
+      aiAbortRef.current.abort();
+      aiAbortRef.current = null;
+    }
+    setAiGenerating(false);
+    setAiGeneratingBlockId(null);
+  }, []);
+
   const handleAISubmit = useCallback(async (userPrompt) => {
     setShowAIMenu(false);
     const cursor = editor.getTextCursorPosition();
     if (!cursor?.block) return;
 
-    // Insert a placeholder block
-    const placeholderBlock = { type: 'paragraph', content: [{ type: 'text', text: 'Generating...', styles: { italic: true } }] };
+    // Insert an empty block — no "Generating..." text
+    const placeholderBlock = { type: 'paragraph', content: [] };
     editor.insertBlocks([placeholderBlock], cursor.block, 'after');
 
     // Get the inserted block (it's the one after cursor)
@@ -315,6 +327,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
     const insertedBlock = doc[cursorIdx + 1];
     if (!insertedBlock) return;
 
+    setAiGenerating(true);
+    setAiGeneratingBlockId(insertedBlock.id);
+    const abortController = new AbortController();
+    aiAbortRef.current = abortController;
+
     try {
       const { streamAI } = await import('../../ai/stream');
       const { WRITE_SYSTEM_PROMPT } = await import('../../ai/prompts');
@@ -322,8 +339,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
       await streamAI({
         systemPrompt: WRITE_SYSTEM_PROMPT,
         userPrompt,
+        signal: abortController.signal,
         onChunk: (chunk, fullText) => {
-          // Update the block content in real-time
+          // Update the block in real-time — text scales naturally
           try {
             editor.updateBlock(insertedBlock.id, {
               content: [{ type: 'text', text: fullText }],
@@ -331,10 +349,12 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
           } catch { /* block may have been removed */ }
         },
         onDone: (fullText) => {
+          setAiGenerating(false);
+          setAiGeneratingBlockId(null);
+          aiAbortRef.current = null;
           // Parse the result into proper blocks
           const lines = fullText.split('\n').filter((l) => l.trim());
           if (lines.length <= 1) {
-            // Single block — just update the text
             try {
               editor.updateBlock(insertedBlock.id, {
                 content: [{ type: 'text', text: fullText.trim() }],
@@ -342,7 +362,6 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
             } catch {}
             return;
           }
-          // Multiple blocks — replace the placeholder
           const newBlocks = lines.map((line) => {
             const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
             if (headingMatch) {
@@ -358,6 +377,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
           } catch {}
         },
         onError: (err) => {
+          setAiGenerating(false);
+          setAiGeneratingBlockId(null);
+          aiAbortRef.current = null;
           try {
             editor.updateBlock(insertedBlock.id, {
               content: [{ type: 'text', text: `Error: ${err.message}` }],
@@ -366,6 +388,10 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
         },
       });
     } catch (err) {
+      setAiGenerating(false);
+      setAiGeneratingBlockId(null);
+      aiAbortRef.current = null;
+      if (err.name === 'AbortError') return;
       try {
         editor.updateBlock(insertedBlock.id, {
           content: [{ type: 'text', text: `Error: ${err.message}` }],
@@ -394,6 +420,22 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
           onSubmit={handleAISubmit}
           onClose={() => setShowAIMenu(false)}
         />
+      )}
+
+      {/* AI generating stop button */}
+      {aiGenerating && (
+        <div className="ai-generating-bar">
+          <div className="ai-generating-bar-inner">
+            <div className="ai-generating-pulse" />
+            <span className="ai-generating-label">AI is writing...</span>
+            <button className="ai-stop-btn" onClick={handleAIStop}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                <rect x="1" y="1" width="10" height="10" rx="2" />
+              </svg>
+              Stop
+            </button>
+          </div>
+        </div>
       )}
 
       {/* AI selection toolbar — appears on text selection */}
