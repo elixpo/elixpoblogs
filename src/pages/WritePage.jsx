@@ -458,7 +458,8 @@ export default function WritePage({ slugid }) {
                 </div>
               ) : (
                 <>
-                  {coverPreview && (
+                  {/* Cover banner */}
+                  {coverPreview ? (
                     <div className="relative mb-6 rounded-xl overflow-hidden group" style={{ aspectRatio: '3/1' }}>
                       <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
@@ -466,7 +467,64 @@ export default function WritePage({ slugid }) {
                         <button onClick={removeCover} className="px-3 py-1.5 bg-red-500/60 backdrop-blur rounded-lg text-xs hover:bg-red-500/80 transition-colors">Remove</button>
                       </div>
                     </div>
-                  )}
+                  ) : showCoverModal ? (
+                    /* Blurred RGB gradient placeholder with upload options */
+                    <div className="relative mb-6 rounded-xl overflow-hidden" style={{ aspectRatio: '3/1' }}>
+                      <div className="absolute inset-0 cover-gradient-blur" />
+                      <div className="absolute inset-0 flex items-center justify-center gap-6 z-10">
+                        <label className="flex flex-col items-center gap-2 cursor-pointer group/upload">
+                          <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover/upload:bg-white/20 transition-colors">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                              <polyline points="17 8 12 3 7 8" />
+                              <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                          </div>
+                          <span className="text-xs text-white/70 font-medium">From device</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setCoverImage(file);
+                                setCoverPreview(URL.createObjectURL(file));
+                                setShowCoverModal(false);
+                              }
+                            }}
+                          />
+                        </label>
+                        <button
+                          onClick={() => {
+                            const url = prompt('Paste image URL:');
+                            if (url?.trim()) {
+                              setCoverPreview(url.trim());
+                              setShowCoverModal(false);
+                            }
+                          }}
+                          className="flex flex-col items-center gap-2 group/url"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover/url:bg-white/20 transition-colors">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                              <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                            </svg>
+                          </div>
+                          <span className="text-xs text-white/70 font-medium">From URL</span>
+                        </button>
+                      </div>
+                      {/* Close button */}
+                      <button
+                        onClick={() => setShowCoverModal(false)}
+                        className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-black/30 backdrop-blur flex items-center justify-center text-white/60 hover:text-white transition-colors"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : null}
 
                   {pageEmoji && (
                     <div className="relative group w-fit mb-2">
@@ -475,7 +533,7 @@ export default function WritePage({ slugid }) {
                     </div>
                   )}
 
-                  {(!coverPreview || !pageEmoji) && (
+                  {(!coverPreview || !pageEmoji) && !showCoverModal && (
                     <div className="flex items-center gap-3 mb-4">
                       {!coverPreview && (
                         <button onClick={() => setShowCoverModal(true)} className="inline-flex items-center gap-1.5 text-[#7c8a9e] hover:text-[#9b7bf7] transition-colors text-xs">
@@ -498,10 +556,6 @@ export default function WritePage({ slugid }) {
                       onRemove={() => { setPageEmoji(null); setShowEmojiPicker(false); }}
                       onClose={() => setShowEmojiPicker(false)}
                     />
-                  )}
-
-                  {showCoverModal && (
-                    <CoverUploadModal onSelect={handleCoverSelect} onClose={() => setShowCoverModal(false)} />
                   )}
 
                   <textarea
@@ -554,6 +608,11 @@ export default function WritePage({ slugid }) {
           )}
         </div>
       </main>
+
+      {/* Publish Side Panel backdrop */}
+      {showPublishPanel && (
+        <div className="fixed inset-0 z-40" onClick={() => setShowPublishPanel(false)} />
+      )}
 
       {/* Publish Side Panel */}
       <div
