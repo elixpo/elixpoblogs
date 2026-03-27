@@ -469,6 +469,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
       aiAbortRef.current = null;
     }
     setAiGenerating(false);
+      setAiPhase('idle');
     setAiGeneratingBlockId(null);
 
     // Scroll to the AI-generated content and show keep/discard
@@ -684,6 +685,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
           aiBlockIdsRef.current = finalIds;
           setAiBlockIds(finalIds);
           setAiGenerating(false);
+      setAiPhase('idle');
           setAiGeneratingBlockId(null);
           aiAbortRef.current = null;
 
@@ -695,6 +697,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
         },
         onError: (err) => {
           setAiGenerating(false);
+      setAiPhase('idle');
           setAiGeneratingBlockId(null);
           aiAbortRef.current = null;
           hideSparkle();
@@ -710,6 +713,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
       });
     } catch (err) {
       setAiGenerating(false);
+      setAiPhase('idle');
       setAiGeneratingBlockId(null);
       aiAbortRef.current = null;
       if (err.name === 'AbortError') return;
