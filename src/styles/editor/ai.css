@@ -6,6 +6,12 @@
   border-radius: 0 6px 6px 0;
   margin-left: -3px;
   transition: background 0.3s ease, border-color 0.3s ease;
+  animation: aiBlockFadeIn 0.3s ease-out;
+}
+
+@keyframes aiBlockFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .ai-generated-highlight .bn-block-content {

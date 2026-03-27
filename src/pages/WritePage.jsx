@@ -7,6 +7,7 @@ import Link from 'next/link';
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
 import '../styles/editor/editor.css';
+import { compressCoverImage } from '../utils/compressImage';
 
 const BlockNoteEditor = dynamic(
   () => import('../components/Editor/BlogEditor'),
@@ -579,9 +580,11 @@ export default function WritePage({ slugid }) {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  setCoverImage(file);
-                                  setCoverPreview(URL.createObjectURL(file));
-                                  setShowCoverModal(false);
+                                  compressCoverImage(file).then(({ blob, url }) => {
+                                    setCoverImage(blob);
+                                    setCoverPreview(url);
+                                    setShowCoverModal(false);
+                                  });
                                 }
                               }}
                             />

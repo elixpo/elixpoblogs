@@ -347,7 +347,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
   }, []);
 
   const hideSparkle = useCallback(() => {
-    if (sparkleRef.current) sparkleRef.current.style.display = 'none';
+    if (sparkleRef.current) {
+      sparkleRef.current.style.display = 'none';
+      sparkleRef.current.style.left = '-100px';
+      sparkleRef.current.style.top = '-100px';
+    }
   }, []);
 
   const getItems = useMemo(
@@ -772,7 +776,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
             <img src="/base-logo.png" alt="Elixpo" className="elixpo-typing-avatar" />
             <div className="elixpo-typing-text">
               <span className="elixpo-typing-name">Elixpo</span>
-              <span className="elixpo-typing-status">is typing<span className="elixpo-typing-dots"><span /><span /><span /></span></span>
+              <span className="elixpo-typing-status">{aiPhase === 'thinking' ? 'is thinking' : 'is typing'}<span className="elixpo-typing-dots"><span /><span /><span /></span></span>
             </div>
             <button className="elixpo-stop-btn" onClick={handleAIStop}>
               <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
