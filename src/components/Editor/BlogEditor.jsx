@@ -338,7 +338,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         const rect = range.getBoundingClientRect();
         if (rect.width !== undefined && rect.height > 0) {
           star.style.left = (rect.right) + 'px';
-          star.style.top = (rect.top + rect.height / 2 - 15) + 'px';
+          star.style.top = (rect.top + rect.height / 2 - 10) + 'px';
           star.style.display = 'block';
           return;
         }
@@ -361,6 +361,17 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       sparkleRef.current.style.top = '-100px';
     }
   }, []);
+
+  // Reposition sparkle on scroll so it stays with the text
+  useEffect(() => {
+    function onScroll() {
+      if (sparkleRef.current && sparkleRef.current.style.display === 'block') {
+        moveSparkleToLastAiBlock();
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [moveSparkleToLastAiBlock]);
 
   const getItems = useMemo(
     () => async (query) => filterItems(getCustomSlashMenuItems(editor), query),
@@ -497,34 +508,65 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     }
   }, []);
 
+  // Force lavender on all children of a block element
+  const forceLavenderOnBlock = useCallback((el) => {
+    el.style.setProperty('color', '#c4b5fd', 'important');
+    el.querySelectorAll('*').forEach((child) => {
+      child.style.setProperty('color', '#c4b5fd', 'important');
+    });
+  }, []);
+
+  // MutationObserver to re-apply lavender when BlockNote re-renders AI blocks
+  const aiObserverRef = useRef(null);
+
+  const startAiObserver = useCallback(() => {
+    if (aiObserverRef.current) aiObserverRef.current.disconnect();
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const observer = new MutationObserver((mutations) => {
+      // Pause observer while we apply styles to avoid infinite loop
+      observer.disconnect();
+      wrapper.querySelectorAll('.ai-generated-highlight').forEach(forceLavenderOnBlock);
+      // Re-observe after styles are applied
+      observer.observe(wrapper, { childList: true, subtree: true, characterData: true });
+    });
+    observer.observe(wrapper, { childList: true, subtree: true, characterData: true });
+    aiObserverRef.current = observer;
+  }, [forceLavenderOnBlock]);
+
+  const stopAiObserver = useCallback(() => {
+    if (aiObserverRef.current) {
+      aiObserverRef.current.disconnect();
+      aiObserverRef.current = null;
+    }
+  }, []);
+
   // Highlight AI blocks in the DOM with lavender class + position sparkle
   const highlightAiBlocks = useCallback((ids, showCursor = true) => {
     // Remove old highlights and restore inline colors
     wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
       el.classList.remove('ai-generated-highlight');
-      el.querySelectorAll('[data-ai-color-override]').forEach((child) => {
+      el.style.removeProperty('color');
+      el.querySelectorAll('*').forEach((child) => {
         child.style.removeProperty('color');
-        child.removeAttribute('data-ai-color-override');
       });
     });
     for (const id of ids) {
       const el = wrapperRef.current?.querySelector(`[data-id="${id}"]`);
       if (el) {
         el.classList.add('ai-generated-highlight');
-        // Force lavender on all elements inside AI blocks
-        el.style.setProperty('color', '#c4b5fd', 'important');
-        el.querySelectorAll('*').forEach((child) => {
-          child.style.setProperty('color', '#c4b5fd', 'important');
-          child.setAttribute('data-ai-color-override', 'true');
-        });
+        forceLavenderOnBlock(el);
       }
     }
+    // Start observer to keep colors enforced during streaming re-renders
+    if (ids.length > 0) startAiObserver();
     if (showCursor) {
       moveSparkleToLastAiBlock();
     } else {
       hideSparkle();
     }
-  }, [moveSparkleToLastAiBlock, hideSparkle]);
+  }, [moveSparkleToLastAiBlock, hideSparkle, forceLavenderOnBlock, startAiObserver]);
 
   // Get current AI block IDs by position relative to anchor
   const getAiBlockIds = useCallback(() => {
@@ -538,12 +580,13 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   }, [editor]);
 
   const handleAIKeep = useCallback(() => {
-    // Remove highlights, restore inline colors, hide sparkle, keep the text
+    // Stop observer, remove highlights, restore white color, hide sparkle
+    stopAiObserver();
     wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
       el.classList.remove('ai-generated-highlight');
-      el.querySelectorAll('[data-ai-color-override]').forEach((child) => {
+      el.style.removeProperty('color');
+      el.querySelectorAll('*').forEach((child) => {
         child.style.removeProperty('color');
-        child.removeAttribute('data-ai-color-override');
       });
     });
     hideSparkle();
@@ -552,10 +595,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     aiBlockCountRef.current = 0;
     aiAnchorIdRef.current = null;
     setShowAIActions(false);
-  }, []);
+  }, [stopAiObserver]);
 
   const handleAIDiscard = useCallback(() => {
-    // Hide sparkle and remove AI-generated blocks
+    // Stop observer, hide sparkle and remove AI-generated blocks
+    stopAiObserver();
     hideSparkle();
     const ids = getAiBlockIds();
     if (ids.length > 0) {
@@ -566,7 +610,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     aiBlockCountRef.current = 0;
     aiAnchorIdRef.current = null;
     setShowAIActions(false);
-  }, [editor, getAiBlockIds]);
+  }, [editor, getAiBlockIds, stopAiObserver]);
 
   // Click on AI content to show keep/discard
   useEffect(() => {
@@ -688,20 +732,30 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         signal: abortController.signal,
         onChunk: (chunk, fullText) => {
           setAiPhase('typing');
-          const newBlocks = parseMarkdownToBlocks(fullText);
+
+          // Extract title if first line is TITLE:
+          let contentText = fullText;
+          if (contentText.trim().startsWith('TITLE:')) {
+            const lines = contentText.split('\n');
+            const titleLine = lines.shift();
+            const newTitle = titleLine.replace(/^TITLE:\s*/, '').trim();
+            if (onTitleChange && newTitle) onTitleChange(newTitle);
+            contentText = lines.join('\n').trim();
+            if (!contentText) return; // Only title so far, no content yet
+          }
+
+          const newBlocks = parseMarkdownToBlocks(contentText);
           const oldIds = getAiBlockIds();
 
           if (oldIds.length === 0) return;
 
           try {
             if (newBlocks.length !== aiBlockCountRef.current) {
-              // Block structure changed — replace all
               editor.replaceBlocks(oldIds, newBlocks);
               aiBlockCountRef.current = newBlocks.length;
               currentIds = getAiBlockIds();
               aiBlockIdsRef.current = new Set(currentIds);
             } else {
-              // Same structure — just update the last block text
               const lastId = oldIds[oldIds.length - 1];
               const lastBlock = newBlocks[newBlocks.length - 1];
               editor.updateBlock(lastId, {
@@ -712,33 +766,40 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
               currentIds = oldIds;
               aiBlockIdsRef.current = new Set(currentIds);
             }
+            // Use double rAF to ensure BlockNote has finished re-rendering
             requestAnimationFrame(() => {
-              highlightAiBlocks(currentIds);
-              // Auto-scroll to follow the last AI block with padding below
-              const lastId = currentIds[currentIds.length - 1];
-              const lastEl = wrapperRef.current?.querySelector(`[data-id="${lastId}"]`);
-              if (lastEl) {
-                const rect = lastEl.getBoundingClientRect();
-                const viewportH = window.innerHeight;
-                // If the block is near or below the bottom, scroll so it's at ~60% of viewport
-                if (rect.bottom > viewportH * 0.7) {
-                  const scrollTarget = window.scrollY + rect.top - viewportH * 0.5;
-                  window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+              requestAnimationFrame(() => {
+                highlightAiBlocks(currentIds);
+                const lastId = currentIds[currentIds.length - 1];
+                const lastEl = wrapperRef.current?.querySelector(`[data-id="${lastId}"]`);
+                if (lastEl) {
+                  const rect = lastEl.getBoundingClientRect();
+                  const viewportH = window.innerHeight;
+                  if (rect.bottom > viewportH * 0.7) {
+                    const scrollTarget = window.scrollY + rect.top - viewportH * 0.5;
+                    window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+                  }
                 }
-              }
+              });
             });
           } catch { /* block may have been removed */ }
         },
         onDone: (fullText) => {
-          // Check for title directive
-          if (fullText.trim().startsWith('TITLE:')) {
-            const newTitle = fullText.trim().replace(/^TITLE:\s*/, '').trim();
-            if (onTitleChange && newTitle) {
-              onTitleChange(newTitle);
-            }
-            // Remove placeholder block
+          // Extract title if first line is TITLE:
+          let contentText = fullText;
+          if (contentText.trim().startsWith('TITLE:')) {
+            const lines = contentText.trim().split('\n');
+            const titleLine = lines.shift();
+            const newTitle = titleLine.replace(/^TITLE:\s*/, '').trim();
+            if (onTitleChange && newTitle) onTitleChange(newTitle);
+            contentText = lines.join('\n').trim();
+          }
+
+          // Title-only response — no content to insert
+          if (!contentText) {
             const oldIds = getAiBlockIds();
             try { if (oldIds.length > 0) editor.removeBlocks(oldIds); } catch {}
+            stopAiObserver();
             setAiGenerating(false);
             setAiPhase('idle');
             setAiGeneratingBlockId(null);
@@ -752,7 +813,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           }
 
           // Final parse into proper blocks
-          const newBlocks = parseMarkdownToBlocks(fullText);
+          const newBlocks = parseMarkdownToBlocks(contentText);
           const oldIds = getAiBlockIds();
 
           try {

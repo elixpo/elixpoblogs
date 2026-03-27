@@ -63,6 +63,7 @@
   border: 1px solid #232d3f;
   border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
 }
 
 .blog-editor-wrapper .bn-toolbar button {
@@ -107,22 +108,6 @@
   color: #b69aff;
 }
 
-.ai-star-btn:hover::after {
-  content: 'Edit with AI';
-  position: absolute;
-  bottom: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  font-size: 11px;
-  color: #e0e0e0;
-  background: #0c1017;
-  border: 1px solid #232d3f;
-  border-radius: 6px;
-  padding: 3px 8px;
-  pointer-events: none;
-  z-index: 100;
-}
 
 /* ===== Toolbar Color/Highlight Buttons ===== */
 
