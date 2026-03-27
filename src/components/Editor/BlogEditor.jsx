@@ -294,16 +294,59 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
     requestAnimationFrame(patchCodeBlocks);
   }, [patchCodeBlocks]);
 
-  // DEBUG: show sparkle star at top-left of editor
+  // AI sparkle star — fixed position, follows the last AI block's text end
+  const sparkleRef = useRef(null);
+
   useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    wrapper.style.position = 'relative';
+    // Create sparkle once, keep hidden until AI starts
     const star = document.createElement('div');
     star.className = 'ai-glob-cursor';
-    star.style.cssText = 'position:absolute;top:10px;left:10px;z-index:9999;pointer-events:none;';
-    wrapper.appendChild(star);
-    return () => star.remove();
+    star.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;display:none;transition:left 0.15s ease-out,top 0.15s ease-out;';
+    document.body.appendChild(star);
+    sparkleRef.current = star;
+    return () => { star.remove(); sparkleRef.current = null; };
+  }, []);
+
+  const moveSparkleToLastAiBlock = useCallback(() => {
+    const star = sparkleRef.current;
+    if (!star) return;
+    const ids = aiBlockIdsRef.current;
+    if (!ids || ids.size === 0) { star.style.display = 'none'; return; }
+
+    const lastId = [...ids][ids.size - 1];
+    const blockEl = wrapperRef.current?.querySelector(`[data-id="${lastId}"]`);
+    if (!blockEl) { star.style.display = 'none'; return; }
+
+    // Find the last text node in the block to position at end of text
+    const inlineEl = blockEl.querySelector('.bn-inline-content') || blockEl.querySelector('p') || blockEl;
+    const range = document.createRange();
+    const textNodes = [];
+    const walker = document.createTreeWalker(inlineEl, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) textNodes.push(node);
+
+    if (textNodes.length > 0) {
+      const lastText = textNodes[textNodes.length - 1];
+      range.setStart(lastText, lastText.length);
+      range.setEnd(lastText, lastText.length);
+      const rect = range.getBoundingClientRect();
+      if (rect.top > 0) {
+        star.style.left = (rect.right + 4) + 'px';
+        star.style.top = (rect.top + rect.height / 2 - 15) + 'px';
+        star.style.display = 'block';
+        return;
+      }
+    }
+
+    // Fallback: position at end of block
+    const blockRect = inlineEl.getBoundingClientRect();
+    star.style.left = (blockRect.right + 4) + 'px';
+    star.style.top = (blockRect.top + blockRect.height / 2 - 15) + 'px';
+    star.style.display = 'block';
+  }, []);
+
+  const hideSparkle = useCallback(() => {
+    if (sparkleRef.current) sparkleRef.current.style.display = 'none';
   }, []);
 
   const getItems = useMemo(
@@ -439,31 +482,21 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
     }
   }, []);
 
-  // Highlight AI blocks in the DOM with lavender class + animated glob cursor
+  // Highlight AI blocks in the DOM with lavender class + position sparkle
   const highlightAiBlocks = useCallback((ids, showCursor = true) => {
-    // Clean up previous highlights and glob
     wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
       el.classList.remove('ai-generated-highlight');
     });
-    wrapperRef.current?.querySelectorAll('.ai-glob-cursor').forEach((el) => el.remove());
-
-    for (let i = 0; i < ids.length; i++) {
-      const el = wrapperRef.current?.querySelector(`[data-id="${ids[i]}"]`);
-      if (el) {
-        el.classList.add('ai-generated-highlight');
-        // Inject glob cursor at end of the last block's text
-        if (showCursor && i === ids.length - 1) {
-          const inlineEl = el.querySelector('.bn-inline-content') || el.querySelector('p') || el;
-          // Remove any existing glob in this element
-          inlineEl.querySelectorAll('.ai-glob-cursor').forEach((g) => g.remove());
-          const glob = document.createElement('span');
-          glob.className = 'ai-glob-cursor';
-          glob.setAttribute('contenteditable', 'false');
-          inlineEl.appendChild(glob);
-        }
-      }
+    for (const id of ids) {
+      const el = wrapperRef.current?.querySelector(`[data-id="${id}"]`);
+      if (el) el.classList.add('ai-generated-highlight');
     }
-  }, []);
+    if (showCursor) {
+      moveSparkleToLastAiBlock();
+    } else {
+      hideSparkle();
+    }
+  }, [moveSparkleToLastAiBlock, hideSparkle]);
 
   // Get current AI block IDs by position relative to anchor
   const getAiBlockIds = useCallback(() => {
@@ -477,11 +510,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
   }, [editor]);
 
   const handleAIKeep = useCallback(() => {
-    // Remove highlights and glob cursor, keep the text
+    // Remove highlights, hide sparkle, keep the text
     wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
       el.classList.remove('ai-generated-highlight');
     });
-    wrapperRef.current?.querySelectorAll('.ai-glob-cursor').forEach((el) => el.remove());
+    hideSparkle();
     setAiBlockIds(new Set());
     aiBlockIdsRef.current = new Set();
     aiBlockCountRef.current = 0;
@@ -490,8 +523,8 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
   }, []);
 
   const handleAIDiscard = useCallback(() => {
-    // Remove glob cursor and AI-generated blocks
-    wrapperRef.current?.querySelectorAll('.ai-glob-cursor').forEach((el) => el.remove());
+    // Hide sparkle and remove AI-generated blocks
+    hideSparkle();
     const ids = getAiBlockIds();
     if (ids.length > 0) {
       try { editor.removeBlocks(ids); } catch {}
@@ -661,6 +694,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
           setAiGenerating(false);
           setAiGeneratingBlockId(null);
           aiAbortRef.current = null;
+          hideSparkle();
           try {
             const ids = getAiBlockIds();
             if (ids.length > 0) editor.removeBlocks(ids);
@@ -676,6 +710,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
       setAiGeneratingBlockId(null);
       aiAbortRef.current = null;
       if (err.name === 'AbortError') return;
+      hideSparkle();
       try {
         const ids = getAiBlockIds();
         if (ids.length > 0) editor.removeBlocks(ids);
