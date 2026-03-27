@@ -52,33 +52,22 @@
   font-style: normal;
 }
 
-/* Reset browser default heading sizes inside BlockNote */
-.blog-editor-wrapper h1,
-.blog-editor-wrapper h2,
-.blog-editor-wrapper h3 {
-  font-size: 1em !important;
-  margin: 0 !important;
-}
-
-/* Headings — set size on the block wrapper so em doesn't compound */
+/* Headings — override BlockNote's --level custom property */
 .blog-editor-wrapper [data-content-type="heading"][data-level="1"] {
-  font-size: 1.85em !important;
+  --level: 1.75em !important;
   font-weight: 700 !important;
-  line-height: 1.3 !important;
   color: #e4e4e7;
 }
 
 .blog-editor-wrapper [data-content-type="heading"][data-level="2"] {
-  font-size: 1.35em !important;
+  --level: 1.35em !important;
   font-weight: 650 !important;
-  line-height: 1.35 !important;
   color: #e4e4e7;
 }
 
 .blog-editor-wrapper [data-content-type="heading"][data-level="3"] {
-  font-size: 1.15em !important;
+  --level: 1.15em !important;
   font-weight: 600 !important;
-  line-height: 1.4 !important;
   color: #e4e4e7;
 }
 

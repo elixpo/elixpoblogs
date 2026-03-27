@@ -394,7 +394,7 @@ export default function WritePage({ slugid }) {
           <HamburgerMenu
             onShareDraft={() => {}}
             onChangeCover={() => setShowCoverModal(true)}
-            onChangeTitle={() => document.querySelector('input[placeholder="Blog title..."]')?.focus()}
+            onChangeTitle={() => document.querySelector('textarea[placeholder="Blog title..."]')?.focus()}
             onChangeTopics={() => setShowPublishPanel(true)}
             onRevisionHistory={() => {}}
             onMoreSettings={() => setShowPublishPanel(true)}
@@ -504,15 +504,40 @@ export default function WritePage({ slugid }) {
                     <CoverUploadModal onSelect={handleCoverSelect} onClose={() => setShowCoverModal(false)} />
                   )}
 
-                  <input
-                    type="text"
+                  <textarea
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                     placeholder="Blog title..."
-                    className="w-full bg-transparent text-[2em] font-extrabold outline-none placeholder-[#4a5568] mb-1 leading-tight"
+                    className="w-full bg-transparent text-[2em] font-extrabold outline-none placeholder-[#4a5568] mb-1 leading-tight resize-none overflow-hidden"
+                    rows={1}
                   />
 
-                  <div className="min-h-[500px] mt-4">
+                  {/* Author bar — stacked avatars, name, read time, word count */}
+                  <div className="flex items-center gap-3 mt-3 mb-4">
+                    <div className="flex -space-x-2">
+                      {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-[#0e121b]" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-[#232d3f] border-2 border-[#0e121b] flex items-center justify-center text-[11px] font-bold text-[#9ca3af]">
+                          {(user?.display_name || user?.username || '?')[0].toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-[13px] text-[#6b7a8d]">
+                      <span className="text-[#9ca3af] font-medium">{user?.display_name || user?.username || 'Author'}</span>
+                      <span className="text-[#3a3f4f]">·</span>
+                      <span>{Math.max(1, Math.ceil(wordCount / 200))} min read</span>
+                      <span className="text-[#3a3f4f]">·</span>
+                      <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
+                    </div>
+                  </div>
+
+                  <div className="min-h-[500px]">
                     <BlockNoteEditor ref={editorRef} onChange={handleEditorChange} initialContent={editorContent} />
                   </div>
                 </>
