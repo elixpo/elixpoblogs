@@ -260,6 +260,42 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
     [editor]
   );
 
+  // Disable spellcheck on code blocks + inject copy buttons
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const observer = new MutationObserver(() => {
+      wrapper.querySelectorAll('[data-content-type="codeBlock"]').forEach((block) => {
+        // Disable spellcheck
+        const editable = block.querySelector('[contenteditable]');
+        if (editable && editable.getAttribute('spellcheck') !== 'false') {
+          editable.setAttribute('spellcheck', 'false');
+        }
+        // Inject copy button if not present
+        if (!block.querySelector('.code-copy-btn')) {
+          const btn = document.createElement('button');
+          btn.className = 'code-copy-btn';
+          btn.title = 'Copy code';
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+          btn.onclick = () => {
+            const code = block.querySelector('[contenteditable]')?.textContent || '';
+            navigator.clipboard.writeText(code);
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+            setTimeout(() => {
+              btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+            }, 1500);
+          };
+          block.style.position = 'relative';
+          block.appendChild(btn);
+        }
+      });
+    });
+
+    observer.observe(wrapper, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   // Space trigger for AI menu on empty blocks
   useEffect(() => {
     function handleKeyDown(e) {
@@ -334,16 +370,16 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
     }
   }, []);
 
-  // Highlight AI blocks in the DOM with lavender class
-  const highlightAiBlocks = useCallback((ids) => {
-    wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
-      el.classList.remove('ai-generated-highlight');
+  // Highlight AI blocks in the DOM with lavender class + optional typing cursor on last block
+  const highlightAiBlocks = useCallback((ids, showCursor = true) => {
+    wrapperRef.current?.querySelectorAll('.ai-generated-highlight, .ai-typing-cursor').forEach((el) => {
+      el.classList.remove('ai-generated-highlight', 'ai-typing-cursor');
     });
-    for (const id of ids) {
-      // BlockNote wraps blocks in [data-id] on the outer container
-      const el = wrapperRef.current?.querySelector(`[data-id="${id}"]`);
+    for (let i = 0; i < ids.length; i++) {
+      const el = wrapperRef.current?.querySelector(`[data-id="${ids[i]}"]`);
       if (el) {
         el.classList.add('ai-generated-highlight');
+        if (showCursor && i === ids.length - 1) el.classList.add('ai-typing-cursor');
       }
     }
   }, []);
@@ -471,7 +507,13 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
               currentIds = oldIds;
               aiBlockIdsRef.current = new Set(currentIds);
             }
-            requestAnimationFrame(() => highlightAiBlocks(currentIds));
+            requestAnimationFrame(() => {
+              highlightAiBlocks(currentIds);
+              // Auto-scroll to follow AI typing
+              const lastId = currentIds[currentIds.length - 1];
+              const lastEl = wrapperRef.current?.querySelector(`[data-id="${lastId}"]`);
+              if (lastEl) lastEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
           } catch { /* block may have been removed */ }
         },
         onDone: (fullText) => {
@@ -494,11 +536,10 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
           setAiGeneratingBlockId(null);
           aiAbortRef.current = null;
 
-          // Highlight and scroll to the content
+          // Highlight without cursor and show keep/discard
+          setShowAIActions(true);
           requestAnimationFrame(() => {
-            highlightAiBlocks(currentIds);
-            const firstEl = wrapperRef.current?.querySelector(`[data-id="${currentIds[0]}"]`);
-            if (firstEl) firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            highlightAiBlocks(currentIds, false);
           });
         },
         onError: (err) => {
@@ -572,28 +613,27 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
         </div>
       )}
 
-      {/* Inline keep/discard actions for AI content */}
+      {/* Keep/Discard actions — fixed bottom bar after AI done */}
       {showAIActions && !aiGenerating && aiBlockIds.size > 0 && (
-        <div
-          className="ai-inline-actions"
-          style={{
-            position: 'absolute',
-            top: aiActionsPos.top,
-            left: aiActionsPos.left,
-            transform: 'translateX(-50%)',
-            zIndex: 100,
-          }}
-        >
-          <button className="ai-action-keep" onClick={handleAIKeep} title="Keep AI text">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </button>
-          <button className="ai-action-discard" onClick={handleAIDiscard} title="Discard AI text">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+        <div className="elixpo-done-bar">
+          <div className="elixpo-done-bar-inner">
+            <img src="/base-logo.png" alt="Elixpo" className="elixpo-typing-avatar" />
+            <span className="elixpo-done-label">Elixpo finished writing</span>
+            <div className="elixpo-done-actions">
+              <button className="elixpo-done-keep" onClick={handleAIKeep} title="Keep">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Keep
+              </button>
+              <button className="elixpo-done-discard" onClick={handleAIDiscard} title="Discard">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+                Undo
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
