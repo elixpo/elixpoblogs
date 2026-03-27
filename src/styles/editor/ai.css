@@ -79,14 +79,13 @@
 /* ===== AI Sparkle Star Cursor (inline, follows text) ===== */
 
 .ai-glob-cursor {
-  display: inline-block !important;
-  position: relative !important;
-  width: 30px !important;
-  height: 30px !important;
-  margin-left: 4px !important;
-  vertical-align: middle !important;
-  pointer-events: none !important;
-  z-index: 50 !important;
+  display: none;
+  position: fixed;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+  z-index: 9999;
+  transition: left 0.15s ease-out, top 0.15s ease-out;
 }
 
 /* Main sparkle star — 4-point star shape */

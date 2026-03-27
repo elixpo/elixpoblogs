@@ -305,7 +305,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     // Create sparkle once, keep hidden until AI starts
     const star = document.createElement('div');
     star.className = 'ai-glob-cursor';
-    star.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;display:none;transition:left 0.15s ease-out,top 0.15s ease-out;';
+    star.style.cssText = '';
     document.body.appendChild(star);
     sparkleRef.current = star;
     return () => { star.remove(); sparkleRef.current = null; };
@@ -707,15 +707,10 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
             }
             requestAnimationFrame(() => {
               highlightAiBlocks(currentIds);
-              // Auto-scroll to follow the glob cursor
-              const globEl = wrapperRef.current?.querySelector('.ai-glob-cursor');
-              if (globEl) {
-                globEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              } else {
-                const lastId = currentIds[currentIds.length - 1];
-                const lastEl = wrapperRef.current?.querySelector(`[data-id="${lastId}"]`);
-                if (lastEl) lastEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              }
+              // Auto-scroll to follow the last AI block
+              const lastId = currentIds[currentIds.length - 1];
+              const lastEl = wrapperRef.current?.querySelector(`[data-id="${lastId}"]`);
+              if (lastEl) lastEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
           } catch { /* block may have been removed */ }
         },
