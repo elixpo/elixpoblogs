@@ -708,10 +708,18 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
             }
             requestAnimationFrame(() => {
               highlightAiBlocks(currentIds);
-              // Auto-scroll to follow the last AI block
+              // Auto-scroll to follow the last AI block with padding below
               const lastId = currentIds[currentIds.length - 1];
               const lastEl = wrapperRef.current?.querySelector(`[data-id="${lastId}"]`);
-              if (lastEl) lastEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              if (lastEl) {
+                const rect = lastEl.getBoundingClientRect();
+                const viewportH = window.innerHeight;
+                // If the block is near or below the bottom, scroll so it's at ~60% of viewport
+                if (rect.bottom > viewportH * 0.7) {
+                  const scrollTarget = window.scrollY + rect.top - viewportH * 0.5;
+                  window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+                }
+              }
             });
           } catch { /* block may have been removed */ }
         },

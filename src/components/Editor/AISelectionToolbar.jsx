@@ -38,6 +38,115 @@ export default function AISelectionToolbar({ editor }) {
 
       injectedRef.current = true;
 
+      // --- Text Color button ---
+      const colorSep = document.createElement('div');
+      colorSep.className = 'ai-toolbar-sep';
+
+      const colorBtn = document.createElement('button');
+      colorBtn.className = 'toolbar-color-btn';
+      colorBtn.title = 'Text Color';
+      colorBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16l5-12 5 12"/><path d="M9.5 11h5"/></svg><span class="toolbar-color-indicator" style="background:#e0e0e0"></span>';
+
+      const colorPalette = [
+        { label: 'Default', value: 'default' },
+        { label: 'White', value: '#ffffff' },
+        { label: 'Gray', value: '#9ca3af' },
+        { label: 'Red', value: '#f87171' },
+        { label: 'Orange', value: '#fb923c' },
+        { label: 'Yellow', value: '#fbbf24' },
+        { label: 'Green', value: '#4ade80' },
+        { label: 'Blue', value: '#60a5fa' },
+        { label: 'Purple', value: '#a78bfa' },
+        { label: 'Pink', value: '#f472b6' },
+      ];
+
+      colorBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Remove any existing popover
+        document.querySelectorAll('.toolbar-color-popover').forEach(el => el.remove());
+        const pop = document.createElement('div');
+        pop.className = 'toolbar-color-popover';
+        const rect = colorBtn.getBoundingClientRect();
+        pop.style.cssText = `position:fixed;top:${rect.bottom + 6}px;left:${rect.left}px;z-index:10000;`;
+        pop.innerHTML = '<div class="toolbar-color-popover-label">Text Color</div>' +
+          '<div class="toolbar-color-grid">' +
+          colorPalette.map(c =>
+            `<button class="toolbar-color-swatch" data-color="${c.value}" title="${c.label}" style="background:${c.value === 'default' ? 'transparent' : c.value};${c.value === 'default' ? 'border:1.5px dashed #6b7a8d;' : ''}"></button>`
+          ).join('') + '</div>';
+        pop.addEventListener('mousedown', (ev) => {
+          const swatch = ev.target.closest('.toolbar-color-swatch');
+          if (!swatch) return;
+          ev.preventDefault();
+          const color = swatch.dataset.color;
+          try {
+            if (color === 'default') {
+              editor.removeStyles({ textColor: '' });
+            } else {
+              editor.addStyles({ textColor: color });
+            }
+          } catch {}
+          pop.remove();
+        });
+        document.body.appendChild(pop);
+        setTimeout(() => {
+          const dismiss = (ev) => { if (!pop.contains(ev.target)) { pop.remove(); document.removeEventListener('mousedown', dismiss); } };
+          document.addEventListener('mousedown', dismiss);
+        }, 0);
+      };
+
+      // --- Highlight button ---
+      const highlightBtn = document.createElement('button');
+      highlightBtn.className = 'toolbar-highlight-btn';
+      highlightBtn.title = 'Highlight Color';
+      highlightBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span class="toolbar-color-indicator" style="background:#fbbf24"></span>';
+
+      const highlightPalette = [
+        { label: 'None', value: 'default' },
+        { label: 'Gray', value: 'rgba(156,163,175,0.25)' },
+        { label: 'Red', value: 'rgba(248,113,113,0.25)' },
+        { label: 'Orange', value: 'rgba(251,146,60,0.25)' },
+        { label: 'Yellow', value: 'rgba(251,191,36,0.25)' },
+        { label: 'Green', value: 'rgba(74,222,128,0.25)' },
+        { label: 'Blue', value: 'rgba(96,165,250,0.25)' },
+        { label: 'Purple', value: 'rgba(167,139,250,0.25)' },
+        { label: 'Pink', value: 'rgba(244,114,182,0.25)' },
+      ];
+
+      highlightBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.querySelectorAll('.toolbar-color-popover').forEach(el => el.remove());
+        const pop = document.createElement('div');
+        pop.className = 'toolbar-color-popover';
+        const rect = highlightBtn.getBoundingClientRect();
+        pop.style.cssText = `position:fixed;top:${rect.bottom + 6}px;left:${rect.left}px;z-index:10000;`;
+        pop.innerHTML = '<div class="toolbar-color-popover-label">Highlight</div>' +
+          '<div class="toolbar-color-grid">' +
+          highlightPalette.map(c =>
+            `<button class="toolbar-color-swatch" data-color="${c.value}" title="${c.label}" style="background:${c.value === 'default' ? 'transparent' : c.value};${c.value === 'default' ? 'border:1.5px dashed #6b7a8d;' : ''}"></button>`
+          ).join('') + '</div>';
+        pop.addEventListener('mousedown', (ev) => {
+          const swatch = ev.target.closest('.toolbar-color-swatch');
+          if (!swatch) return;
+          ev.preventDefault();
+          const color = swatch.dataset.color;
+          try {
+            if (color === 'default') {
+              editor.removeStyles({ backgroundColor: '' });
+            } else {
+              editor.addStyles({ backgroundColor: color });
+            }
+          } catch {}
+          pop.remove();
+        });
+        document.body.appendChild(pop);
+        setTimeout(() => {
+          const dismiss = (ev) => { if (!pop.contains(ev.target)) { pop.remove(); document.removeEventListener('mousedown', dismiss); } };
+          document.addEventListener('mousedown', dismiss);
+        }, 0);
+      };
+
       // Add a separator + star button
       const sep = document.createElement('div');
       sep.className = 'ai-toolbar-sep';
@@ -79,6 +188,9 @@ export default function AISelectionToolbar({ editor }) {
         } catch { /* editor not ready */ }
       };
 
+      toolbar.appendChild(colorSep);
+      toolbar.appendChild(colorBtn);
+      toolbar.appendChild(highlightBtn);
       toolbar.appendChild(sep);
       toolbar.appendChild(btn);
     }, 200);

@@ -29,20 +29,12 @@
   to { opacity: 1; }
 }
 
-/* Force lavender color on ALL text inside AI blocks — use style override to beat inline styles */
+/* Force lavender color on ALL text inside AI blocks — use broad selectors to beat inline styles */
+.ai-generated-highlight,
+.ai-generated-highlight *,
+[data-node-type="blockContainer"].ai-generated-highlight *,
 .ai-generated-highlight .bn-inline-content,
-.ai-generated-highlight .bn-inline-content *,
-.ai-generated-highlight p,
-.ai-generated-highlight span,
-.ai-generated-highlight h1,
-.ai-generated-highlight h2,
-.ai-generated-highlight h3,
-.ai-generated-highlight li,
-.ai-generated-highlight code,
-.ai-generated-highlight strong,
-.ai-generated-highlight em,
-.ai-generated-highlight a,
-.ai-generated-highlight blockquote {
+.ai-generated-highlight .bn-inline-content * {
   color: #c4b5fd !important;
 }
 
