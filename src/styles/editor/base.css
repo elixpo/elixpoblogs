@@ -113,6 +113,32 @@
   animation: coverBannerIn 0.35s ease-out;
 }
 
+/* Cover toolbar buttons */
+.cover-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cover-toolbar-btn:hover {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+}
+
+.cover-toolbar-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
 /* Glassmorphic emoji picker wrapper */
 .emoji-picker-glass {
   background: rgba(14, 18, 27, 0.7);
