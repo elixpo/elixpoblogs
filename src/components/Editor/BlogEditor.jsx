@@ -223,6 +223,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
   const [aiMenuPos, setAiMenuPos] = useState({ top: 0, left: 0 });
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiGeneratingBlockId, setAiGeneratingBlockId] = useState(null);
+  const [aiErrorToast, setAiErrorToast] = useState(null);
   const [aiBlockIds, setAiBlockIds] = useState(new Set());
   const [showAIActions, setShowAIActions] = useState(false);
   const [aiActionsPos, setAiActionsPos] = useState({ top: 0, left: 0 });
@@ -237,6 +238,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
     initialContent: initialContent || undefined,
     domAttributes: {
       editor: { class: 'blog-editor' },
+    },
+    placeholders: {
+      default: "Press 'Space' for AI, type '/' for commands",
     },
   });
 
@@ -503,12 +507,12 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
           aiAbortRef.current = null;
           try {
             const ids = getAiBlockIds();
-            if (ids.length > 0) {
-              editor.updateBlock(ids[0], {
-                content: [{ type: 'text', text: `Error: ${err.message}` }],
-              });
-            }
+            if (ids.length > 0) editor.removeBlocks(ids);
           } catch {}
+          setAiBlockIds(new Set());
+          aiBlockIdsRef.current = new Set();
+          setShowAIActions(false);
+          setAiErrorToast(err.message || 'AI generation failed');
         },
       });
     } catch (err) {
@@ -518,12 +522,12 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
       if (err.name === 'AbortError') return;
       try {
         const ids = getAiBlockIds();
-        if (ids.length > 0) {
-          editor.updateBlock(ids[0], {
-            content: [{ type: 'text', text: `Error: ${err.message}` }],
-          });
-        }
+        if (ids.length > 0) editor.removeBlocks(ids);
       } catch {}
+      setAiBlockIds(new Set());
+      aiBlockIdsRef.current = new Set();
+      setShowAIActions(false);
+      setAiErrorToast(err.message || 'AI generation failed');
     }
   }, [editor, getAiBlockIds, highlightAiBlocks]);
 
@@ -549,16 +553,17 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
         />
       )}
 
-      {/* AI generating bar with shimmer animation */}
+      {/* Elixpo AI typing bar — fixed bottom glassmorphism */}
       {aiGenerating && (
-        <div className="ai-generating-bar">
-          <div className="ai-generating-bar-inner ai-generating-shimmer">
-            <div className="ai-generating-dots">
-              <span /><span /><span />
+        <div className="elixpo-typing-bar">
+          <div className="elixpo-typing-bar-inner">
+            <img src="/base-logo.png" alt="Elixpo" className="elixpo-typing-avatar" />
+            <div className="elixpo-typing-text">
+              <span className="elixpo-typing-name">Elixpo</span>
+              <span className="elixpo-typing-status">is typing<span className="elixpo-typing-dots"><span /><span /><span /></span></span>
             </div>
-            <span className="ai-generating-label">AI is writing...</span>
-            <button className="ai-stop-btn" onClick={handleAIStop}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+            <button className="elixpo-stop-btn" onClick={handleAIStop}>
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
                 <rect x="1" y="1" width="10" height="10" rx="2" />
               </svg>
               Stop
@@ -594,6 +599,21 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent }, 
 
       {/* AI selection toolbar — appears on text selection */}
       <AISelectionToolbar editor={editor} />
+
+      {/* AI error toast */}
+      {aiErrorToast && (
+        <div className="ai-error-toast" onAnimationEnd={(e) => {
+          if (e.animationName === 'ai-toast-fade-out') setAiErrorToast(null);
+        }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+            <circle cx="8" cy="8" r="7" stroke="#ff6b6b" strokeWidth="1.5" />
+            <path d="M8 4.5v4" stroke="#ff6b6b" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="8" cy="11" r="0.75" fill="#ff6b6b" />
+          </svg>
+          <span>{aiErrorToast}</span>
+          <button onClick={() => setAiErrorToast(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
     </div>
   );
 });
