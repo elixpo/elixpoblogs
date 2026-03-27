@@ -46,11 +46,9 @@ export default function AICommandMenu({ position, onSubmit, onClose }) {
     >
       <div className="mx-auto w-full max-w-[600px] bg-[#0d1117] border border-[#1a1d27] rounded-xl shadow-2xl overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3">
-          {/* AI icon */}
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#9b7bf714] flex items-center justify-center">
-            <svg className="w-[18px] h-[18px] text-[#9b7bf7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-            </svg>
+          {/* AI logo */}
+          <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden">
+            <img src="/base-logo.png" alt="AI" className="w-full h-full object-cover" />
           </div>
 
           {/* Input */}
