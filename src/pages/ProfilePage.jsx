@@ -29,8 +29,8 @@ export default function ProfilePage() {
       <AppShell>
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
           <h2 className="text-xl font-bold text-white mb-2">Sign in to view your profile</h2>
-          <p className="text-[#777] text-sm mb-6">Your profile, blogs, and activity will appear here.</p>
-          <Link href="/sign-in" className="px-6 py-2.5 bg-[#e8e8e8] text-[#0c1017] font-semibold rounded-full text-sm hover:bg-white transition-colors">
+          <p className="text-[#9ca3af] text-sm mb-6">Your profile, blogs, and activity will appear here.</p>
+          <Link href="/sign-in" className="px-6 py-2.5 bg-[#9b7bf7] text-white font-semibold rounded-full text-sm hover:bg-[#b69aff] transition-colors">
             Sign In
           </Link>
         </div>
@@ -99,7 +99,7 @@ export default function ProfilePage() {
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">{user.display_name || user.username}</h1>
-            <p className="text-[#777] text-sm mt-0.5">@{user.username}</p>
+            <p className="text-[#9ca3af] text-sm mt-0.5">@{user.username}</p>
           </div>
           <Link
             href="/settings"
@@ -113,7 +113,7 @@ export default function ProfilePage() {
           <p className="text-[#c8c8c8] text-[15px] leading-relaxed mb-6">{user.bio}</p>
         )}
 
-        <div className="flex items-center gap-6 text-[14px] text-[#777] mb-8">
+        <div className="flex items-center gap-6 text-[14px] text-[#9ca3af] mb-8">
           <span><strong className="text-[#e0e0e0]">0</strong> Followers</span>
           <span><strong className="text-[#e0e0e0]">0</strong> Following</span>
         </div>
@@ -123,13 +123,13 @@ export default function ProfilePage() {
         {/* Blog tabs */}
         <div className="flex gap-6 border-b border-[#232d3f] mb-8">
           <button className="pb-3 text-[14px] font-medium text-white border-b-2 border-white">Published</button>
-          <button className="pb-3 text-[14px] font-medium text-[#777] border-b-2 border-transparent hover:text-[#b0b0b0] transition-colors">Drafts</button>
+          <button className="pb-3 text-[14px] font-medium text-[#9ca3af] border-b-2 border-transparent hover:text-[#b0b0b0] transition-colors">Drafts</button>
         </div>
 
         {/* Empty state */}
         <div className="text-center py-16">
-          <p className="text-[#777] text-sm">No published blogs yet.</p>
-          <Link href="/new-blog" className="inline-block mt-4 px-5 py-2 text-[13px] font-medium text-[#0c1017] bg-[#e8e8e8] hover:bg-white rounded-full transition-colors">
+          <p className="text-[#9ca3af] text-sm">No published blogs yet.</p>
+          <Link href="/new-blog" className="inline-block mt-4 px-5 py-2 text-[13px] font-medium text-white bg-[#9b7bf7] hover:bg-[#b69aff] rounded-full transition-colors">
             Write your first blog
           </Link>
         </div>

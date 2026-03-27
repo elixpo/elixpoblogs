@@ -139,7 +139,7 @@ export const AIBlock = createReactBlockSpec(
                 <ion-icon name={selectedType.icon} style={{ fontSize: '15px', color: '#9b7bf7' }} />
                 {selectedType.label}
               </span>
-              <svg className="w-3.5 h-3.5 text-[#666]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className="w-3.5 h-3.5 text-[#8896a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             {showTypeDropdown && (
               <div className="absolute top-full mt-1 left-0 right-0 bg-[#0c1017] border border-[#232d3f] rounded-lg shadow-xl z-10 overflow-hidden">
@@ -166,13 +166,13 @@ export const AIBlock = createReactBlockSpec(
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe the content that should be generated. Use '@' to mention people, pages, or dates"
             rows={4}
-            className="w-full bg-[#0c1017] border border-[#232d3f] rounded-lg p-3 text-[13px] text-[#e0e0e0] resize-none outline-none focus:border-[#333] transition-colors placeholder-[#555] mb-4"
+            className="w-full bg-[#0c1017] border border-[#232d3f] rounded-lg p-3 text-[13px] text-[#e0e0e0] resize-none outline-none focus:border-[#333] transition-colors placeholder-[#6b7a8d] mb-4"
           />
 
           {/* Context dropdown */}
           <p className="text-[12px] text-[#9b7bf7] font-medium mb-2 flex items-center gap-1">
             Using
-            <span className="text-[#444] cursor-help" title="Choose the context for AI generation">
+            <span className="text-[#7c8a9e] cursor-help" title="Choose the context for AI generation">
               <svg className="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth={2} /><path d="M12 16v-4M12 8h.01" strokeWidth={2} /></svg>
             </span>
           </p>
@@ -184,11 +184,11 @@ export const AIBlock = createReactBlockSpec(
               <span className="flex items-center gap-2">
                 <ion-icon name="document-outline" style={{ fontSize: '14px', color: '#888' }} />
                 {selectedContext.label}
-                {context === 'current' && <span className="text-[#555]">&mdash;</span>}
+                {context === 'current' && <span className="text-[#8896a8]">&mdash;</span>}
                 {context === 'new' && null}
-                {context === 'current' && <span className="flex items-center gap-1 text-[#555]"><ion-icon name="document-outline" style={{ fontSize: '13px' }} /> New page</span>}
+                {context === 'current' && <span className="flex items-center gap-1 text-[#8896a8]"><ion-icon name="document-outline" style={{ fontSize: '13px' }} /> New page</span>}
               </span>
-              <svg className="w-3.5 h-3.5 text-[#666]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className="w-3.5 h-3.5 text-[#8896a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             {showContextDropdown && (
               <div className="absolute bottom-full mb-1 left-0 right-0 bg-[#0c1017] border border-[#232d3f] rounded-lg shadow-xl z-10 overflow-hidden">

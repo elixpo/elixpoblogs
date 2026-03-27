@@ -35,18 +35,18 @@ export const TabsBlock = createReactBlockSpec(
       if (editing) {
         return (
           <div className="border border-[#232d3f] rounded-xl bg-[#141a26] p-4 my-2">
-            <p className="text-[11px] text-[#666] font-medium mb-1">Tabs Block</p>
-            <p className="text-[10px] text-[#444] mb-2">Separate tabs with --- on its own line. First line of each tab is the title.</p>
+            <p className="text-[11px] text-[#8896a8] font-medium mb-1">Tabs Block</p>
+            <p className="text-[10px] text-[#7c8a9e] mb-2">Separate tabs with --- on its own line. First line of each tab is the title.</p>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder={"Getting Started\nContent for first tab\n---\nAdvanced\nContent for second tab"}
               rows={8}
-              className="w-full bg-[#0c1017] border border-[#232d3f] rounded-lg p-3 text-[13px] text-[#e0e0e0] font-mono resize-none outline-none focus:border-[#333] placeholder-[#444]"
+              className="w-full bg-[#0c1017] border border-[#232d3f] rounded-lg p-3 text-[13px] text-[#e0e0e0] font-mono resize-none outline-none focus:border-[#333] placeholder-[#6b7a8d]"
             />
             <div className="flex justify-end gap-2 mt-2">
               <button onClick={() => setEditing(false)} className="px-3 py-1 text-[12px] text-[#888]">Cancel</button>
-              <button onClick={save} className="px-3 py-1 text-[12px] bg-[#e8e8e8] text-[#0c1017] rounded-md font-medium hover:bg-white transition-colors">Done</button>
+              <button onClick={save} className="px-3 py-1 text-[12px] bg-[#9b7bf7] text-white rounded-md font-medium hover:bg-[#b69aff] transition-colors">Done</button>
             </div>
           </div>
         );
@@ -60,7 +60,7 @@ export const TabsBlock = createReactBlockSpec(
                 key={i}
                 onClick={() => setActiveTab(i)}
                 className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${
-                  i === activeTab ? 'text-white border-white' : 'text-[#777] border-transparent hover:text-[#b0b0b0]'
+                  i === activeTab ? 'text-white border-white' : 'text-[#9ca3af] border-transparent hover:text-[#b0b0b0]'
                 }`}
               >
                 {tab.title}

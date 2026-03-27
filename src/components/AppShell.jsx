@@ -110,13 +110,13 @@ function ProfileDropdown({ user, logout }) {
               <ion-icon name="log-out-outline" style={{ fontSize: '18px', color: '#888' }} />
               Sign out
             </button>
-            <p className="px-5 pb-1 text-[11px] text-[#555] truncate">{user.email}</p>
+            <p className="px-5 pb-1 text-[11px] text-[#8896a8] truncate">{user.email}</p>
           </div>
 
           <div className="h-px bg-[#232d3f]" />
 
           {/* Footer links */}
-          <div className="px-5 py-3 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-[#555]">
+          <div className="px-5 py-3 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-[#8896a8]">
             <Link href="/about" className="hover:text-[#888] transition-colors">About</Link>
             <Link href="/blog" className="hover:text-[#888] transition-colors">Blog</Link>
             <span className="hover:text-[#888] cursor-pointer transition-colors">Privacy</span>
@@ -172,7 +172,7 @@ export default function AppShell({ children }) {
                 <button onClick={handleLogin} className="text-[14px] text-[#b0b0b0] hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-[#ffffff08]">
                   Sign In
                 </button>
-                <button onClick={handleLogin} className="text-[14px] font-medium text-[#0c1017] bg-[#e8e8e8] hover:bg-white transition-colors px-4 py-1.5 rounded-full">
+                <button onClick={handleLogin} className="text-[14px] font-medium text-white bg-[#9b7bf7] hover:bg-[#b69aff] transition-colors px-4 py-1.5 rounded-full">
                   Get Started
                 </button>
               </>
@@ -229,7 +229,7 @@ export default function AppShell({ children }) {
                 )}
                 <div className="min-w-0">
                   <p className="text-[13px] text-[#e0e0e0] font-medium truncate">{user.display_name || user.username}</p>
-                  <p className="text-[11px] text-[#666] truncate">@{user.username}</p>
+                  <p className="text-[11px] text-[#8896a8] truncate">@{user.username}</p>
                 </div>
               </div>
             </div>

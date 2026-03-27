@@ -17,7 +17,7 @@ function StoryCard({ story }) {
             <span className="text-[11px] font-medium text-[#e8a840] bg-[#e8a84014] px-2 py-0.5 rounded-full">Draft</span>
           )}
           {!isDraft && story.published_at && (
-            <span className="text-[12px] text-[#777]">
+            <span className="text-[12px] text-[#9ca3af]">
               Published {new Date(story.published_at * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           )}
@@ -26,9 +26,9 @@ function StoryCard({ story }) {
           {story.title || 'Untitled'}
         </h3>
         {story.subtitle && (
-          <p className="text-[14px] text-[#777] line-clamp-2 mb-3">{story.subtitle}</p>
+          <p className="text-[14px] text-[#9ca3af] line-clamp-2 mb-3">{story.subtitle}</p>
         )}
-        <div className="flex items-center gap-4 text-[13px] text-[#666]">
+        <div className="flex items-center gap-4 text-[13px] text-[#8896a8]">
           {!isDraft && (
             <>
               <span className="flex items-center gap-1">
@@ -92,8 +92,8 @@ export default function StoriesPage() {
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
           <svg className="w-12 h-12 text-[#2a2d3a] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
           <h2 className="text-xl font-bold text-white mb-2">Sign in to see your stories</h2>
-          <p className="text-[#777] text-sm mb-6">Your drafts and published posts will appear here.</p>
-          <Link href="/sign-in" className="px-6 py-2.5 bg-[#e8e8e8] text-[#0c1017] font-semibold rounded-full text-sm hover:bg-white transition-colors">
+          <p className="text-[#9ca3af] text-sm mb-6">Your drafts and published posts will appear here.</p>
+          <Link href="/sign-in" className="px-6 py-2.5 bg-[#9b7bf7] text-white font-semibold rounded-full text-sm hover:bg-[#b69aff] transition-colors">
             Sign In
           </Link>
         </div>
@@ -110,7 +110,7 @@ export default function StoriesPage() {
           <h1 className="text-3xl font-bold text-white">Your Stories</h1>
           <Link
             href="/new-blog"
-            className="px-5 py-2 text-[13px] font-medium text-[#0c1017] bg-[#e8e8e8] hover:bg-white rounded-full transition-colors"
+            className="px-5 py-2 text-[13px] font-medium text-white bg-[#9b7bf7] hover:bg-[#b69aff] rounded-full transition-colors"
           >
             Write a story
           </Link>
@@ -125,7 +125,7 @@ export default function StoriesPage() {
               className={`pb-3 text-[14px] font-medium border-b-2 transition-colors ${
                 i === activeTab
                   ? 'text-white border-white'
-                  : 'text-[#777] border-transparent hover:text-[#b0b0b0]'
+                  : 'text-[#9ca3af] border-transparent hover:text-[#b0b0b0]'
               }`}
             >
               {tab} ({i === 0 ? drafts.length : published.length})
@@ -149,17 +149,17 @@ export default function StoriesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
               )}
             </svg>
-            <p className="text-[#777] text-[15px] font-medium mb-1.5">
+            <p className="text-[#9ca3af] text-[15px] font-medium mb-1.5">
               {activeTab === 0 ? 'No drafts yet' : 'No published stories yet'}
             </p>
-            <p className="text-[#555] text-[13px] mb-6">
+            <p className="text-[#8896a8] text-[13px] mb-6">
               {activeTab === 0
                 ? 'Start writing and your drafts will show up here.'
                 : 'Once you publish a story, it will appear here.'}
             </p>
             <Link
               href="/new-blog"
-              className="px-5 py-2 text-[13px] font-medium text-[#0c1017] bg-[#e8e8e8] hover:bg-white rounded-full transition-colors"
+              className="px-5 py-2 text-[13px] font-medium text-white bg-[#9b7bf7] hover:bg-[#b69aff] rounded-full transition-colors"
             >
               Write a story
             </Link>

@@ -27,8 +27,8 @@ export default function LibraryPage() {
       <AppShell>
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
           <h2 className="text-xl font-bold text-white mb-2">Sign in to access your library</h2>
-          <p className="text-[#777] text-sm mb-6">Your bookmarks, collections, and reading history will appear here.</p>
-          <Link href="/sign-in" className="px-6 py-2.5 bg-[#e8e8e8] text-[#0c1017] font-semibold rounded-full text-sm hover:bg-white transition-colors">
+          <p className="text-[#9ca3af] text-sm mb-6">Your bookmarks, collections, and reading history will appear here.</p>
+          <Link href="/sign-in" className="px-6 py-2.5 bg-[#9b7bf7] text-white font-semibold rounded-full text-sm hover:bg-[#b69aff] transition-colors">
             Sign In
           </Link>
         </div>
@@ -50,7 +50,7 @@ export default function LibraryPage() {
               className={`pb-3 text-[14px] font-medium border-b-2 transition-colors ${
                 i === activeTab
                   ? 'text-white border-white'
-                  : 'text-[#777] border-transparent hover:text-[#b0b0b0]'
+                  : 'text-[#9ca3af] border-transparent hover:text-[#b0b0b0]'
               }`}
             >
               {tab}
@@ -67,12 +67,12 @@ export default function LibraryPage() {
                 <h2 className="text-xl font-bold text-white mb-2">
                   Create a collection to easily categorize and share posts
                 </h2>
-                <button className="mt-3 px-5 py-2 text-[13px] font-medium text-[#0c1017] bg-[#e8e8e8] hover:bg-white rounded-full transition-colors">
+                <button className="mt-3 px-5 py-2 text-[13px] font-medium text-white bg-[#9b7bf7] hover:bg-[#b69aff] rounded-full transition-colors">
                   Start a collection
                 </button>
               </div>
               <div className="hidden sm:flex items-center justify-center w-24 h-24 rounded-full bg-[#232d3f] ml-8 flex-shrink-0">
-                <svg className="w-10 h-10 text-[#777]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-10 h-10 text-[#9ca3af]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
               </div>
@@ -80,7 +80,7 @@ export default function LibraryPage() {
 
             {/* Empty state */}
             <div className="text-center py-12">
-              <p className="text-[#777] text-sm">No collections yet.</p>
+              <p className="text-[#9ca3af] text-sm">No collections yet.</p>
             </div>
           </div>
         )}
@@ -88,14 +88,14 @@ export default function LibraryPage() {
         {/* Saved Tab */}
         {activeTab === 1 && (
           <div className="text-center py-16">
-            <p className="text-[#777] text-sm">No saved posts yet. Bookmark posts to see them here.</p>
+            <p className="text-[#9ca3af] text-sm">No saved posts yet. Bookmark posts to see them here.</p>
           </div>
         )}
 
         {/* Read History Tab */}
         {activeTab === 2 && (
           <div className="text-center py-16">
-            <p className="text-[#777] text-sm">Your reading history will appear here.</p>
+            <p className="text-[#9ca3af] text-sm">Your reading history will appear here.</p>
           </div>
         )}
       </div>

@@ -89,7 +89,7 @@ function FeedCard({ post }) {
       <div className="flex items-center gap-2 mb-3">
         <div className="h-6 w-6 rounded-full bg-[#2a2d3a] flex-shrink-0" />
         <span className="text-[13px] text-[#b0b0b0]">
-          {post.org && <><span className="text-[#c8c8c8] hover:underline">in {post.org}</span><span className="mx-1.5 text-[#555]">&middot;</span></>}
+          {post.org && <><span className="text-[#c8c8c8] hover:underline">in {post.org}</span><span className="mx-1.5 text-[#8896a8]">&middot;</span></>}
           <span className="text-[#c8c8c8] hover:underline">{post.author}</span>
         </span>
       </div>
@@ -101,7 +101,7 @@ function FeedCard({ post }) {
           <p className="text-[15px] text-[#888] leading-[1.5] line-clamp-2 mb-4">
             {post.subtitle}
           </p>
-          <div className="flex items-center gap-4 text-[13px] text-[#777]">
+          <div className="flex items-center gap-4 text-[13px] text-[#9ca3af]">
             <span className="text-[#9b7bf7] text-[12px] bg-[#9b7bf714] px-2.5 py-0.5 rounded-full font-medium">{post.tag}</span>
             <span>{post.date}</span>
             <span className="flex items-center gap-1">
@@ -134,14 +134,14 @@ function StaffPickCard({ pick }) {
       <div className="flex items-center gap-2 mb-1.5">
         <div className="h-5 w-5 rounded-full bg-[#2a2d3a] flex-shrink-0" />
         <span className="text-[12px] text-[#b0b0b0]">
-          {pick.org && <><span className="hover:underline">in {pick.org}</span><span className="mx-1 text-[#555]">&middot;</span></>}
+          {pick.org && <><span className="hover:underline">in {pick.org}</span><span className="mx-1 text-[#8896a8]">&middot;</span></>}
           <span className="hover:underline">{pick.author}</span>
         </span>
       </div>
       <h3 className="text-[15px] font-bold text-[#d0d0d0] leading-[1.35] group-hover:text-white transition-colors font-serif">
         {pick.title}
       </h3>
-      <span className="text-[12px] text-[#666] mt-1 block">{pick.date}</span>
+      <span className="text-[12px] text-[#8896a8] mt-1 block">{pick.date}</span>
     </div>
   );
 }
@@ -164,7 +164,7 @@ export default function App() {
                   className={`flex items-center gap-1.5 px-4 py-3 text-[13px] font-medium whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${
                     i === activeTopic
                       ? 'text-white border-white'
-                      : 'text-[#777] border-transparent hover:text-[#b0b0b0] hover:border-[#333]'
+                      : 'text-[#9ca3af] border-transparent hover:text-[#b0b0b0] hover:border-[#333]'
                   }`}
                 >
                   {topic.icon && <ion-icon name={topic.icon} style={{ fontSize: '14px' }} />}
@@ -222,14 +222,14 @@ export default function App() {
             </ul>
             <button
               onClick={() => window.location.href = '/new-blog'}
-              className="inline-block mt-4 px-5 py-2 text-[13px] font-medium text-[#0c1017] bg-[#e8e8e8] hover:bg-white rounded-full transition-colors"
+              className="inline-block mt-4 px-5 py-2 text-[13px] font-medium text-white bg-[#9b7bf7] hover:bg-[#b69aff] rounded-full transition-colors"
             >
               Start writing
             </button>
           </div>
 
           {/* Footer Links */}
-          <div className="mt-8 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#555]">
+          <div className="mt-8 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#8896a8]">
             <span className="hover:text-[#888] cursor-pointer transition-colors">Help</span>
             <span className="hover:text-[#888] cursor-pointer transition-colors">Status</span>
             <span className="hover:text-[#888] cursor-pointer transition-colors">About</span>

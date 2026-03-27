@@ -59,7 +59,7 @@ export default function AICommandMenu({ position, onSubmit, onClose }) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask AI anything..."
-            className="flex-1 bg-transparent text-[14px] text-[#e0e0e0] placeholder-[#555] outline-none"
+            className="flex-1 bg-transparent text-[14px] text-[#e0e0e0] placeholder-[#6b7a8d] outline-none"
             autoComplete="off"
             spellCheck="false"
           />
