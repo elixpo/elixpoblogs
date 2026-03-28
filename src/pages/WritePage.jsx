@@ -407,6 +407,21 @@ export default function WritePage({ slugid }) {
           {lastSaved && (
             <span className="text-[#7c8a9e] text-[11px] hidden md:block">{formatSavedTime(lastSaved)}</span>
           )}
+          {/* Sync status dot */}
+          {syncStatus !== 'idle' && (
+            <span
+              className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
+                syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' :
+                syncStatus === 'synced' ? 'bg-green-400' :
+                syncStatus === 'local' ? 'bg-yellow-500' : ''
+              }`}
+              title={
+                syncStatus === 'syncing' ? 'Syncing to cloud...' :
+                syncStatus === 'synced' ? 'Saved to cloud' :
+                syncStatus === 'local' ? 'Saved locally' : ''
+              }
+            />
+          )}
         </div>
 
         {/* Right: Actions */}
@@ -944,6 +959,23 @@ export default function WritePage({ slugid }) {
           </button>
         </div>
       </div>
+
+      {/* Saved to cloud toast */}
+      <AnimatePresence>
+        {showSavedToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-green-500/20 bg-[#141a26]/90 backdrop-blur-lg shadow-2xl"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span className="text-[13px] text-green-300 font-medium">Saved to cloud</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

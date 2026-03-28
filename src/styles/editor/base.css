@@ -260,10 +260,12 @@
   overflow: hidden;
 }
 
-/* Side menu (+ / drag handle) */
+/* Side menu (+ / drag handle) — lavender glassmorphic */
 .blog-editor-wrapper .bn-side-menu {
-  background: #232d3f;
-  border: 1px solid #2a2e3a;
+  background: rgba(196, 181, 253, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(196, 181, 253, 0.15);
   border-radius: 8px;
   margin-right: 16px;
   height: 28px !important;
@@ -272,14 +274,29 @@
   align-items: center;
   align-self: flex-start !important;
   overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.blog-editor-wrapper .bn-side-menu:hover {
+  background: rgba(196, 181, 253, 0.1);
+  border-color: rgba(196, 181, 253, 0.25);
+}
+
+.blog-editor-wrapper .bn-side-menu button {
+  color: rgba(196, 181, 253, 0.5);
+  transition: color 0.15s ease;
+}
+
+.blog-editor-wrapper .bn-side-menu button:hover {
+  color: #c4b5fd;
 }
 
 .blog-editor-wrapper .bn-drag-handle {
-  color: #6b7a8d;
+  color: rgba(196, 181, 253, 0.4);
 }
 
 .blog-editor-wrapper .bn-drag-handle:hover {
-  color: #7ba8f0;
+  color: #c4b5fd;
 }
 
 /* Selection highlight */
