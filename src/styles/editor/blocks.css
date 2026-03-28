@@ -280,10 +280,9 @@
 .editor-outline-sidebar {
   position: fixed;
   right: 24px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 180px;
-  max-height: 60vh;
+  top: 80px;
+  width: 200px;
+  max-height: 70vh;
   overflow-y: auto;
   z-index: 30;
   opacity: 0.5;
@@ -295,7 +294,7 @@
 }
 
 .editor-outline-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -336,7 +335,7 @@
 }
 
 .editor-outline-text {
-  font-size: 11px;
+  font-size: 13px;
   color: #8896a8;
   white-space: nowrap;
   overflow: hidden;

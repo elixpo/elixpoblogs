@@ -725,7 +725,7 @@ export default function WritePage({ slugid }) {
                         }}
                       >
                         <div
-                          className="w-[72px] h-[72px] rounded-full bg-[#0e121b] border-[3px] border-[#1a2030] shadow-lg flex items-center justify-center cursor-pointer relative"
+                          className="w-[72px] h-[72px] rounded-full bg-[#151820] flex items-center justify-center cursor-pointer relative"
                           style={{ borderRadius: '50%' }}
                           onClick={() => setShowEmojiPicker(true)}
                         >
