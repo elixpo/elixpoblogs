@@ -4,7 +4,7 @@
   background: #0c1017;
   border: 1px solid #232d3f;
   border-radius: 10px;
-  font-family: 'lixCode', 'SF Mono', 'Fira Code', monospace;
+  font-family: 'lixCode', monospace;
 }
 
 .blog-editor-wrapper [data-content-type="codeBlock"] code {

@@ -7,12 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['lixFont', 'Inter', 'system-ui', 'sans-serif'],
-        serif: ['"Source Serif 4"', 'Georgia', 'serif'],
-        fancy: ['lixFancy', 'lixFont', 'sans-serif'],
-        code: ['lixCode', 'SF Mono', 'Fira Code', 'monospace'],
-        kanit: ['Kanit', 'sans-serif'],
-        docs: ['lixDocs', 'lixFont', 'sans-serif'],
+        sans: ['lixFancy', 'sans-serif'],
+        code: ['lixCode', 'monospace'],
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.6s ease-out',
