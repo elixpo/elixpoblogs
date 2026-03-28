@@ -19,8 +19,6 @@ import { ButtonBlock } from './blocks/ButtonBlock';
 import { Breadcrumbs } from './blocks/Breadcrumbs';
 import { TabsBlock } from './blocks/TabsBlock';
 import { AIBlock } from './blocks/AIBlock';
-import { BlogImageBlock } from './blocks/BlogImageBlock';
-
 // Custom inline content
 import { InlineEquation } from './blocks/InlineEquation';
 import { DateInline } from './blocks/DateInline';
@@ -40,7 +38,6 @@ const schema = BlockNoteSchema.create({
     breadcrumbs: Breadcrumbs({}),
     tabsBlock: TabsBlock({}),
     aiBlock: AIBlock({}),
-    blogImage: BlogImageBlock({}),
   },
   inlineContentSpecs: {
     ...defaultInlineContentSpecs,
@@ -122,14 +119,6 @@ function getCustomSlashMenuItems(editor) {
       aliases: ['tabs', 'tabbed', 'sections', 'panels'],
       icon: <Icon d="M4 6h16M4 6v12a2 2 0 002 2h12a2 2 0 002-2V6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />,
       onItemClick: () => editor.insertBlocks([{ type: 'tabsBlock' }], editor.getTextCursorPosition().block, 'after'),
-    },
-    {
-      title: 'Image',
-      subtext: 'Upload or paste an image',
-      group: 'Media',
-      aliases: ['image', 'photo', 'picture', 'img', 'upload'],
-      icon: <Icon d="M3 3h18a2 2 0 012 2v14a2 2 0 01-2 2H3a2 2 0 01-2-2V5a2 2 0 012-2z" d2="M8.5 8.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM21 15l-5-5L5 21" />,
-      onItemClick: () => editor.insertBlocks([{ type: 'blogImage' }], editor.getTextCursorPosition().block, 'after'),
     },
     {
       title: 'AI Block',
@@ -232,11 +221,21 @@ function isCurrentBlockEmpty(editor) {
 // ── BlogEditor ──
 
 // Sanitize saved content — convert raw LaTeX/code paragraphs back into proper block types
+// Block types known to the schema — used to filter out stale/removed block types
+const KNOWN_BLOCK_TYPES = new Set([
+  'paragraph', 'heading', 'bulletListItem', 'numberedListItem', 'image',
+  'table', 'codeBlock', 'checkListItem', 'file', 'video', 'audio',
+  'tableOfContents', 'blockEquation', 'buttonBlock', 'breadcrumbs',
+  'tabsBlock', 'aiBlock',
+]);
+
 function sanitizeInitialContent(blocks) {
   if (!blocks || !Array.isArray(blocks)) return blocks;
 
-  // Recursively sanitize children too
-  const sanitized = doSanitize(blocks);
+  // Filter out unknown block types (e.g. removed custom blocks)
+  const filtered = blocks.filter((b) => !b.type || KNOWN_BLOCK_TYPES.has(b.type));
+
+  const sanitized = doSanitize(filtered);
   return sanitized;
 }
 
@@ -400,7 +399,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     getMarkdown: async () => await editor.blocksToMarkdownLossy(editor.document),
   }), [editor]);
 
-  // Handle clipboard paste of images — insert a blogImage block at cursor
+  // Handle clipboard paste of images — compress, upload, insert native image block
   useEffect(() => {
     const editorEl = wrapperRef.current?.querySelector('.bn-editor');
     if (!editorEl) return;
@@ -417,23 +416,25 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           const file = item.getAsFile();
           if (!file) return;
 
-          // Insert a blogImage block at cursor position
           const cursor = editor.getTextCursorPosition();
           if (!cursor?.block) return;
 
+          // Insert image block + empty paragraph below so user can keep typing
           editor.insertBlocks(
-            [{ type: 'blogImage', props: { blogId: blogId || '' } }],
+            [
+              { type: 'image', props: { url: '', caption: '', previewWidth: 740 } },
+              { type: 'paragraph', content: [] },
+            ],
             cursor.block,
             'after'
           );
 
-          // Get the newly inserted block and upload the image to it
           const doc = editor.document;
           const cursorIdx = doc.findIndex((b) => b.id === cursor.block.id);
           const newBlock = doc[cursorIdx + 1];
           if (!newBlock) return;
 
-          // Upload the image asynchronously
+          // Compress and upload, then update with real URL
           (async () => {
             try {
               const { compressBlogImage } = await import('../../utils/compressImage');
@@ -453,10 +454,12 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
               const data = await res.json();
 
               editor.updateBlock(newBlock.id, {
-                props: { url: data.url, uploading: false },
+                type: 'image',
+                props: { url: data.url, caption: '', previewWidth: 740 },
               });
             } catch (err) {
               console.error('Clipboard image upload failed:', err);
+              try { editor.removeBlocks([newBlock.id]); } catch {}
             }
           })();
 
