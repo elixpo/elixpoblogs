@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { streamAI } from '../../ai/stream';
+import { streamAI } from '../../ai/agent';
 import { EDIT_SYSTEM_PROMPT } from '../../ai/prompts';
 import { parseMarkdownToBlocks } from './markdownToBlocks';
 

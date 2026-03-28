@@ -1,7 +1,81 @@
-// Client-side agentic AI orchestrator
-// Handles streaming with function calls (generate_image), image gen via Pollinations, Cloudinary upload
+// Client-side AI module — text streaming + agentic orchestrator with image generation
+// All client-side AI logic lives here. Server proxies: /api/ai/stream, /api/ai/agent
 
 const POLLINATIONS_IMAGE_BASE = 'https://gen.pollinations.ai/v1/images/generations';
+
+// ── Simple text streaming (calls /api/ai/stream) ──
+
+/**
+ * Stream AI text generation from the server proxy.
+ * @param {Object} opts
+ * @param {string} opts.systemPrompt
+ * @param {string} opts.userPrompt
+ * @param {function} opts.onChunk - Called with (chunk, fullText)
+ * @param {function} [opts.onDone] - Called when stream completes with full text
+ * @param {function} [opts.onError] - Called on error
+ * @param {AbortSignal} [opts.signal]
+ * @returns {Promise<string>}
+ */
+export async function streamAI({ systemPrompt, userPrompt, onChunk, onDone, onError, signal }) {
+  let fullText = '';
+
+  try {
+    const res = await fetch('/api/ai/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ systemPrompt, userPrompt }),
+      signal,
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') {
+          onDone?.(fullText);
+          return fullText;
+        }
+
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (content) {
+            fullText += content;
+            onChunk?.(content, fullText);
+          }
+        } catch {
+          // skip malformed
+        }
+      }
+    }
+
+    onDone?.(fullText);
+    return fullText;
+  } catch (err) {
+    if (err.name === 'AbortError') return fullText;
+    onError?.(err);
+    throw err;
+  }
+}
+
+// ── Agentic streaming (calls /api/ai/agent, supports tool calls) ──
 
 /**
  * Stream agentic AI — supports text streaming + tool calls (image generation).

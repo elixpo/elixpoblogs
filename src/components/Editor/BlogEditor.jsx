@@ -1024,7 +1024,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
       // Use simple stream for edit mode, agent for write mode
       if (isEditMode) {
-        const { streamAI } = await import('../../ai/stream');
+        const { streamAI } = await import('../../ai/agent');
         await streamAI({
           systemPrompt: EDIT_SYSTEM_PROMPT,
           userPrompt: finalPrompt,
