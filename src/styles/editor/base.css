@@ -1,3 +1,19 @@
+/* ===== Fonts ===== */
+
+@font-face {
+  font-family: 'lixFont';
+  src: url('/fonts/lixFont.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'lixCode';
+  src: url('/fonts/lixCode.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
 /* ===== Edit page scrollbar ===== */
 
 .edit-page {
@@ -77,6 +93,7 @@
 .blog-editor-wrapper .bn-editor {
   background: transparent;
   color: #e4e4e7;
+  font-family: 'lixFont', 'Inter', system-ui, sans-serif;
   font-size: 1em;
   line-height: 1.75;
   padding-left: 0;
@@ -129,7 +146,21 @@
   border-radius: 4px;
   padding: 0.15em 0.4em;
   font-size: 0.95em;
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-family: 'lixCode', 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Code blocks — lixCode font, no line highlights */
+.blog-editor-wrapper [data-content-type="codeBlock"] code,
+.blog-editor-wrapper [data-content-type="codeBlock"] pre,
+.blog-editor-wrapper [data-content-type="codeBlock"] [contenteditable] {
+  font-family: 'lixCode', 'SF Mono', 'Fira Code', monospace !important;
+  font-size: 0.9em;
+}
+
+.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-ln-line,
+.blog-editor-wrapper [data-content-type="codeBlock"] .line-highlight,
+.blog-editor-wrapper [data-content-type="codeBlock"] .bn-line-number {
+  background: none !important;
 }
 
 /* Map BlockNote block-level text color (data-text-color on block containers) */

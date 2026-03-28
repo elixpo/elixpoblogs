@@ -224,16 +224,38 @@ function isCurrentBlockEmpty(editor) {
 // Sanitize saved content — convert raw LaTeX/code paragraphs back into proper block types
 function sanitizeInitialContent(blocks) {
   if (!blocks || !Array.isArray(blocks)) return blocks;
+
+  // Recursively sanitize children too
+  const sanitized = doSanitize(blocks);
+  return sanitized;
+}
+
+function doSanitize(blocks) {
+  if (!blocks || !Array.isArray(blocks)) return blocks;
   const result = [];
   let i = 0;
 
-  const getText = (b) => (b.content || []).map(c => c.text || '').join('').trim();
+  const getText = (b) => (b.content || []).map(c => {
+    if (c.type === 'inlineEquation') return c.props?.latex || '';
+    return c.text || '';
+  }).join('').trim();
 
   while (i < blocks.length) {
     const block = blocks[i];
+    // Recursively sanitize children
+    if (block.children && block.children.length > 0) {
+      block = { ...block, children: doSanitize(block.children) };
+    }
     if (block.type !== 'paragraph') { result.push(block); i++; continue; }
 
     const text = getText(block);
+
+    // Paragraph containing only a single inlineEquation → convert to blockEquation
+    const contentItems = (block.content || []).filter(c => !(c.type === 'text' && !c.text?.trim()));
+    if (contentItems.length === 1 && contentItems[0].type === 'inlineEquation' && contentItems[0].props?.latex) {
+      result.push({ id: block.id, type: 'blockEquation', props: { latex: contentItems[0].props.latex }, children: [] });
+      i++; continue;
+    }
 
     // Single-line \[...\] — may have \] at end of content
     const singleBracket = text.match(/^\\\[(.+?)\\\]$/s);
@@ -256,7 +278,7 @@ function sanitizeInitialContent(blocks) {
       const closeInFirst = firstContent.indexOf('\\]');
       if (closeInFirst !== -1) {
         const latex = firstContent.slice(0, closeInFirst).trim();
-        if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex } });
+        if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex }, children: [] });
         i++; continue;
       }
       const latexParts = firstContent ? [firstContent] : [];
@@ -275,7 +297,7 @@ function sanitizeInitialContent(blocks) {
         i++;
       }
       const latex = latexParts.join('\n').trim();
-      if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex } });
+      if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex }, children: [] });
       continue;
     }
 
@@ -297,7 +319,7 @@ function sanitizeInitialContent(blocks) {
         i++;
       }
       const latex = latexParts.join('\n').trim();
-      if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex } });
+      if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex }, children: [] });
       continue;
     }
 
@@ -399,13 +421,26 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     requestAnimationFrame(patchCodeBlocks);
   }, [onChange, editor, patchCodeBlocks]);
 
-  // Patch code blocks on initial mount + signal ready
+  // Patch code blocks on initial mount + signal ready (double rAF for sanitized blocks)
   useEffect(() => {
     requestAnimationFrame(() => {
-      patchCodeBlocks();
-      onReady?.();
+      requestAnimationFrame(() => {
+        patchCodeBlocks();
+        onReady?.();
+      });
     });
   }, [patchCodeBlocks, onReady]);
+
+  // Re-patch code blocks when DOM changes (catches sanitized blocks rendered late)
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const observer = new MutationObserver(() => {
+      requestAnimationFrame(patchCodeBlocks);
+    });
+    observer.observe(wrapper, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [patchCodeBlocks]);
 
   // AI sparkle star — fixed position, follows the last AI block's text end
   const sparkleRef = useRef(null);
