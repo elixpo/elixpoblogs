@@ -15,7 +15,7 @@
 }
 
 .ai-generated-highlight .bn-block-content {
-  background: rgba(167, 139, 250, 0.08) !important;
+  background: rgba(167, 139, 250, 0.12) !important;
   border-radius: 4px;
 }
 
@@ -103,7 +103,7 @@
 /* ===== Inline AI Edit Diff — new AI blocks (lavender) ===== */
 
 .ai-edit-new-block {
-  background: rgba(196, 181, 253, 0.08) !important;
+  background: rgba(196, 181, 253, 0.12) !important;
   border-left: 3px solid rgba(196, 181, 253, 0.5) !important;
   border-radius: 0 6px 6px 0;
   margin-left: -3px;

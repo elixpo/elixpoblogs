@@ -838,9 +838,20 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     const abortController = new AbortController();
     aiAbortRef.current = abortController;
 
-    // Apply initial highlight + glob cursor immediately
+    // Show glob cursor at the space-press position (the anchor block) immediately
     requestAnimationFrame(() => {
-      highlightAiBlocks(currentIds, true);
+      highlightAiBlocks(currentIds, false); // highlight but don't move sparkle yet
+      // Position sparkle at the anchor block (where space was pressed)
+      const star = sparkleRef.current;
+      if (star) {
+        const anchorEl = wrapperRef.current?.querySelector(`[data-id="${anchorBlockId}"]`);
+        if (anchorEl) {
+          const anchorRect = anchorEl.getBoundingClientRect();
+          star.style.left = (anchorRect.right - 10) + 'px';
+          star.style.top = (anchorRect.top + anchorRect.height / 2 - 10) + 'px';
+          star.style.display = 'block';
+        }
+      }
       // Scroll to the placeholder
       const el = wrapperRef.current?.querySelector(`[data-id="${insertedBlock.id}"]`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
