@@ -35,6 +35,11 @@ const EmojiPicker = dynamic(
   { ssr: false }
 );
 
+const KeyboardShortcutsModal = dynamic(
+  () => import('../components/Editor/KeyboardShortcutsModal'),
+  { ssr: false }
+);
+
 const STORAGE_KEY_PREFIX = 'lixblogs_draft_';
 
 function getDraftKey(slugid) {
@@ -235,6 +240,7 @@ export default function WritePage({ slugid }) {
 
   const [syncStatus, setSyncStatus] = useState('idle'); // idle | local | syncing | synced
   const [showSavedToast, setShowSavedToast] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const username = user?.username || 'you';
 
