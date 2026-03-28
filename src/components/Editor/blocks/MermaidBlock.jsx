@@ -40,57 +40,81 @@ const mermaidConfig = {
   },
 };
 
-async function renderMermaid(code, container) {
-  if (!code?.trim() || !container) return;
-  const mermaid = (await import('mermaid')).default;
-  // Always reinitialize to ensure config is applied (handles HMR)
-  mermaid.initialize(mermaidConfig);
-  const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-  try {
-    const { svg } = await mermaid.render(id, code.trim());
-    container.innerHTML = svg;
-    const svgEl = container.querySelector('svg');
-    if (svgEl) {
-      svgEl.removeAttribute('width');
-      svgEl.removeAttribute('height');
-      svgEl.style.width = '';
-      svgEl.style.height = '';
-      svgEl.style.maxWidth = 'none';
-      svgEl.style.minWidth = 'fit-content';
-    }
-  } catch (err) {
-    container.innerHTML = `<pre style="color:#f87171;font-size:12px;white-space:pre-wrap;margin:0;">${err.message || 'Invalid diagram syntax'}</pre>`;
+let mermaidModule = null;
+
+async function getMermaid() {
+  if (!mermaidModule) {
+    mermaidModule = (await import('mermaid')).default;
+    mermaidModule.initialize(mermaidConfig);
   }
+  return mermaidModule;
 }
 
-function MermaidViewer({ diagram, onEdit }) {
-  const viewportRef = useRef(null);
-  const svgRef = useRef(null);
+function MermaidViewer({ diagram }) {
+  const containerRef = useRef(null);
+  const [svgHTML, setSvgHTML] = useState('');
+  const [error, setError] = useState('');
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const dragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
 
-  // Render diagram
+  // Render mermaid to SVG string
   useEffect(() => {
-    if (diagram && svgRef.current) {
-      renderMermaid(diagram, svgRef.current).then(() => {
-        setZoom(1);
-        setPan({ x: 0, y: 0 });
-      });
-    }
+    if (!diagram?.trim()) return;
+    let cancelled = false;
+    const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+    (async () => {
+      try {
+        const mermaid = await getMermaid();
+        // Create a temp container — must be visible + in layout for SVG getBBox to work
+        const tempDiv = document.createElement('div');
+        tempDiv.id = id;
+        tempDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;opacity:0;pointer-events:none;z-index:-9999;';
+        document.body.appendChild(tempDiv);
+
+        const { svg } = await mermaid.render(id, diagram.trim(), tempDiv);
+
+        // Clean up temp element
+        tempDiv.remove();
+
+        if (!cancelled) {
+          setSvgHTML(svg);
+          setError('');
+          setZoom(1);
+          setPan({ x: 0, y: 0 });
+        }
+      } catch (err) {
+        console.error('[Mermaid] Render error:', err);
+        if (!cancelled) {
+          setError(err.message || 'Invalid diagram syntax');
+          setSvgHTML('');
+        }
+        // Clean up any leftover temp elements
+        try { document.getElementById(id)?.remove(); } catch {}
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [diagram]);
 
-  // Mouse wheel zoom
-  const handleWheel = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setZoom((z) => {
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      return Math.min(3, Math.max(0.3, z + delta));
-    });
-  }, []);
+  // Mouse wheel zoom — use native listener to avoid passive event issue
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handleWheel = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setZoom((z) => {
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        return Math.min(3, Math.max(0.3, z + delta));
+      });
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [svgHTML]); // re-attach when SVG loads since containerRef might change
 
   // Pan via drag
   const handleMouseDown = useCallback((e) => {
@@ -126,20 +150,35 @@ function MermaidViewer({ diagram, onEdit }) {
     setPan({ x: 0, y: 0 });
   }, []);
 
+  if (error) {
+    return (
+      <div className="mermaid-viewport">
+        <pre style={{ color: '#f87171', fontSize: '12px', whiteSpace: 'pre-wrap', padding: '16px', margin: 0 }}>{error}</pre>
+      </div>
+    );
+  }
+
+  if (!svgHTML) {
+    return (
+      <div className="mermaid-viewport" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: '#6b7a8d', fontSize: '13px' }}>Loading diagram...</span>
+      </div>
+    );
+  }
+
   return (
     <div
-      ref={viewportRef}
+      ref={containerRef}
       className="mermaid-viewport"
-      onWheel={handleWheel}
       onMouseDown={handleMouseDown}
     >
       <div
-        ref={svgRef}
         className="mermaid-block-svg"
         style={{
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
           transformOrigin: 'center center',
         }}
+        dangerouslySetInnerHTML={{ __html: svgHTML }}
       />
       {/* Zoom controls */}
       <div className="mermaid-zoom-controls">
@@ -250,8 +289,8 @@ export const MermaidBlock = createReactBlockSpec(
       }
 
       return (
-        <div className="mermaid-block mermaid-block--rendered group">
-          <MermaidViewer diagram={block.props.diagram} onEdit={() => setEditing(true)} />
+        <div className="mermaid-block mermaid-block--rendered group" onDoubleClick={() => setEditing(true)}>
+          <MermaidViewer diagram={block.props.diagram} />
           <div className="mermaid-block-hover">
             <button onClick={() => setEditing(true)} className="mermaid-hover-btn" title="Edit">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
