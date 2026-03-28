@@ -69,15 +69,15 @@ function MermaidViewer({ diagram }) {
     (async () => {
       try {
         const mermaid = await getMermaid();
-        // Create a temp container — must be visible + in layout for SVG getBBox to work
+        // Container must be visible + in layout for SVG getBBox to work
+        // Use a different ID for the container to avoid collision with mermaid's SVG id
         const tempDiv = document.createElement('div');
-        tempDiv.id = id;
+        tempDiv.id = 'container-' + id;
         tempDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;opacity:0;pointer-events:none;z-index:-9999;';
         document.body.appendChild(tempDiv);
 
         const { svg } = await mermaid.render(id, diagram.trim(), tempDiv);
 
-        // Clean up temp element
         tempDiv.remove();
 
         if (!cancelled) {
