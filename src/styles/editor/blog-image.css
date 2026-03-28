@@ -38,6 +38,13 @@
   background: rgba(196, 181, 253, 0.05);
 }
 
+.blog-img-empty--generating {
+  border: none;
+  background: transparent;
+  padding: 0;
+  min-height: 200px;
+}
+
 .blog-img-empty[data-drag-over="true"] {
   border-color: #c4b5fd;
   background: rgba(196, 181, 253, 0.1);
