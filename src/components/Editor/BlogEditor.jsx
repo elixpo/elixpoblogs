@@ -431,16 +431,6 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     });
   }, [patchCodeBlocks, onReady]);
 
-  // Re-patch code blocks when DOM changes (catches sanitized blocks rendered late)
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const observer = new MutationObserver(() => {
-      requestAnimationFrame(patchCodeBlocks);
-    });
-    observer.observe(wrapper, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, [patchCodeBlocks]);
 
   // AI sparkle star — fixed position, follows the last AI block's text end
   const sparkleRef = useRef(null);
