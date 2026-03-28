@@ -830,7 +830,7 @@ export default function WritePage({ slugid }) {
                     </div>
                   </div>
 
-                  <div className="min-h-[60vh] pb-[100px]">
+                  <div className="min-h-[60vh] pb-[100px] relative">
                     <BlockNoteEditor
                       ref={editorRef}
                       onChange={handleEditorChange}
@@ -839,6 +839,39 @@ export default function WritePage({ slugid }) {
                       onTitleChange={(newTitle) => { setTitle(newTitle); setAiTitleKey(k => k + 1); }}
                       blogId={slugid}
                     />
+                    {/* Outline sidebar — shows heading positions */}
+                    {editorContent && editorContent.length > 0 && (() => {
+                      const headings = (editorContent || []).filter(
+                        (b) => b.type === 'heading' && b.content?.length > 0
+                      );
+                      if (headings.length === 0) return null;
+                      return (
+                        <div className="editor-outline-sidebar">
+                          <p className="editor-outline-title">Outline</p>
+                          <ul className="editor-outline-list">
+                            {headings.map((h, i) => {
+                              const level = parseInt(h.props?.level || '1', 10);
+                              const text = h.content.map((c) => c.text || '').join('');
+                              if (!text.trim()) return null;
+                              return (
+                                <li
+                                  key={h.id || i}
+                                  className="editor-outline-item"
+                                  style={{ paddingLeft: `${(level - 1) * 12}px` }}
+                                  onClick={() => {
+                                    const el = document.querySelector(`[data-id="${h.id}"]`);
+                                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  }}
+                                >
+                                  <span className="editor-outline-dot" style={{ opacity: level === 1 ? 1 : level === 2 ? 0.7 : 0.4 }} />
+                                  <span className="editor-outline-text">{text}</span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </>
                 </div>
