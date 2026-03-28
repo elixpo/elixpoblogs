@@ -84,6 +84,8 @@
   pointer-events: none;
 }
 
+.ai-edit-original-block [contenteditable="true"],
+.ai-edit-original-block [contenteditable="true"] *,
 .ai-edit-original-block .bn-inline-content,
 .ai-edit-original-block .bn-inline-content *,
 .ai-edit-original-block p,
@@ -96,6 +98,7 @@
   text-decoration: line-through !important;
   text-decoration-color: rgba(196, 181, 253, 0.6) !important;
   color: rgba(196, 181, 253, 0.35) !important;
+  -webkit-text-fill-color: rgba(196, 181, 253, 0.35) !important;
 }
 
 /* ===== Inline AI Edit Diff — new AI blocks (lavender) ===== */
@@ -124,6 +127,8 @@
 
 .ai-edit-new-block,
 .ai-edit-new-block *,
+.ai-edit-new-block [contenteditable="true"],
+.ai-edit-new-block [contenteditable="true"] *,
 .ai-edit-new-block .bn-inline-content,
 .ai-edit-new-block .bn-inline-content *,
 .ai-edit-new-block p,
@@ -132,8 +137,12 @@
 .ai-edit-new-block em,
 .ai-edit-new-block code,
 .ai-edit-new-block a,
-.ai-edit-new-block li {
+.ai-edit-new-block li,
+.ai-edit-new-block h1,
+.ai-edit-new-block h2,
+.ai-edit-new-block h3 {
   color: #c4b5fd !important;
+  -webkit-text-fill-color: #c4b5fd !important;
   caret-color: #c4b5fd !important;
 }
 
