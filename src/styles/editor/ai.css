@@ -544,16 +544,19 @@
   border: 1.5px dashed rgba(196, 181, 253, 0.3) !important;
 }
 
-/* Hide the default white image placeholder inside skeleton */
-.ai-image-skeleton .bn-file-default-preview,
+/* Hide ALL default BlockNote image UI inside skeleton — the white "Add image" box */
 .ai-image-skeleton .bn-add-file-button,
-.ai-image-skeleton .bn-file-block-content-wrapper > div:first-child,
-.ai-image-skeleton [class*="AddFile"],
-.ai-image-skeleton img[src=""],
-.ai-image-skeleton img:not([src]),
-.ai-image-skeleton .bn-image-block-content-wrapper > div {
+.ai-image-skeleton .bn-file-block-content-wrapper,
+.ai-image-skeleton .bn-file-name-with-icon,
+.ai-image-skeleton .bn-visual-media-wrapper,
+.ai-image-skeleton .bn-file-caption,
+.ai-image-skeleton [data-file-block] > *,
+.ai-image-skeleton .bn-block-content > * {
   opacity: 0 !important;
+  visibility: hidden !important;
   pointer-events: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
 }
 
 .ai-image-skeleton::before {

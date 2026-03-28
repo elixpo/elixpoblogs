@@ -299,6 +299,30 @@
   color: #c4b5fd;
 }
 
+/* Dark theme override for BlockNote file/image "Add image" button */
+.blog-editor-wrapper .bn-add-file-button {
+  background-color: rgba(196, 181, 253, 0.06) !important;
+  border: 1.5px dashed rgba(196, 181, 253, 0.2) !important;
+  border-radius: 10px !important;
+  color: rgba(196, 181, 253, 0.45) !important;
+  min-height: 180px !important;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.blog-editor-wrapper .bn-add-file-button:hover {
+  background-color: rgba(196, 181, 253, 0.1) !important;
+  border-color: rgba(196, 181, 253, 0.35) !important;
+  color: rgba(196, 181, 253, 0.6) !important;
+}
+
+.blog-editor-wrapper .bn-add-file-button .bn-add-file-button-icon {
+  color: rgba(196, 181, 253, 0.35) !important;
+}
+
+.blog-editor-wrapper .bn-add-file-button .bn-add-file-button-text {
+  color: rgba(196, 181, 253, 0.45) !important;
+}
+
 /* Selection highlight */
 .blog-editor-wrapper ::selection {
   background: rgba(123, 168, 240, 0.3);
