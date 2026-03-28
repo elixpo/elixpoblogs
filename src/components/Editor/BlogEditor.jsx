@@ -626,9 +626,10 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       aiAbortRef.current = null;
     }
     setAiGenerating(false);
-      setAiPhase('idle');
+    setAiPhase('idle');
     setAiGeneratingBlockId(null);
     hideSparkle();
+    wrapperRef.current?.querySelectorAll('.ai-skeleton-nearby').forEach((el) => el.classList.remove('ai-skeleton-nearby'));
 
     // Scroll to the AI-generated content and show keep/discard
     const ids = aiBlockIdsRef.current;
@@ -852,9 +853,18 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           star.style.display = 'block';
         }
       }
-      // Scroll to the placeholder
-      const el = wrapperRef.current?.querySelector(`[data-id="${insertedBlock.id}"]`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Add skeleton loading to nearby lines during thinking
+      const placeholderEl = wrapperRef.current?.querySelector(`[data-id="${insertedBlock.id}"]`);
+      if (placeholderEl) {
+        let sibling = placeholderEl.nextElementSibling;
+        let count = 0;
+        while (sibling && count < 3) {
+          sibling.classList.add('ai-skeleton-nearby');
+          sibling = sibling.nextElementSibling;
+          count++;
+        }
+        placeholderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     });
 
     try {
@@ -873,6 +883,10 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
       // Helper to update blocks from streamed text
       const updateBlocksFromText = (fullText) => {
+        // Remove skeleton loading once AI starts writing
+        wrapperRef.current?.querySelectorAll('.ai-skeleton-nearby').forEach((el) => {
+          el.classList.remove('ai-skeleton-nearby');
+        });
         let contentText = fullText;
         if (contentText.trim().startsWith('TITLE:')) {
           const lines = contentText.split('\n');

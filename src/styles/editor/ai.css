@@ -82,8 +82,25 @@
 
 .ai-edit-original-block {
   position: relative;
-  opacity: 0.5;
+  opacity: 0.6;
   transition: opacity 0.3s ease;
+  background: rgba(196, 181, 253, 0.04) !important;
+  border-left: 3px solid rgba(196, 181, 253, 0.25) !important;
+  border-radius: 0 4px 4px 0;
+  margin-left: -3px;
+}
+
+.ai-edit-original-block::before {
+  content: '−';
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(196, 181, 253, 0.4);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: monospace;
+  pointer-events: none;
 }
 
 .ai-edit-original-block .bn-inline-content,
@@ -97,17 +114,31 @@
 .ai-edit-original-block li {
   text-decoration: line-through !important;
   text-decoration-color: rgba(196, 181, 253, 0.6) !important;
-  color: rgba(196, 181, 253, 0.45) !important;
+  color: rgba(196, 181, 253, 0.35) !important;
 }
 
 /* ===== Inline AI Edit Diff — new AI blocks (lavender) ===== */
 
 .ai-edit-new-block {
+  position: relative;
   background: rgba(196, 181, 253, 0.12) !important;
   border-left: 3px solid rgba(196, 181, 253, 0.5) !important;
   border-radius: 0 6px 6px 0;
   margin-left: -3px;
   animation: aiBlockFadeIn 0.3s ease-out;
+}
+
+.ai-edit-new-block::before {
+  content: '+';
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(196, 181, 253, 0.6);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: monospace;
+  pointer-events: none;
 }
 
 .ai-edit-new-block,
@@ -384,6 +415,70 @@
 
 .elixpo-done-discard:hover {
   background: rgba(248, 113, 113, 0.15);
+}
+
+/* ===== AI Editor Lock — prevent user editing during AI work ===== */
+
+.ai-editor-locked .bn-editor [contenteditable] {
+  pointer-events: none !important;
+  user-select: none !important;
+  opacity: 0.85;
+}
+
+.ai-editor-locked .bn-toolbar {
+  display: none !important;
+}
+
+/* ===== AI Selected Block — lavender highlight before AI starts editing ===== */
+
+.ai-edit-selected-block {
+  background: rgba(196, 181, 253, 0.15) !important;
+  border-left: 3px solid rgba(196, 181, 253, 0.4) !important;
+  border-radius: 0 6px 6px 0;
+  margin-left: -3px;
+  transition: background 0.3s ease;
+}
+
+.ai-edit-selected-block .bn-inline-content,
+.ai-edit-selected-block .bn-inline-content *,
+.ai-edit-selected-block p,
+.ai-edit-selected-block span,
+.ai-edit-selected-block strong,
+.ai-edit-selected-block em,
+.ai-edit-selected-block code,
+.ai-edit-selected-block a,
+.ai-edit-selected-block li {
+  color: #c4b5fd !important;
+}
+
+/* ===== AI Skeleton Loading — shimmer on nearby lines during thinking ===== */
+
+.ai-skeleton-nearby {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-skeleton-nearby::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    rgba(196, 181, 253, 0.08) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: aiSkeletonShimmer 1.8s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+.ai-skeleton-nearby .bn-inline-content,
+.ai-skeleton-nearby .bn-inline-content * {
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
 }
 
 /* ===== AI Error Toast ===== */
