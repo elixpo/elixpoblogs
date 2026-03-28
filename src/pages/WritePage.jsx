@@ -233,7 +233,62 @@ export default function WritePage({ slugid }) {
   const [isDraggingCover, setIsDraggingCover] = useState(false);
   const coverDragStart = useRef({ x: 0, y: 0, posX: 50, posY: 50 });
 
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle | local | syncing | synced
+  const [showSavedToast, setShowSavedToast] = useState(false);
+
   const username = user?.username || 'you';
+
+  // Ctrl+S → save to localStorage immediately, then sync to cloud
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+
+        // Save to localStorage first
+        if (title || editorContent) {
+          saveDraft(slugid, { title, subtitle, tags, publishAs, coverPreview, editorContent, pageEmoji });
+          setLastSaved(Date.now());
+          setSyncStatus('syncing');
+
+          // Sync to cloud
+          (async () => {
+            try {
+              const res = await fetch('/api/blogs/draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  slugid,
+                  title,
+                  subtitle,
+                  tags,
+                  publishAs,
+                  coverPreview,
+                  editorContent,
+                  pageEmoji,
+                }),
+              });
+
+              if (res.ok) {
+                setSyncStatus('synced');
+                setShowSavedToast(true);
+                setTimeout(() => setShowSavedToast(false), 3000);
+                setTimeout(() => setSyncStatus('idle'), 5000);
+              } else {
+                setSyncStatus('local');
+                setTimeout(() => setSyncStatus('idle'), 5000);
+              }
+            } catch {
+              setSyncStatus('local');
+              setTimeout(() => setSyncStatus('idle'), 5000);
+            }
+          })();
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [title, subtitle, tags, publishAs, coverPreview, editorContent, pageEmoji, slugid]);
 
   useEffect(() => {
     // Small delay to show skeleton and let the UI mount before heavy JSON parsing

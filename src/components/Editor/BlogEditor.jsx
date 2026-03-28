@@ -399,6 +399,27 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     getMarkdown: async () => await editor.blocksToMarkdownLossy(editor.document),
   }), [editor]);
 
+  // Prevent backspace from triggering browser back navigation when editor is empty
+  useEffect(() => {
+    const editorEl = wrapperRef.current?.querySelector('.bn-editor');
+    if (!editorEl) return;
+
+    function handleBackspace(e) {
+      if (e.key === 'Backspace') {
+        // Always prevent browser back when focused inside the editor
+        const isEditorFocused = editorEl.contains(document.activeElement) || editorEl === document.activeElement;
+        if (isEditorFocused) {
+          // Let BlockNote handle it, but stop the event from reaching the browser
+          e.stopPropagation();
+        }
+      }
+    }
+
+    // Use capture phase to catch it before the browser navigation handler
+    editorEl.addEventListener('keydown', handleBackspace, { capture: true });
+    return () => editorEl.removeEventListener('keydown', handleBackspace, { capture: true });
+  }, [editor]);
+
   // Handle clipboard paste of images — compress, upload, insert native image block
   useEffect(() => {
     const editorEl = wrapperRef.current?.querySelector('.bn-editor');
