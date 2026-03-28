@@ -266,7 +266,7 @@ async function generateAndUploadImage({
     const imageRes = await fetch(IMAGE_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, width, height }),
+      body: JSON.stringify({ prompt, width, height, model: "flux" }),
       signal: combinedSignal,
     });
     clearTimeout(timeout);
