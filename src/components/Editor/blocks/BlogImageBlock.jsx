@@ -19,6 +19,7 @@ export const BlogImageBlock = createReactBlockSpec(
       name: { default: '' },
       showPreview: { default: true },
       _imageId: { default: '' },
+      _mediaId: { default: '' },
     },
     content: 'none',
   },
@@ -77,7 +78,7 @@ function BlogImageRenderer({ block, editor }) {
       const res = await fetch('/api/media/upload', { method: 'POST', body: formData });
       if (!res.ok) throw new Error('Upload failed');
       const data = await res.json();
-      editor.updateBlock(block.id, { props: { url: data.url } });
+      editor.updateBlock(block.id, { props: { url: data.url, _mediaId: data.id || '' } });
       setMode('idle');
     } catch (err) {
       console.error('Upload failed:', err);
@@ -156,7 +157,7 @@ function BlogImageRenderer({ block, editor }) {
       if (!uploadRes.ok) throw new Error('Upload failed');
       const uploadData = await uploadRes.json();
 
-      editor.updateBlock(block.id, { props: { url: uploadData.url } });
+      editor.updateBlock(block.id, { props: { url: uploadData.url, _mediaId: uploadData.id || '' } });
       setMode('idle');
       setAiPrompt('');
     } catch (err) {
@@ -180,13 +181,31 @@ function BlogImageRenderer({ block, editor }) {
   }, []);
 
   const handleDelete = useCallback(() => {
+    // Delete from Cloudinary if we have a mediaId
+    const mediaId = block.props._mediaId;
+    if (mediaId) {
+      fetch('/api/media/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mediaId }),
+      }).catch(() => {}); // fire and forget
+    }
     try { editor.removeBlocks([block.id]); } catch {}
-  }, [editor, block.id]);
+  }, [editor, block.id, block.props._mediaId]);
 
   const handleReplace = useCallback(() => {
-    editor.updateBlock(block.id, { props: { url: '' } });
+    // Delete old image from Cloudinary
+    const mediaId = block.props._mediaId;
+    if (mediaId) {
+      fetch('/api/media/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mediaId }),
+      }).catch(() => {});
+    }
+    editor.updateBlock(block.id, { props: { url: '', _mediaId: '' } });
     setMode('idle');
-  }, [editor, block.id]);
+  }, [editor, block.id, block.props._mediaId]);
 
   const handleCaptionSave = useCallback(() => {
     editor.updateBlock(block.id, { props: { caption: captionText } });

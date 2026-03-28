@@ -725,13 +725,13 @@ export default function WritePage({ slugid }) {
                         }}
                       >
                         <div
-                          className="w-[72px] h-[72px] rounded-full bg-[#0e121b] border-[3px] border-[#0e121b] shadow-lg flex items-center justify-center cursor-pointer relative"
+                          className="w-[72px] h-[72px] rounded-full bg-[#0e121b] border-[3px] border-[#1a2030] shadow-lg flex items-center justify-center cursor-pointer relative"
+                          style={{ borderRadius: '50%' }}
                           onClick={() => setShowEmojiPicker(true)}
                         >
-                          <span className="text-[55px] leading-none select-none">{pageEmoji}</span>
-                          <div className="absolute inset-[-2px] rounded-full" />
+                          <span className="text-[42px] leading-none select-none">{pageEmoji}</span>
                         </div>
-                        <button onClick={() => setPageEmoji(null)} className="absolute -top-1 -right-3 opacity-0 group-hover:opacity-100 h-5 w-5 rounded-full bg-[#232d3f] border border-[#333] flex items-center justify-center text-[#888] hover:text-white transition-all text-[10px]">&times;</button>
+                        <button onClick={() => setPageEmoji(null)} className="absolute -top-1 -left-1 opacity-0 group-hover:opacity-100 h-5 w-5 rounded-full bg-[#232d3f] border border-[#333] flex items-center justify-center text-[#888] hover:text-white transition-all text-[10px] z-20">&times;</button>
                       </div>
                     )}
                   </div>
