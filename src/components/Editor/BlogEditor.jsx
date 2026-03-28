@@ -221,60 +221,105 @@ function isCurrentBlockEmpty(editor) {
 
 // ── BlogEditor ──
 
-// Sanitize saved content — convert raw LaTeX paragraphs back into blockEquation blocks
+// Sanitize saved content — convert raw LaTeX/code paragraphs back into proper block types
 function sanitizeInitialContent(blocks) {
   if (!blocks || !Array.isArray(blocks)) return blocks;
   const result = [];
   let i = 0;
+
+  const getText = (b) => (b.content || []).map(c => c.text || '').join('').trim();
+
   while (i < blocks.length) {
     const block = blocks[i];
-    const text = (block.content || []).map(c => c.text || '').join('').trim();
+    if (block.type !== 'paragraph') { result.push(block); i++; continue; }
 
-    if (block.type === 'paragraph') {
-      // Single-line \[...\]
-      const singleMatch = text.match(/^\\\[(.+)\\\]$/);
-      if (singleMatch) {
-        result.push({ ...block, type: 'blockEquation', props: { latex: singleMatch[1].trim() }, content: undefined });
+    const text = getText(block);
+
+    // Single-line \[...\] — may have \] at end of content
+    const singleBracket = text.match(/^\\\[(.+?)\\\]$/s);
+    if (singleBracket) {
+      result.push({ id: block.id, type: 'blockEquation', props: { latex: singleBracket[1].trim() } });
+      i++; continue;
+    }
+
+    // Single-line $$...$$
+    const singleDollar = text.match(/^\$\$(.+?)\$\$$/s);
+    if (singleDollar) {
+      result.push({ id: block.id, type: 'blockEquation', props: { latex: singleDollar[1].trim() } });
+      i++; continue;
+    }
+
+    // Multi-line \[ opener — collect until a block containing \]
+    if (text === '\\[' || text.startsWith('\\[')) {
+      const firstContent = text === '\\[' ? '' : text.slice(2);
+      // Check if \] is already in this block
+      const closeInFirst = firstContent.indexOf('\\]');
+      if (closeInFirst !== -1) {
+        const latex = firstContent.slice(0, closeInFirst).trim();
+        if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex } });
         i++; continue;
       }
-      // Single-line $$...$$
-      const singleDollar = text.match(/^\$\$(.+)\$\$$/);
-      if (singleDollar) {
-        result.push({ ...block, type: 'blockEquation', props: { latex: singleDollar[1].trim() }, content: undefined });
-        i++; continue;
-      }
-      // Opening \[ on its own — collect subsequent paragraphs until \]
-      if (text === '\\[') {
-        const latexParts = [];
+      const latexParts = firstContent ? [firstContent] : [];
+      i++;
+      while (i < blocks.length) {
+        const nextText = getText(blocks[i]);
+        // Check if this block contains the closing \]
+        const closeIdx = nextText.indexOf('\\]');
+        if (closeIdx !== -1) {
+          const before = nextText.slice(0, closeIdx).trim();
+          if (before) latexParts.push(before);
+          i++; break;
+        }
+        if (nextText === '\\]') { i++; break; }
+        latexParts.push(nextText);
         i++;
-        while (i < blocks.length) {
-          const nextText = (blocks[i].content || []).map(c => c.text || '').join('').trim();
-          if (nextText === '\\]') { i++; break; }
-          latexParts.push(nextText);
-          i++;
-        }
-        const latex = latexParts.join('\n').trim();
-        if (latex) {
-          result.push({ id: block.id, type: 'blockEquation', props: { latex } });
-        }
-        continue;
       }
-      // Opening $$ on its own
-      if (text === '$$') {
-        const latexParts = [];
+      const latex = latexParts.join('\n').trim();
+      if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex } });
+      continue;
+    }
+
+    // Multi-line $$ opener
+    if (text === '$$' || (text.startsWith('$$') && !text.endsWith('$$'))) {
+      const firstContent = text === '$$' ? '' : text.slice(2);
+      const latexParts = firstContent ? [firstContent] : [];
+      i++;
+      while (i < blocks.length) {
+        const nextText = getText(blocks[i]);
+        const closeIdx = nextText.indexOf('$$');
+        if (closeIdx !== -1) {
+          const before = nextText.slice(0, closeIdx).trim();
+          if (before) latexParts.push(before);
+          i++; break;
+        }
+        if (nextText === '$$') { i++; break; }
+        latexParts.push(nextText);
         i++;
-        while (i < blocks.length) {
-          const nextText = (blocks[i].content || []).map(c => c.text || '').join('').trim();
-          if (nextText === '$$') { i++; break; }
-          latexParts.push(nextText);
-          i++;
-        }
-        const latex = latexParts.join('\n').trim();
-        if (latex) {
-          result.push({ id: block.id, type: 'blockEquation', props: { latex } });
-        }
-        continue;
       }
+      const latex = latexParts.join('\n').trim();
+      if (latex) result.push({ id: block.id, type: 'blockEquation', props: { latex } });
+      continue;
+    }
+
+    // Code fence opener: ```lang — collect until closing ```
+    const fenceMatch = text.match(/^```(\w*)$/);
+    if (fenceMatch) {
+      const lang = fenceMatch[1] || '';
+      const codeLines = [];
+      i++;
+      while (i < blocks.length) {
+        const nextText = getText(blocks[i]);
+        if (nextText === '```') { i++; break; }
+        codeLines.push(nextText);
+        i++;
+      }
+      result.push({
+        id: block.id,
+        type: 'codeBlock',
+        props: { language: lang },
+        content: [{ type: 'text', text: codeLines.join('\n') }],
+      });
+      continue;
     }
 
     result.push(block);
