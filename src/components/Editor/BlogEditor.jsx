@@ -730,9 +730,21 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
 
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver(() => {
       // Pause observer while we apply styles to avoid infinite loop
       observer.disconnect();
+
+      // Re-apply highlight class to AI blocks that lost it during re-render
+      const ids = aiBlockIdsRef.current;
+      if (ids && ids.size > 0) {
+        for (const id of ids) {
+          const el = wrapper.querySelector(`[data-id="${id}"]`);
+          if (el && !el.classList.contains('ai-generated-highlight')) {
+            el.classList.add('ai-generated-highlight');
+          }
+        }
+      }
+
       wrapper.querySelectorAll('.ai-generated-highlight').forEach(forceLavenderOnBlock);
       // Re-observe after styles are applied
       observer.observe(wrapper, { childList: true, subtree: true, characterData: true });
@@ -786,8 +798,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   }, [editor]);
 
   const handleAIKeep = useCallback(() => {
-    // Stop observer, remove highlights, restore white color, hide sparkle
+    // Stop observer, remove highlights, restore default color, hide sparkle
     stopAiObserver();
+    hideSparkle();
     wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
       el.classList.remove('ai-generated-highlight');
       el.style.removeProperty('color');
@@ -795,28 +808,40 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         child.style.removeProperty('color');
       });
     });
-    hideSparkle();
     setAiBlockIds(new Set());
     aiBlockIdsRef.current = new Set();
     aiBlockCountRef.current = 0;
     aiAnchorIdRef.current = null;
     setShowAIActions(false);
-  }, [stopAiObserver]);
+  }, [stopAiObserver, hideSparkle]);
 
   const handleAIDiscard = useCallback(() => {
     // Stop observer, hide sparkle and remove AI-generated blocks
     stopAiObserver();
     hideSparkle();
-    const ids = getAiBlockIds();
-    if (ids.length > 0) {
-      try { editor.removeBlocks(ids); } catch {}
+    // Use stored IDs directly — more reliable than anchor+count after replaceBlocks
+    const storedIds = [...aiBlockIdsRef.current];
+    if (storedIds.length > 0) {
+      try { editor.removeBlocks(storedIds); } catch (e) {
+        // Fallback: try getAiBlockIds if stored IDs are stale
+        try {
+          const fallbackIds = getAiBlockIds();
+          if (fallbackIds.length > 0) editor.removeBlocks(fallbackIds);
+        } catch {}
+      }
     }
+    // Remove highlights from any remaining elements
+    wrapperRef.current?.querySelectorAll('.ai-generated-highlight').forEach((el) => {
+      el.classList.remove('ai-generated-highlight');
+      el.style.removeProperty('color');
+      el.querySelectorAll('*').forEach((child) => child.style.removeProperty('color'));
+    });
     setAiBlockIds(new Set());
     aiBlockIdsRef.current = new Set();
     aiBlockCountRef.current = 0;
     aiAnchorIdRef.current = null;
     setShowAIActions(false);
-  }, [editor, getAiBlockIds, stopAiObserver]);
+  }, [editor, getAiBlockIds, stopAiObserver, hideSparkle]);
 
   // Click on AI content to show keep/discard
   useEffect(() => {
@@ -917,20 +942,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     const abortController = new AbortController();
     aiAbortRef.current = abortController;
 
-    // Show glob cursor at the inserted AI block (where content will appear)
+    // Highlight the placeholder block and show sparkle
     requestAnimationFrame(() => {
-      highlightAiBlocks(currentIds, false); // highlight but don't move sparkle yet
-      // Position sparkle at the first AI block
-      const star = sparkleRef.current;
-      if (star) {
-        const aiEl = wrapperRef.current?.querySelector(`[data-id="${insertedBlock.id}"]`);
-        if (aiEl) {
-          const aiRect = aiEl.getBoundingClientRect();
-          star.style.left = (aiRect.left + 4) + 'px';
-          star.style.top = (aiRect.top + aiRect.height / 2 - 10) + 'px';
-          star.style.display = 'block';
-        }
-      }
+      highlightAiBlocks(currentIds, true);
       // Add skeleton loading to nearby lines during thinking
       const placeholderEl = wrapperRef.current?.querySelector(`[data-id="${insertedBlock.id}"]`);
       if (placeholderEl) {
@@ -1146,7 +1160,13 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           if (oldIds.length > 0) {
             editor.replaceBlocks(oldIds, newBlocks);
             aiBlockCountRef.current = newBlocks.length;
-            currentIds = getAiBlockIds();
+            // Read actual IDs from document after replacement
+            const anchorId = aiAnchorIdRef.current;
+            const doc = editor.document;
+            const anchorIdx = doc.findIndex((b) => b.id === anchorId);
+            if (anchorIdx !== -1) {
+              currentIds = doc.slice(anchorIdx + 1, anchorIdx + 1 + newBlocks.length).map((b) => b.id);
+            }
           }
         } catch {}
 
