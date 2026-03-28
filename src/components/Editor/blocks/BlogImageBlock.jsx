@@ -126,11 +126,15 @@ function BlogImageRenderer({ block, editor }) {
     if (!aiPrompt.trim()) return;
     setMode('generating');
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120000);
       const res = await fetch('/api/ai/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: aiPrompt.trim(), width: 1200, height: 675 }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       if (!res.ok) throw new Error(`Generation failed (${res.status})`);
       const data = await res.json();
       const b64 = data.data?.[0]?.b64_json;

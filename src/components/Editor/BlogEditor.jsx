@@ -954,17 +954,17 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     const abortController = new AbortController();
     aiAbortRef.current = abortController;
 
-    // Show glob cursor at the space-press position (the anchor block) immediately
+    // Show glob cursor at the inserted AI block (where content will appear)
     requestAnimationFrame(() => {
       highlightAiBlocks(currentIds, false); // highlight but don't move sparkle yet
-      // Position sparkle at the anchor block (where space was pressed)
+      // Position sparkle at the first AI block
       const star = sparkleRef.current;
       if (star) {
-        const anchorEl = wrapperRef.current?.querySelector(`[data-id="${anchorBlockId}"]`);
-        if (anchorEl) {
-          const anchorRect = anchorEl.getBoundingClientRect();
-          star.style.left = (anchorRect.right - 10) + 'px';
-          star.style.top = (anchorRect.top + anchorRect.height / 2 - 10) + 'px';
+        const aiEl = wrapperRef.current?.querySelector(`[data-id="${insertedBlock.id}"]`);
+        if (aiEl) {
+          const aiRect = aiEl.getBoundingClientRect();
+          star.style.left = (aiRect.left + 4) + 'px';
+          star.style.top = (aiRect.top + aiRect.height / 2 - 10) + 'px';
           star.style.display = 'block';
         }
       }
@@ -1242,24 +1242,25 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       const doc = editor.document;
       for (const block of doc) {
         if (block.type === 'image' && block.props?._imageId === imageId) {
-          editor.removeBlocks([block.id]);
+          // Convert to empty paragraph instead of removing — leaves an empty line
+          editor.updateBlock(block.id, { type: 'paragraph', props: {}, content: [] });
           return;
         }
         // Also check paragraph blocks with IMG_LOADING text
         if (block.type === 'paragraph') {
           const text = (block.content || []).map(c => c.text || '').join('');
           if (text.includes(`IMG_LOADING:${imageId}`)) {
-            editor.removeBlocks([block.id]);
+            editor.updateBlock(block.id, { type: 'paragraph', props: {}, content: [] });
             return;
           }
         }
       }
-      // Fallback: remove any image block with no URL (empty placeholder)
+      // Fallback: convert any image block with no URL (empty placeholder)
       for (const block of doc) {
         if (block.type === 'image' && (!block.props?.url || block.props.url === '')) {
           const el = wrapperRef.current?.querySelector(`[data-id="${block.id}"]`);
           if (el?.classList.contains('ai-image-skeleton')) {
-            editor.removeBlocks([block.id]);
+            editor.updateBlock(block.id, { type: 'paragraph', props: {}, content: [] });
             return;
           }
         }

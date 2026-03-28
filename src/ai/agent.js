@@ -256,12 +256,20 @@ async function generateAndUploadImage({
 }) {
   try {
     // Generate image via server proxy (keeps API key server-side)
+    // GPT image generation can take up to 90s — use a generous timeout
+    const timeoutController = new AbortController();
+    const timeout = setTimeout(() => timeoutController.abort(), 120000);
+    const combinedSignal = signal
+      ? AbortSignal.any([signal, timeoutController.signal])
+      : timeoutController.signal;
+
     const imageRes = await fetch(IMAGE_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, width, height }),
-      signal,
+      signal: combinedSignal,
     });
+    clearTimeout(timeout);
 
     if (!imageRes.ok) {
       throw new Error(`Image generation failed (${imageRes.status})`);
