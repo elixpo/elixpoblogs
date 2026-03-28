@@ -1,7 +1,8 @@
 // Client-side AI module — text streaming + agentic orchestrator with image generation
 // All client-side AI logic lives here. Server proxies: /api/ai/stream, /api/ai/agent
 
-const POLLINATIONS_IMAGE_BASE = 'https://gen.pollinations.ai/v1/images/generations';
+// Image generation goes through our server proxy to keep API key safe
+const IMAGE_API = '/api/ai/image';
 
 // ── Simple text streaming (calls /api/ai/stream) ──
 
@@ -254,17 +255,11 @@ async function generateAndUploadImage({
   signal,
 }) {
   try {
-    // Generate image via Pollinations
-    const imageRes = await fetch(POLLINATIONS_IMAGE_BASE, {
+    // Generate image via server proxy (keeps API key server-side)
+    const imageRes = await fetch(IMAGE_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        model: 'gptimage',
-        size: `${width}x${height}`,
-        response_format: 'b64_json',
-        n: 1,
-      }),
+      body: JSON.stringify({ prompt, width, height }),
       signal,
     });
 

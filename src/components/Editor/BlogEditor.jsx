@@ -1052,17 +1052,24 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
             updateBlocksFromText(fullText);
           },
           onImageStart: ({ id, prompt, alt }) => {
-            // Image placeholder is already in the text via the agent
             setAiPhase('generating_image');
+            // Apply skeleton frame to the image placeholder block
+            requestAnimationFrame(() => {
+              wrapperRef.current?.querySelectorAll('[data-content-type="image"]').forEach((imgBlock) => {
+                const img = imgBlock.querySelector('img');
+                if (!img || !img.src || img.src === window.location.href || img.src.includes('IMG_LOADING')) {
+                  imgBlock.closest('[data-node-type="blockContainer"]')?.classList.add('ai-image-skeleton');
+                }
+              });
+            });
           },
           onImageDone: ({ id, url, alt }) => {
-            // Replace the placeholder image block with the real URL
             replaceImagePlaceholder(id, url, alt);
             setAiPhase('writing');
           },
           onImageError: ({ id, error }) => {
-            // Remove the broken placeholder
             removeImagePlaceholder(id);
+            setAiErrorToast(error || 'Image generation failed');
           },
           onDone: (fullText) => {
             finishAI(fullText);
@@ -1203,7 +1210,25 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       for (const block of doc) {
         if (block.type === 'image' && block.props?._imageId === imageId) {
           editor.removeBlocks([block.id]);
-          break;
+          return;
+        }
+        // Also check paragraph blocks with IMG_LOADING text
+        if (block.type === 'paragraph') {
+          const text = (block.content || []).map(c => c.text || '').join('');
+          if (text.includes(`IMG_LOADING:${imageId}`)) {
+            editor.removeBlocks([block.id]);
+            return;
+          }
+        }
+      }
+      // Fallback: remove any image block with no URL (empty placeholder)
+      for (const block of doc) {
+        if (block.type === 'image' && (!block.props?.url || block.props.url === '')) {
+          const el = wrapperRef.current?.querySelector(`[data-id="${block.id}"]`);
+          if (el?.classList.contains('ai-image-skeleton')) {
+            editor.removeBlocks([block.id]);
+            return;
+          }
         }
       }
     } catch {}
