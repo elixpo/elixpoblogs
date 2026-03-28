@@ -556,8 +556,18 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     const ids = aiBlockIdsRef.current;
     if (!ids || ids.size === 0) { star.style.display = 'none'; return; }
 
-    const lastId = [...ids][ids.size - 1];
-    const blockEl = wrapperRef.current?.querySelector(`[data-id="${lastId}"]`);
+    // Find the last text block (skip image blocks — glob cursor is only for text)
+    let lastTextId = null;
+    for (const id of [...ids].reverse()) {
+      const el = wrapperRef.current?.querySelector(`[data-id="${id}"]`);
+      if (el && !el.querySelector('.blog-img-empty, .blog-img-loaded, .blog-img-generating')) {
+        lastTextId = id;
+        break;
+      }
+    }
+    if (!lastTextId) { star.style.display = 'none'; return; }
+
+    const blockEl = wrapperRef.current?.querySelector(`[data-id="${lastTextId}"]`);
     if (!blockEl) { star.style.display = 'none'; return; }
 
     const inlineEl = blockEl.querySelector('.bn-inline-content') || blockEl.querySelector('p') || blockEl;

@@ -197,7 +197,7 @@ function HamburgerMenu({ onShareDraft, onChangeCover, onChangeTitle, onChangeTop
               onClick={() => { setOpen(false); document.querySelector('[data-shortcuts-btn]')?.click(); }}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] text-[#c8c8c8] hover:text-white hover:bg-[#ffffff06] transition-colors"
             >
-              <ion-icon name="keyboard-outline" style={{ fontSize: '15px' }} />
+              <svg width="15" height="15" viewBox="0 0 512 512" fill="none" stroke="currentColor" strokeWidth="36" strokeLinecap="round" strokeLinejoin="round"><rect x="48" y="128" width="416" height="256" rx="48" ry="48"/><path d="M160 304h192"/><path d="M160 240h16m48 0h16m48 0h16m48 0h16"/><path d="M160 176h16m48 0h16m48 0h16m48 0h16"/></svg>
               Keyboard shortcuts
             </button>
           </div>
