@@ -6,40 +6,10 @@
   border-radius: 0 6px 6px 0;
   margin-left: -3px;
   transition: background 0.3s ease, border-color 0.3s ease;
-  animation: aiBlockFadeIn 0.3s ease-out;
-}
-
-@keyframes aiBlockFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .ai-generated-highlight .bn-block-content {
-  background: rgba(167, 139, 250, 0.12) !important;
-  border-radius: 4px;
-}
-
-/* Smooth text appearance during AI streaming — word-level fade in effect */
-.ai-generated-highlight .bn-inline-content {
-  animation: aiTextFadeIn 0.4s ease-out;
-}
-
-.ai-generated-highlight .bn-inline-content span,
-.ai-generated-highlight .bn-inline-content a,
-.ai-generated-highlight .bn-inline-content code,
-.ai-generated-highlight .bn-inline-content strong,
-.ai-generated-highlight .bn-inline-content em {
-  animation: aiWordFadeIn 0.35s ease-out both;
-}
-
-@keyframes aiTextFadeIn {
-  from { opacity: 0.3; filter: blur(2px); }
-  to { opacity: 1; filter: blur(0); }
-}
-
-@keyframes aiWordFadeIn {
-  from { opacity: 0; transform: translateY(4px); filter: blur(2px); }
-  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  background: transparent !important;
 }
 
 /* Force lavender color on ALL text inside AI blocks — use broad selectors to beat inline styles */

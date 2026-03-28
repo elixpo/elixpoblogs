@@ -538,26 +538,18 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   }, [patchCodeBlocks, onReady]);
 
 
-  // AI sparkle star — fixed position, follows the last AI block's text end
+  // AI sparkle star — inline element appended to last AI text block
   const sparkleRef = useRef(null);
 
-  useEffect(() => {
-    // Create sparkle once, keep hidden until AI starts
-    const star = document.createElement('div');
-    star.className = 'ai-glob-cursor';
-    star.style.cssText = '';
-    document.body.appendChild(star);
-    sparkleRef.current = star;
-    return () => { star.remove(); sparkleRef.current = null; };
-  }, []);
-
   const moveSparkleToLastAiBlock = useCallback(() => {
-    const star = sparkleRef.current;
-    if (!star) return;
-    const ids = aiBlockIdsRef.current;
-    if (!ids || ids.size === 0) { star.style.display = 'none'; return; }
+    // Remove any existing sparkle from DOM
+    const existing = wrapperRef.current?.querySelector('.ai-glob-cursor');
+    if (existing) existing.remove();
 
-    // Find the last text block (skip image blocks — glob cursor is only for text)
+    const ids = aiBlockIdsRef.current;
+    if (!ids || ids.size === 0) return;
+
+    // Find the last text block (skip image blocks)
     let lastTextId = null;
     for (const id of [...ids].reverse()) {
       const el = wrapperRef.current?.querySelector(`[data-id="${id}"]`);
@@ -566,62 +558,25 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         break;
       }
     }
-    if (!lastTextId) { star.style.display = 'none'; return; }
+    if (!lastTextId) return;
 
     const blockEl = wrapperRef.current?.querySelector(`[data-id="${lastTextId}"]`);
-    if (!blockEl) { star.style.display = 'none'; return; }
+    if (!blockEl) return;
 
     const inlineEl = blockEl.querySelector('.bn-inline-content') || blockEl.querySelector('p') || blockEl;
 
-    // Try to find the last text node and position at its end
-    try {
-      const textNodes = [];
-      const walker = document.createTreeWalker(inlineEl, NodeFilter.SHOW_TEXT);
-      let n;
-      while ((n = walker.nextNode())) textNodes.push(n);
-
-      if (textNodes.length > 0) {
-        const lastText = textNodes[textNodes.length - 1];
-        const range = document.createRange();
-        range.setStart(lastText, lastText.length);
-        range.collapse(true);
-        const rect = range.getBoundingClientRect();
-        if (rect.width !== undefined && rect.height > 0) {
-          star.style.left = (rect.right) + 'px';
-          star.style.top = (rect.top + rect.height / 2 - 10) + 'px';
-          star.style.display = 'block';
-          return;
-        }
-      }
-    } catch {}
-
-    // Fallback: position at the left edge of the block (for empty blocks)
-    const blockRect = blockEl.getBoundingClientRect();
-    if (blockRect.height > 0) {
-      star.style.left = (blockRect.left + 4) + 'px';
-      star.style.top = (blockRect.top + 2) + 'px';
-      star.style.display = 'block';
-    }
+    // Create and append sparkle inline at the end of the text
+    const star = document.createElement('span');
+    star.className = 'ai-glob-cursor';
+    inlineEl.appendChild(star);
+    sparkleRef.current = star;
   }, []);
 
   const hideSparkle = useCallback(() => {
-    if (sparkleRef.current) {
-      sparkleRef.current.style.display = 'none';
-      sparkleRef.current.style.left = '-100px';
-      sparkleRef.current.style.top = '-100px';
-    }
+    const existing = wrapperRef.current?.querySelector('.ai-glob-cursor');
+    if (existing) existing.remove();
+    sparkleRef.current = null;
   }, []);
-
-  // Reposition sparkle on scroll so it stays with the text
-  useEffect(() => {
-    function onScroll() {
-      if (sparkleRef.current && sparkleRef.current.style.display === 'block') {
-        moveSparkleToLastAiBlock();
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [moveSparkleToLastAiBlock]);
 
   const getItems = useMemo(
     () => async (query) => filterItems(getCustomSlashMenuItems(editor), query),
