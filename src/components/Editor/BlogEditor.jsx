@@ -379,6 +379,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const aiBlockIdsRef = useRef(new Set());
   const aiBlockCountRef = useRef(0);
   const aiAnchorIdRef = useRef(null);
+  const resolvedImagesRef = useRef({}); // Track resolved AI image URLs: { imageId: { url, alt } }
   const wrapperRef = useRef(null);
 
   const sanitizedContent = useMemo(() => sanitizeInitialContent(initialContent), [initialContent]);
@@ -905,7 +906,14 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
   const handleAISubmit = useCallback(async (userPrompt) => {
     setShowAIMenu(false);
+
+    // Auto-keep previous AI content if any exists
+    if (aiBlockIdsRef.current.size > 0) {
+      handleAIKeep();
+    }
+
     setShowAIActions(false);
+    resolvedImagesRef.current = {};
 
     // Detect title-related prompts
     const titleKeywords = /\b(title|heading|name.*blog|blog.*name)\b/i;
@@ -1097,6 +1105,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
             });
           },
           onImageDone: ({ id, url, alt }) => {
+            resolvedImagesRef.current[id] = { url, alt };
             replaceImagePlaceholder(id, url, alt);
             setAiPhase('writing');
           },
@@ -1137,6 +1146,15 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           return;
         }
 
+        // Replace IMG_LOADING: markers with resolved image URLs so we don't overwrite them
+        const resolved = resolvedImagesRef.current;
+        for (const [imageId, { url, alt }] of Object.entries(resolved)) {
+          contentText = contentText.replace(
+            new RegExp(`!\\[([^\\]]*)\\]\\(IMG_LOADING:${imageId}\\)`),
+            `![${alt || '$1'}](${url})`
+          );
+        }
+
         const newBlocks = parseMarkdownToBlocks(contentText);
         const oldIds = getAiBlockIds();
         try {
@@ -1144,6 +1162,17 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
             editor.replaceBlocks(oldIds, newBlocks);
             aiBlockCountRef.current = newBlocks.length;
             currentIds = getAiBlockIds();
+          }
+        } catch {}
+
+        // Insert an empty paragraph after the last AI block so user can keep typing
+        try {
+          const lastAiId = currentIds[currentIds.length - 1];
+          if (lastAiId) {
+            const lastBlock = editor.getBlock(lastAiId);
+            if (lastBlock) {
+              editor.insertBlocks([{ type: 'paragraph', content: [] }], lastBlock, 'after');
+            }
           }
         } catch {}
 
