@@ -221,6 +221,68 @@ function isCurrentBlockEmpty(editor) {
 
 // ── BlogEditor ──
 
+// Sanitize saved content — convert raw LaTeX paragraphs back into blockEquation blocks
+function sanitizeInitialContent(blocks) {
+  if (!blocks || !Array.isArray(blocks)) return blocks;
+  const result = [];
+  let i = 0;
+  while (i < blocks.length) {
+    const block = blocks[i];
+    const text = (block.content || []).map(c => c.text || '').join('').trim();
+
+    if (block.type === 'paragraph') {
+      // Single-line \[...\]
+      const singleMatch = text.match(/^\\\[(.+)\\\]$/);
+      if (singleMatch) {
+        result.push({ ...block, type: 'blockEquation', props: { latex: singleMatch[1].trim() }, content: undefined });
+        i++; continue;
+      }
+      // Single-line $$...$$
+      const singleDollar = text.match(/^\$\$(.+)\$\$$/);
+      if (singleDollar) {
+        result.push({ ...block, type: 'blockEquation', props: { latex: singleDollar[1].trim() }, content: undefined });
+        i++; continue;
+      }
+      // Opening \[ on its own — collect subsequent paragraphs until \]
+      if (text === '\\[') {
+        const latexParts = [];
+        i++;
+        while (i < blocks.length) {
+          const nextText = (blocks[i].content || []).map(c => c.text || '').join('').trim();
+          if (nextText === '\\]') { i++; break; }
+          latexParts.push(nextText);
+          i++;
+        }
+        const latex = latexParts.join('\n').trim();
+        if (latex) {
+          result.push({ id: block.id, type: 'blockEquation', props: { latex } });
+        }
+        continue;
+      }
+      // Opening $$ on its own
+      if (text === '$$') {
+        const latexParts = [];
+        i++;
+        while (i < blocks.length) {
+          const nextText = (blocks[i].content || []).map(c => c.text || '').join('').trim();
+          if (nextText === '$$') { i++; break; }
+          latexParts.push(nextText);
+          i++;
+        }
+        const latex = latexParts.join('\n').trim();
+        if (latex) {
+          result.push({ id: block.id, type: 'blockEquation', props: { latex } });
+        }
+        continue;
+      }
+    }
+
+    result.push(block);
+    i++;
+  }
+  return result;
+}
+
 const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, onReady, onTitleChange, blogId }, ref) {
   const [showMentionMenu, setShowMentionMenu] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
@@ -241,9 +303,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const aiAnchorIdRef = useRef(null);
   const wrapperRef = useRef(null);
 
+  const sanitizedContent = useMemo(() => sanitizeInitialContent(initialContent), [initialContent]);
+
   const editor = useCreateBlockNote({
     schema,
-    initialContent: initialContent || undefined,
+    initialContent: sanitizedContent || undefined,
     domAttributes: {
       editor: { class: 'blog-editor' },
     },
