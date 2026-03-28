@@ -1220,7 +1220,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       setShowAIActions(false);
       setAiErrorToast(err.message || 'AI generation failed');
     }
-  }, [editor, getAiBlockIds, highlightAiBlocks, getFullBlogContext, blogId]);
+  }, [editor, getAiBlockIds, highlightAiBlocks, getFullBlogContext, blogId, handleAIKeep]);
 
   // Replace an image placeholder with the real Cloudinary URL
   const replaceImagePlaceholder = useCallback((imageId, url, alt) => {
@@ -1298,7 +1298,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   }, [editor]);
 
   return (
-    <div className="blog-editor-wrapper" ref={wrapperRef} style={{ position: 'relative' }}>
+    <div className={`blog-editor-wrapper${(aiGenerating || (showAIActions && aiBlockIds.size > 0)) ? ' ai-editor-locked' : ''}`} ref={wrapperRef} style={{ position: 'relative' }}>
       <BlockNoteView
         editor={editor}
         onChange={handleChange}

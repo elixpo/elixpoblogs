@@ -49,15 +49,27 @@
 .ai-generated-highlight .bn-inline-content,
 .ai-generated-highlight .bn-inline-content *,
 .ai-generated-highlight [data-content-type] *,
+.ai-generated-highlight [data-content-type],
 .ai-generated-highlight p,
 .ai-generated-highlight span,
 .ai-generated-highlight strong,
 .ai-generated-highlight em,
 .ai-generated-highlight code,
 .ai-generated-highlight a,
-.ai-generated-highlight li {
+.ai-generated-highlight li,
+.ai-generated-highlight h1,
+.ai-generated-highlight h2,
+.ai-generated-highlight h3,
+.ai-generated-highlight [contenteditable] *,
+.ai-generated-highlight [contenteditable] {
   color: #c4b5fd !important;
   caret-color: #c4b5fd !important;
+}
+
+/* Ensure the highlight background is visible even on dark theme block containers */
+.ai-generated-highlight .bn-block-content,
+.ai-generated-highlight [class*="blockContent"] {
+  background: transparent !important;
 }
 
 /* ===== AI Edit Diff Styles (lavender theme) ===== */
