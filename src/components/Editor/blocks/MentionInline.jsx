@@ -39,11 +39,14 @@ function MentionChip({ username, displayName, avatarUrl }) {
 
   return (
     <>
-      <span
+      <a
         ref={chipRef}
+        href={`/@${username}`}
         className="mention-chip"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onClick={(e) => { e.stopPropagation(); }}
+        style={{ textDecoration: 'none' }}
       >
         {avatarUrl ? (
           <img src={avatarUrl} alt="" className="mention-chip-avatar" />
@@ -53,7 +56,7 @@ function MentionChip({ username, displayName, avatarUrl }) {
           </span>
         )}
         @{displayName || username}
-      </span>
+      </a>
 
       {showCard && (
         <div
@@ -102,19 +105,6 @@ function MentionChip({ username, displayName, avatarUrl }) {
           {/* Orgs — show if available from blogs or fetch */}
           {/* TODO: orgs could be fetched separately if needed */}
 
-          {/* View profile link */}
-          <a
-            href={`/@${username}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '4px',
-              fontSize: 12, color: '#9b7bf7', textDecoration: 'none', fontWeight: 500,
-            }}
-          >
-            View full profile
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
         </div>
       )}
     </>
