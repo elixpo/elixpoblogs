@@ -162,7 +162,6 @@ function HamburgerMenu({ onShareDraft, onChangeCover, onChangeTitle, onChangeTop
     { label: 'Change featured image', action: onChangeCover, icon: 'image-outline' },
     { label: 'Change display title', action: onChangeTitle, icon: 'text-outline' },
     { label: 'Change topics', action: onChangeTopics, icon: 'pricetags-outline' },
-    { label: 'See revision history', action: onRevisionHistory, icon: 'time-outline' },
     { label: 'More settings', action: onMoreSettings, icon: 'options-outline' },
   ];
 
@@ -222,6 +221,8 @@ export default function WritePage({ slugid }) {
   const [showPublishPanel, setShowPublishPanel] = useState(false);
   const [showPublishMenu, setShowPublishMenu] = useState(false);
   const [showCoverModal, setShowCoverModal] = useState(false);
+  const [coverUrlMode, setCoverUrlMode] = useState(false);
+  const [coverUrlInput, setCoverUrlInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [pageEmoji, setPageEmoji] = useState(null);
   const [editorContent, setEditorContent] = useState(null);
@@ -839,13 +840,7 @@ export default function WritePage({ slugid }) {
                             />
                           </label>
                           <button
-                            onClick={() => {
-                              const url = prompt('Paste image URL:');
-                              if (url?.trim()) {
-                                setCoverPreview(url.trim());
-                                setShowCoverModal(false);
-                              }
-                            }}
+                            onClick={() => setCoverUrlMode(true)}
                             className="flex flex-col items-center gap-2 group/url"
                           >
                             <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover/url:bg-white/20 transition-colors">
@@ -857,6 +852,43 @@ export default function WritePage({ slugid }) {
                             <span className="text-xs text-white/70 font-medium">From URL</span>
                           </button>
                         </div>
+                        {/* Inline URL input — slides up from bottom */}
+                        {coverUrlMode && (
+                          <div className="absolute bottom-0 left-0 right-0 z-20 bg-black/60 backdrop-blur-md p-4 rounded-b-xl">
+                            <div className="flex gap-2">
+                              <input
+                                autoFocus
+                                type="url"
+                                value={coverUrlInput}
+                                onChange={(e) => setCoverUrlInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && coverUrlInput.trim()) {
+                                    setCoverPreview(coverUrlInput.trim());
+                                    setShowCoverModal(false);
+                                    setCoverUrlMode(false);
+                                    setCoverUrlInput('');
+                                  }
+                                  if (e.key === 'Escape') { setCoverUrlMode(false); setCoverUrlInput(''); }
+                                }}
+                                placeholder="Paste image URL and press Enter..."
+                                className="flex-1 bg-white/10 text-white rounded-lg px-3 py-2 text-[13px] outline-none border border-white/20 focus:border-white/40 placeholder-white/40"
+                              />
+                              <button
+                                onClick={() => {
+                                  if (coverUrlInput.trim()) {
+                                    setCoverPreview(coverUrlInput.trim());
+                                    setShowCoverModal(false);
+                                    setCoverUrlMode(false);
+                                    setCoverUrlInput('');
+                                  }
+                                }}
+                                className="px-4 py-2 bg-white/15 text-white rounded-lg text-[13px] font-medium hover:bg-white/25 transition-colors"
+                              >
+                                Set
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         <button
                           onClick={() => setShowCoverModal(false)}
                           className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-black/30 backdrop-blur flex items-center justify-center text-white/60 hover:text-white transition-colors"

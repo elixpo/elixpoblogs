@@ -12,6 +12,19 @@ function renderBlocksToHTML(blocks) {
       if (c.type === 'inlineEquation' && c.props?.latex) {
         return `<span class="preview-inline-equation" data-latex="${encodeURIComponent(c.props.latex)}"></span>`;
       }
+      if (c.type === 'mention' && c.props?.username) {
+        const name = c.props.displayName || c.props.username;
+        const avatar = c.props.avatarUrl
+          ? `<img src="${c.props.avatarUrl}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px">`
+          : '';
+        return `<a href="/@${c.props.username}" class="mention-chip" style="text-decoration:none">${avatar}@${name}</a>`;
+      }
+      if (c.type === 'blogMention' && c.props?.slugid) {
+        return `<a href="/${c.props.slugid}" style="color:#60a5fa;text-decoration:none;font-weight:500">${c.props.title || 'Untitled blog'}</a>`;
+      }
+      if (c.type === 'orgMention' && c.props?.slug) {
+        return `<a href="/@${c.props.slug}" style="color:#60a5fa;text-decoration:none;font-weight:500">@${c.props.name || c.props.slug}</a>`;
+      }
       let text = (c.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       if (!text) return '';
       const s = c.styles || {};
@@ -21,7 +34,6 @@ function renderBlocksToHTML(blocks) {
       if (s.code) text = `<code>${text}</code>`;
       if (s.underline) text = `<u>${text}</u>`;
       if (c.type === 'link' && c.href) text = `<a href="${c.href}">${text}</a>`;
-      // Inline text color
       if (s.textColor) text = `<span style="color:${s.textColor}">${text}</span>`;
       if (s.backgroundColor) text = `<span style="background:${s.backgroundColor};border-radius:3px;padding:0 2px">${text}</span>`;
       return text;
