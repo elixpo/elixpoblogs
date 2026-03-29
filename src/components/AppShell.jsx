@@ -77,37 +77,36 @@ function ProfileDropdown({ user, logout }) {
           <div className="h-px bg-[#232d3f]" />
 
           {/* Organizations section */}
-          {orgs.length > 0 && (
-            <>
-              <div className="py-1.5">
-                <p className="px-5 pt-2 pb-1 text-[10px] text-[#666] font-semibold uppercase tracking-wider">Organizations</p>
-                {orgs.slice(0, 4).map(org => (
-                  <Link
-                    key={org.id}
-                    href={`/@${org.slug}`}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-5 py-2 text-[13px] text-[#c8c8c8] hover:text-white hover:bg-[#ffffff06] transition-colors"
-                  >
-                    {org.logo_url ? (
-                      <img src={org.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
-                    ) : (
-                      <div className="w-5 h-5 rounded bg-[#232d3f] flex items-center justify-center text-[9px] text-[#9ca3af] font-bold">
-                        {(org.name || '?')[0].toUpperCase()}
-                      </div>
-                    )}
-                    <span className="truncate">{org.name}</span>
-                    <span className="ml-auto text-[10px] text-[#555] bg-[#1a2030] px-1.5 py-0.5 rounded">{org.role}</span>
-                  </Link>
-                ))}
-                {orgs.length > 4 && (
-                  <Link href="/settings" onClick={() => setOpen(false)} className="px-5 py-1.5 text-[11px] text-[#9b7bf7] hover:text-[#b69aff] block">
-                    View all ({orgs.length})
-                  </Link>
+          <div className="py-1.5">
+            <p className="px-5 pt-2 pb-1 text-[10px] text-[#666] font-semibold uppercase tracking-wider">Organizations</p>
+            {orgs.slice(0, 4).map(org => (
+              <Link
+                key={org.id}
+                href={`/@${org.slug}`}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-5 py-2 text-[13px] text-[#c8c8c8] hover:text-white hover:bg-[#ffffff06] transition-colors"
+              >
+                {org.logo_url ? (
+                  <img src={org.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
+                ) : (
+                  <div className="w-5 h-5 rounded bg-[#232d3f] flex items-center justify-center text-[9px] text-[#9ca3af] font-bold">
+                    {(org.name || '?')[0].toUpperCase()}
+                  </div>
                 )}
-              </div>
-              <div className="h-px bg-[#232d3f]" />
-            </>
-          )}
+                <span className="truncate">{org.name}</span>
+                <span className="ml-auto text-[10px] text-[#555] bg-[#1a2030] px-1.5 py-0.5 rounded">{org.role}</span>
+              </Link>
+            ))}
+            <Link
+              href="/settings?tab=organization"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-5 py-2 text-[13px] text-[#9b7bf7] hover:text-[#b69aff] hover:bg-[#ffffff06] transition-colors"
+            >
+              <ion-icon name="add-circle-outline" style={{ fontSize: '16px' }} />
+              {orgs.length > 0 ? 'Manage Organizations' : 'Create Organization'}
+            </Link>
+          </div>
+          <div className="h-px bg-[#232d3f]" />
 
           {/* Main links */}
           <div className="py-1.5">
