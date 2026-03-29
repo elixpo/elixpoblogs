@@ -436,6 +436,61 @@
   -webkit-text-fill-color: rgba(196, 181, 253, 0.6) !important;
 }
 
+/* ===== AI Placeholder Skeleton — shimmer on the empty line where AI will type ===== */
+
+.ai-placeholder-skeleton {
+  position: relative;
+  min-height: 28px;
+  overflow: hidden;
+  background: rgba(167, 139, 250, 0.08) !important;
+  border-left: 3px solid rgba(196, 181, 253, 0.35) !important;
+  border-radius: 0 6px 6px 0;
+  margin-left: -3px;
+}
+
+.ai-placeholder-skeleton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    rgba(196, 181, 253, 0.15) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: aiSkeletonShimmer 1.8s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Fake text lines inside skeleton */
+.ai-placeholder-skeleton::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  width: 60%;
+  height: 10px;
+  background: rgba(196, 181, 253, 0.1);
+  border-radius: 4px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ===== Inline Status Bar — text fade transition ===== */
+
+.ai-status-text-fade {
+  animation: aiStatusFade 0.4s ease-out;
+}
+
+@keyframes aiStatusFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ===== AI Skeleton Loading — shimmer on nearby lines during thinking ===== */
 
 .ai-skeleton-nearby {
