@@ -24,7 +24,7 @@ export default function AICommandMenu({ position, onSubmit, onClose }) {
   }, [onClose]);
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
+    if (e.key === 'Escape' || (e.key === 'Backspace' && !query)) {
       e.preventDefault();
       onClose();
     } else if (e.key === 'Enter' && query.trim()) {

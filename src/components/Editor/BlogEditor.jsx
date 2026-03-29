@@ -445,6 +445,14 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         // Always prevent browser back when focused inside the editor
         const isEditorFocused = editorEl.contains(document.activeElement) || editorEl === document.activeElement;
         if (isEditorFocused) {
+          // Convert empty heading to paragraph on backspace
+          const cursor = editor.getTextCursorPosition();
+          if (cursor?.block?.type === 'heading' && (!cursor.block.content || cursor.block.content.length === 0 || (cursor.block.content.length === 1 && cursor.block.content[0].text === ''))) {
+            e.preventDefault();
+            e.stopPropagation();
+            editor.updateBlock(cursor.block.id, { type: 'paragraph', props: {} });
+            return;
+          }
           // Let BlockNote handle it, but stop the event from reaching the browser
           e.stopPropagation();
         }
@@ -1150,8 +1158,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
               // Text-based block — insert empty, then animate typing
               const blockType = blockDef.type || 'paragraph';
               const props = {};
-              if (blockType === 'heading' && blockDef.props?.level) {
-                props.level = blockDef.props.level;
+              if (blockType === 'heading') {
+                const lvl = parseInt(blockDef.props?.level) || 2;
+                props.level = String(Math.max(lvl, 2)); // h1 reserved for blog title
               }
               if (blockType === 'codeBlock' && blockDef.props?.language) {
                 props.language = blockDef.props.language;
