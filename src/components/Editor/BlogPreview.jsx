@@ -225,7 +225,7 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
               zIndex: 10,
             }}
           >
-            <div className="w-[72px] h-[72px] rounded-full bg-[#0e121b] border-[3px] border-[#0e121b] shadow-lg flex items-center justify-center relative">
+            <div className="w-[72px] h-[72px] rounded-full bg-[#131922] border-[3px] border-[#131922] shadow-lg flex items-center justify-center relative">
               <span className="text-[42px] leading-none select-none">{pageEmoji}</span>
               <div className="absolute inset-[-2px] rounded-full border border-[#232d3f]" />
             </div>
@@ -249,9 +249,9 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
         <div className="flex items-center gap-3 mt-3 mb-4">
           <div className="flex -space-x-2">
             {user.avatar_url ? (
-              <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-[#0e121b]" />
+              <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-[#131922]" />
             ) : (
-              <div className="w-7 h-7 rounded-full bg-[#232d3f] border-2 border-[#0e121b] flex items-center justify-center text-[11px] font-bold text-[#9ca3af]">
+              <div className="w-7 h-7 rounded-full bg-[#232d3f] border-2 border-[#131922] flex items-center justify-center text-[11px] font-bold text-[#9ca3af]">
                 {(user.display_name || user.username || '?')[0].toUpperCase()}
               </div>
             )}

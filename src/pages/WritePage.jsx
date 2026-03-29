@@ -442,9 +442,9 @@ export default function WritePage({ slugid }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0c1017] text-white edit-page">
+    <div className="min-h-screen bg-[#131922] text-white edit-page">
       {/* Header */}
-      <header className="fixed top-0 left-0 w-full h-14 border-b border-[#232d3f] flex items-center justify-between px-5 bg-[#0c1017]/95 backdrop-blur-md z-50">
+      <header className="fixed top-0 left-0 w-full h-14 border-b border-[#232d3f] flex items-center justify-between px-5 bg-[#131922]/95 backdrop-blur-md z-50">
         {/* Left: Logo + breadcrumb */}
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
@@ -490,7 +490,7 @@ export default function WritePage({ slugid }) {
               </button>
               <button
                 onClick={() => setShowPublishMenu(!showPublishMenu)}
-                className="px-2 py-1.5 bg-[#9b7bf7] text-white rounded-r-full border-l border-[#0c1017]/10 hover:bg-[#b69aff] transition-colors"
+                className="px-2 py-1.5 bg-[#9b7bf7] text-white rounded-r-full border-l border-[#131922]/10 hover:bg-[#b69aff] transition-colors"
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 12 15 18 9" />
@@ -859,9 +859,9 @@ export default function WritePage({ slugid }) {
                   <div className="flex items-center gap-3 mt-3 mb-4">
                     <div className="flex -space-x-2">
                       {user?.avatar_url ? (
-                        <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-[#0e121b]" />
+                        <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-[#131922]" />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-[#232d3f] border-2 border-[#0e121b] flex items-center justify-center text-[11px] font-bold text-[#9ca3af]">
+                        <div className="w-7 h-7 rounded-full bg-[#232d3f] border-2 border-[#131922] flex items-center justify-center text-[11px] font-bold text-[#9ca3af]">
                           {(user?.display_name || user?.username || '?')[0].toUpperCase()}
                         </div>
                       )}
@@ -958,7 +958,7 @@ export default function WritePage({ slugid }) {
 
         <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-thin">
           {/* Blog Properties */}
-          <div className="flex items-center gap-4 text-[13px] text-[#9ca3af] bg-[#0c1017] border border-[#232d3f] rounded-lg px-4 py-3">
+          <div className="flex items-center gap-4 text-[13px] text-[#9ca3af] bg-[#131922] border border-[#232d3f] rounded-lg px-4 py-3">
             <span className="flex items-center gap-1.5">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
               {wordCount} words
@@ -979,7 +979,7 @@ export default function WritePage({ slugid }) {
                   key={opt}
                   onClick={() => setPublishAs(opt)}
                   className={`flex-1 py-2 rounded-lg text-[13px] font-medium transition-colors ${
-                    publishAs === opt ? 'bg-white text-white' : 'bg-[#0c1017] border border-[#232d3f] text-[#9ca3af] hover:text-white hover:border-[#333]'
+                    publishAs === opt ? 'bg-white text-white' : 'bg-[#131922] border border-[#232d3f] text-[#9ca3af] hover:text-white hover:border-[#333]'
                   }`}
                 >
                   {opt.charAt(0).toUpperCase() + opt.slice(1)}
@@ -1006,7 +1006,7 @@ export default function WritePage({ slugid }) {
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
                 placeholder="Add a tag..."
-                className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3 py-2 outline-none text-[13px] border border-[#232d3f] focus:border-[#333] transition-colors placeholder-[#6b7a8d]"
+                className="w-full bg-[#131922] text-[#e0e0e0] rounded-lg px-3 py-2 outline-none text-[13px] border border-[#232d3f] focus:border-[#333] transition-colors placeholder-[#6b7a8d]"
               />
             )}
           </div>
@@ -1014,7 +1014,7 @@ export default function WritePage({ slugid }) {
           {/* URL Slug */}
           <div>
             <label className="text-[12px] text-[#9ca3af] mb-2 block font-medium">URL Slug</label>
-            <div className="flex items-center bg-[#0c1017] rounded-lg border border-[#232d3f] overflow-hidden">
+            <div className="flex items-center bg-[#131922] rounded-lg border border-[#232d3f] overflow-hidden">
               <span className="text-[#8896a8] text-[13px] px-3">@{username}/</span>
               <input
                 type="text"
@@ -1028,7 +1028,7 @@ export default function WritePage({ slugid }) {
           {/* Preview Card */}
           <div>
             <label className="text-[12px] text-[#9ca3af] mb-2 block font-medium">Preview</label>
-            <div className="bg-[#0c1017] border border-[#232d3f] rounded-xl p-4">
+            <div className="bg-[#131922] border border-[#232d3f] rounded-xl p-4">
               {coverPreview && (
                 <img src={coverPreview} alt="Cover" className="w-full h-[100px] object-cover rounded-lg mb-3" />
               )}

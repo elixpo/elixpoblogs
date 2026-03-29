@@ -148,9 +148,9 @@ export default function AppShell({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0c1017]">
+    <div className="min-h-screen bg-[#131922]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0c1017]/95 backdrop-blur-md border-b border-[#232d3f]">
+      <header className="sticky top-0 z-50 bg-[#131922]/95 backdrop-blur-md border-b border-[#232d3f]">
         <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3">

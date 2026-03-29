@@ -110,9 +110,9 @@ export default function ProfilePage() {
           </div>
           <div className="absolute -bottom-12 left-6">
             {user.avatar_url ? (
-              <img src={user.avatar_url} alt="" className="h-24 w-24 rounded-full border-4 border-[#0c1017] object-cover" />
+              <img src={user.avatar_url} alt="" className="h-24 w-24 rounded-full border-4 border-[#131922] object-cover" />
             ) : (
-              <div className="h-24 w-24 rounded-full border-4 border-[#0c1017] bg-[#2a2d3a] flex items-center justify-center text-3xl text-[#b0b0b0] font-bold">
+              <div className="h-24 w-24 rounded-full border-4 border-[#131922] bg-[#2a2d3a] flex items-center justify-center text-3xl text-[#b0b0b0] font-bold">
                 {(user.display_name || user.username || '?')[0].toUpperCase()}
               </div>
             )}
