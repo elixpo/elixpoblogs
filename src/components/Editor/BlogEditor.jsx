@@ -762,7 +762,32 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     }
   }, []);
 
-  // No MutationObserver needed — CSS handles lavender via -webkit-text-fill-color
+  // Re-apply ai-generated-highlight after BlockNote re-renders (which destroys DOM classes)
+  useEffect(() => {
+    if (aiBlockIds.size === 0) return;
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    let applyPending = false;
+    const applyHighlights = () => {
+      if (applyPending) return;
+      applyPending = true;
+      requestAnimationFrame(() => {
+        applyPending = false;
+        for (const id of aiBlockIds) {
+          const el = wrapper.querySelector(`[data-id="${id}"]`);
+          if (el && !el.classList.contains('ai-generated-highlight')) {
+            el.classList.add('ai-generated-highlight');
+          }
+        }
+      });
+    };
+
+    applyHighlights();
+    const observer = new MutationObserver(applyHighlights);
+    observer.observe(wrapper, { childList: true, subtree: true, attributes: false });
+    return () => observer.disconnect();
+  }, [aiBlockIds]);
 
   // Highlight AI blocks in the DOM with lavender class + position sparkle
   const highlightAiBlocks = useCallback((ids, showCursor = true) => {
@@ -1101,8 +1126,8 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       async function animateTyping(blockId, contentStr, signal) {
         if (!contentStr || signal?.aborted) return;
         const chars = [...contentStr];
-        const BATCH = 3;
-        const DELAY = 20;
+        const BATCH = 8;
+        const DELAY = 12;
 
         for (let i = 0; i <= chars.length; i += BATCH) {
           if (signal?.aborted) return;
@@ -1111,7 +1136,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           try {
             editor.updateBlock(blockId, { content: partialContent });
           } catch { return; }
-          if (i % 30 === 0) {
+          if (i % 40 === 0) {
             const el = wrapperRef.current?.querySelector(`[data-id="${blockId}"]`);
             if (el) {
               const rect = el.getBoundingClientRect();
@@ -1255,18 +1280,29 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
                 }
 
                 try {
-                  editor.replaceBlocks([insertedBlock.id], [{ type: blockType, props, content: [] }]);
-                  // Update insertedBlock reference to the replaced block
-                  const refreshedDoc = editor.document;
-                  const anchorIdx = refreshedDoc.findIndex((b) => b.id === aiAnchorIdRef.current);
-                  if (anchorIdx !== -1 && anchorIdx + 1 < refreshedDoc.length) {
-                    insertedBlock = refreshedDoc[anchorIdx + 1];
-                    currentIds = [insertedBlock.id];
-                    aiBlockIdsRef.current = new Set(currentIds);
+                  // Only change type if it differs from the placeholder paragraph
+                  if (blockType !== 'paragraph') {
+                    editor.updateBlock(insertedBlock.id, { type: blockType, props });
+                  } else if (Object.keys(props).length > 0) {
+                    editor.updateBlock(insertedBlock.id, { props });
                   }
                 } catch (updateErr) {
-                  console.error('Failed to update placeholder block:', updateErr);
-                  continue;
+                  // Fallback: remove old block, insert new one with correct type
+                  try {
+                    const anchorId = aiAnchorIdRef.current;
+                    editor.removeBlocks([insertedBlock.id]);
+                    editor.insertBlocks([{ type: blockType, props, content: [] }], anchorId, 'after');
+                    const refreshedDoc = editor.document;
+                    const anchorIdx = refreshedDoc.findIndex((b) => b.id === anchorId);
+                    if (anchorIdx !== -1 && anchorIdx + 1 < refreshedDoc.length) {
+                      insertedBlock = refreshedDoc[anchorIdx + 1];
+                      currentIds = [insertedBlock.id];
+                      aiBlockIdsRef.current = new Set(currentIds);
+                    }
+                  } catch (fallbackErr) {
+                    console.error('Failed to update placeholder block:', fallbackErr);
+                    continue;
+                  }
                 }
 
                 highlightAiBlocks(currentIds, true);
@@ -1458,16 +1494,14 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       setAiGeneratingBlockId(null);
       aiAbortRef.current = null;
       setShowAIActions(currentIds.length > 0);
-      requestAnimationFrame(() => {
-        highlightAiBlocks(currentIds, false);
-      });
+      highlightAiBlocks(currentIds, false);
     } catch (err) {
       handleAIError(err);
     }
   }, [editor, getAiBlockIds, highlightAiBlocks, getFullBlogContext, blogId, handleAIKeep, aiMenuPos, hideSparkle, onTitleChange, replaceImagePlaceholder, removeImagePlaceholder]);
 
   return (
-    <div className={`blog-editor-wrapper${(showAIActions && aiBlockIds.size > 0) ? ' ai-editor-locked' : ''}`} ref={wrapperRef} style={{ position: 'relative' }}>
+    <div className={`blog-editor-wrapper${aiGenerating ? ' ai-editor-locked' : ''}`} ref={wrapperRef} style={{ position: 'relative' }}>
       <BlockNoteView
         editor={editor}
         onChange={handleChange}
