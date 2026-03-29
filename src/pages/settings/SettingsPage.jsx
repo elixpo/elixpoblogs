@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { generatePixelAvatar } from '../../utils/pixelAvatar';
 import AppShell from '../../components/AppShell';
 import Link from 'next/link';
 
@@ -335,6 +336,22 @@ function NotificationsTab() {
   );
 }
 
+// Random org name suggestions (GitHub-style)
+const ORG_NAME_ADJECTIVES = ['curious', 'bold', 'swift', 'bright', 'calm', 'cool', 'epic', 'kind', 'lucky', 'neat', 'rare', 'wise', 'keen', 'cozy', 'zesty'];
+const ORG_NAME_NOUNS = ['panda', 'falcon', 'lotus', 'spark', 'pixel', 'orbit', 'coral', 'cedar', 'flint', 'prism', 'ridge', 'bloom', 'ember', 'drift', 'grove'];
+
+function getRandomOrgNames(count = 3) {
+  const names = [];
+  const used = new Set();
+  while (names.length < count) {
+    const adj = ORG_NAME_ADJECTIVES[Math.floor(Math.random() * ORG_NAME_ADJECTIVES.length)];
+    const noun = ORG_NAME_NOUNS[Math.floor(Math.random() * ORG_NAME_NOUNS.length)];
+    const combo = `${adj}-${noun}`;
+    if (!used.has(combo)) { used.add(combo); names.push(combo); }
+  }
+  return names;
+}
+
 // ── Create Org Modal ──
 function CreateOrgModal({ onClose, onCreated }) {
   const [name, setName] = useState('');
@@ -345,6 +362,7 @@ function CreateOrgModal({ onClose, onCreated }) {
   const [visibility, setVisibility] = useState('public');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
+  const [suggestions] = useState(() => getRandomOrgNames(3));
 
   useEffect(() => {
     if (name) {
@@ -384,6 +402,27 @@ function CreateOrgModal({ onClose, onCreated }) {
         </div>
 
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* Pixel avatar preview */}
+          <div className="flex items-center gap-4">
+            <img src={generatePixelAvatar(slug || name || 'org')} alt="" className="w-14 h-14 rounded-xl" />
+            <div className="text-[12px] text-[#8896a8]">Auto-generated avatar based on your org name. You can change it later.</div>
+          </div>
+
+          {/* Name suggestions */}
+          {!name && (
+            <div>
+              <label className="text-[11px] text-[#666] mb-1.5 block">Need inspiration?</label>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map(s => (
+                  <button key={s} onClick={() => setName(s)}
+                    className="px-3 py-1.5 text-[12px] text-[#9b7bf7] bg-[#9b7bf70a] border border-[#9b7bf720] rounded-lg hover:bg-[#9b7bf714] transition-colors">
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="text-[12px] text-[#9ca3af] mb-1.5 block font-medium">Name *</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="My Organization"

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import AppShell from '../../components/AppShell';
 import Link from 'next/link';
+import { generatePixelAvatar } from '../../utils/pixelAvatar';
 
 const ROLE_LABELS = { admin: 'Admin', maintain: 'Maintain', write: 'Write', read: 'Read' };
 const ROLE_COLORS = { admin: '#f87171', maintain: '#fbbf24', write: '#4ade80', read: '#9ca3af' };
@@ -190,9 +191,7 @@ export default function OrgManagePage({ slug }) {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </Link>
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#232d3f] flex items-center justify-center text-[16px] text-[#9ca3af] font-bold">
-              {(org.name || '?')[0].toUpperCase()}
-            </div>
+            <img src={org.logo_url || generatePixelAvatar(org.slug)} alt="" className="h-10 w-10 rounded-lg" />
             <div>
               <h1 className="text-xl font-bold text-white">{org.name}</h1>
               <p className="text-[12px] text-[#8896a8]">@{org.slug}</p>
