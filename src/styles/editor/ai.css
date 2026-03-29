@@ -1,8 +1,8 @@
-/* ===== AI Generated Block Highlight (green) ===== */
+/* ===== AI Generated Block Highlight (pink) ===== */
 
 .ai-generated-highlight {
-  background: rgba(74, 222, 128, 0.08) !important;
-  border-left: 3px solid rgba(74, 222, 128, 0.5) !important;
+  background: rgba(244, 114, 182, 0.08) !important;
+  border-left: 3px solid rgba(244, 114, 182, 0.5) !important;
   border-radius: 0 6px 6px 0;
   margin-left: -3px;
 }
@@ -12,14 +12,14 @@
 }
 
 /*
- * Force green color on AI-generated text.
+ * Force pink color on AI-generated text.
  * -webkit-text-fill-color overrides inline styles that CSS !important alone cannot beat.
  */
 .ai-generated-highlight [contenteditable="true"],
 .ai-generated-highlight [contenteditable="true"] * {
-  color: #4ade80 !important;
-  caret-color: #4ade80 !important;
-  -webkit-text-fill-color: #4ade80 !important;
+  color: #f472b6 !important;
+  caret-color: #f472b6 !important;
+  -webkit-text-fill-color: #f472b6 !important;
 }
 
 /* Also cover non-editable rendered content inside AI blocks */
@@ -34,8 +34,8 @@
 .ai-generated-highlight h1,
 .ai-generated-highlight h2,
 .ai-generated-highlight h3 {
-  color: #4ade80 !important;
-  -webkit-text-fill-color: #4ade80 !important;
+  color: #f472b6 !important;
+  -webkit-text-fill-color: #f472b6 !important;
 }
 
 /* ===== AI Edit Diff Styles (lavender theme) ===== */
