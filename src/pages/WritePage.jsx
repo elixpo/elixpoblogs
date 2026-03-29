@@ -1131,7 +1131,7 @@ export default function WritePage({ slugid }) {
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
-                placeholder="Add a tag..."
+                placeholder="Add a tag, press Enter..."
                 className="w-full bg-[#131922] text-[#e0e0e0] rounded-lg px-3 py-2 outline-none text-[13px] border border-[#232d3f] focus:border-[#333] transition-colors placeholder-[#6b7a8d]"
               />
             )}
