@@ -15,15 +15,15 @@ function renderBlocksToHTML(blocks) {
       if (c.type === 'mention' && c.props?.username) {
         const name = c.props.displayName || c.props.username;
         const avatar = c.props.avatarUrl
-          ? `<img src="${c.props.avatarUrl}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px">`
-          : '';
-        return `<a href="/@${c.props.username}" class="mention-chip" style="text-decoration:none">${avatar}@${name}</a>`;
+          ? `<img src="${c.props.avatarUrl}" alt="" class="mention-chip-avatar">`
+          : `<span class="mention-chip-initial">${(name || '?')[0].toUpperCase()}</span>`;
+        return `<a href="/@${c.props.username}" class="mention-chip">${avatar}@${name}</a>`;
       }
       if (c.type === 'blogMention' && c.props?.slugid) {
-        return `<a href="/${c.props.slugid}" style="color:#60a5fa;text-decoration:none;font-weight:500">${c.props.title || 'Untitled blog'}</a>`;
+        return `<a href="/${c.props.slugid}" class="mention-chip">${c.props.title || 'Untitled blog'}</a>`;
       }
       if (c.type === 'orgMention' && c.props?.slug) {
-        return `<a href="/@${c.props.slug}" style="color:#60a5fa;text-decoration:none;font-weight:500">@${c.props.name || c.props.slug}</a>`;
+        return `<a href="/@${c.props.slug}" class="mention-chip">@${c.props.name || c.props.slug}</a>`;
       }
       let text = (c.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       if (!text) return '';
@@ -40,12 +40,30 @@ function renderBlocksToHTML(blocks) {
     }).join('');
   }
 
+  // Collect headings for TOC
+  const headings = [];
+  for (const block of blocks) {
+    if (block.type === 'heading') {
+      const text = (block.content || []).map(c => c.text || '').join('');
+      if (text.trim()) {
+        const id = `h-${text.trim().toLowerCase().replace(/[^\w]+/g, '-').slice(0, 40)}`;
+        headings.push({ id, text: text.trim(), level: block.props?.level || 1 });
+      }
+    }
+  }
+
   for (const block of blocks) {
     const content = inlineToHTML(block.content);
     switch (block.type) {
+      case 'tableOfContents':
+        // Placeholder — will be replaced with actual TOC after all headings are collected
+        parts.push('__TOC_PLACEHOLDER__');
+        break;
       case 'heading': {
         const level = block.props?.level || 1;
-        parts.push(`<h${level}>${content}</h${level}>`);
+        const text = (block.content || []).map(c => c.text || '').join('');
+        const id = `h-${text.trim().toLowerCase().replace(/[^\w]+/g, '-').slice(0, 40)}`;
+        parts.push(`<h${level} id="${id}">${content}</h${level}>`);
         break;
       }
       case 'bulletListItem':

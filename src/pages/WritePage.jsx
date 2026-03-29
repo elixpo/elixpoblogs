@@ -946,15 +946,18 @@ export default function WritePage({ slugid }) {
 
                   {/* Emoji picker — absolute positioned, glassmorphic */}
                   {showEmojiPicker && (
-                    <div className="relative">
-                      <div className="absolute left-0 top-0 z-50 emoji-picker-glass">
-                        <EmojiPicker
-                          onSelect={(emoji) => { setPageEmoji(emoji); setShowEmojiPicker(false); }}
-                          onRemove={() => { setPageEmoji(null); setShowEmojiPicker(false); }}
-                          onClose={() => setShowEmojiPicker(false)}
-                        />
+                    <>
+                      <div className="fixed inset-0 z-[60]" onClick={() => setShowEmojiPicker(false)} />
+                      <div className="relative">
+                        <div className="absolute left-0 top-0 z-[61] emoji-picker-glass">
+                          <EmojiPicker
+                            onSelect={(emoji) => { setPageEmoji(emoji); setShowEmojiPicker(false); }}
+                            onRemove={() => { setPageEmoji(null); setShowEmojiPicker(false); }}
+                            onClose={() => setShowEmojiPicker(false)}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    </>
                   )}
 
                   <div className="relative">

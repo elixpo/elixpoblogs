@@ -56,12 +56,12 @@
   margin-bottom: 0.75em;
 }
 
-.blog-preview-content a {
+.blog-preview-content a:not(.mention-chip) {
   color: #7ba8f0;
   text-decoration: underline;
 }
 
-.blog-preview-content a:hover {
+.blog-preview-content a:not(.mention-chip):hover {
   color: #9dc0ff;
 }
 
@@ -145,7 +145,7 @@
   font-size: 0.85em;
 }
 
-.blog-preview-content img {
+.blog-preview-content img:not(.mention-chip-avatar) {
   border-radius: 10px;
   max-width: 100%;
   width: 100%;
