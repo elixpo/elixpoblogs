@@ -1517,7 +1517,6 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         onChange={handleChange}
         theme="dark"
         slashMenu={false}
-        spellCheck={false}
       >
         <SuggestionMenuController
           triggerCharacter="/"

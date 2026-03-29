@@ -134,30 +134,16 @@ function renderBlocksToHTML(blocks) {
     }
   }
 
-  // Build TOC HTML — matches editor's TableOfContents block exactly
+  // TOC is rendered as a floating sidebar in the component, not in the HTML
   let tocHTML = '';
-  if (headings.length >= 2) {
-    tocHTML = `<div class="toc-block" style="border:1px solid #232d3f;border-radius:12px;background:#141a26;padding:16px 20px;margin:8px 0 24px">
-      <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#8896a8;font-weight:700;margin-bottom:12px">Table of Contents</p>
-      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">`;
-    for (const h of headings) {
-      tocHTML += `<li><a href="#${h.id}" style="padding-left:${(h.level - 1) * 16}px;font-size:13px;color:#9b7bf7;text-decoration:none;display:block;transition:color 0.15s"
-        onmouseover="this.style.color='#b69aff'" onmouseout="this.style.color='#9b7bf7'">${h.text}</a></li>`;
-    }
-    tocHTML += '</ul></div>';
-  }
 
   // Wrap consecutive bullet/numbered items in lists
   let html = parts.join('\n');
   html = html.replace(/((?:<li class="preview-bullet">.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
   html = html.replace(/((?:<li class="preview-numbered">.*?<\/li>\n?)+)/g, '<ol>$1</ol>');
 
-  // Replace TOC placeholder or prepend TOC by default
-  if (html.includes('__TOC_PLACEHOLDER__')) {
-    html = html.replace('__TOC_PLACEHOLDER__', tocHTML);
-  } else if (tocHTML) {
-    html = tocHTML + html;
-  }
+  // Remove TOC placeholder (rendered separately as floating sidebar)
+  html = html.replace('__TOC_PLACEHOLDER__', '');
 
   return html;
 }
@@ -250,7 +236,58 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
   }, [renderedHTML]);
 
   return (
-    <div className="blog-preview">
+    <div className="blog-preview" style={{ position: 'relative' }} id="blog-preview-top">
+      {/* Floating TOC — top right */}
+      {headings.length >= 2 && (
+        <div style={{
+          position: 'fixed', top: '80px', right: '24px', width: '200px', zIndex: 30,
+          maxHeight: 'calc(100vh - 120px)', overflowY: 'auto',
+        }} className="hidden xl:block">
+          <p style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#666', fontWeight: 700, marginBottom: 8 }}>
+            On this page
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {headings.map(h => (
+              <li key={h.id}>
+                <a
+                  href={`#${h.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                  style={{
+                    paddingLeft: (h.level - 1) * 12, fontSize: 12, color: '#8896a8',
+                    textDecoration: 'none', display: 'block', padding: '2px 0',
+                    paddingLeft: (h.level - 1) * 12,
+                    transition: 'color 0.15s',
+                  }}
+                  onMouseOver={e => e.target.style.color = '#c4b5fd'}
+                  onMouseOut={e => e.target.style.color = '#8896a8'}
+                >
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Back to top button */}
+      <button
+        onClick={() => document.getElementById('blog-preview-top')?.scrollIntoView({ behavior: 'smooth' })}
+        style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 30,
+          width: 36, height: 36, borderRadius: '50%', border: '1px solid #232d3f',
+          background: '#141a26', color: '#8896a8', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'color 0.15s, border-color 0.15s',
+        }}
+        onMouseOver={e => { e.currentTarget.style.color = '#c4b5fd'; e.currentTarget.style.borderColor = '#c4b5fd40'; }}
+        onMouseOut={e => { e.currentTarget.style.color = '#8896a8'; e.currentTarget.style.borderColor = '#232d3f'; }}
+        title="Back to top"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+      </button>
       {/* Cover + emoji */}
       <div className="relative mb-2">
         {coverPreview && (
