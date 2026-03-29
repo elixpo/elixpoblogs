@@ -358,6 +358,23 @@
   background: rgba(248, 113, 113, 0.15);
 }
 
+/* ===== AI Input Host — hide block content when AI input takes its place ===== */
+
+.ai-input-host .bn-inline-content,
+.ai-input-host .bn-block-content {
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.ai-input-host {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
 /* ===== AI Editor Lock — prevent user editing during AI work ===== */
 
 .ai-editor-locked .bn-editor [contenteditable] {
