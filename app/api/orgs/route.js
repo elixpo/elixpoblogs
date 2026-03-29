@@ -68,10 +68,15 @@ export async function POST(request) {
       return NextResponse.json({ error: `You can own up to ${limits.ownedOrgs} org(s) on the ${user?.tier || 'free'} plan` }, { status: 403 });
     }
 
-    // Check slug uniqueness
-    const existing = await db.prepare('SELECT id FROM orgs WHERE slug = ?').bind(cleanSlug).first();
-    if (existing) {
-      return NextResponse.json({ error: 'Slug already taken' }, { status: 409 });
+    // Check namespace — slug must not conflict with any username or org slug
+    const { checkNameAvailable, reserveName } = await import('../../../lib/namespace');
+    const nsCheck = await checkNameAvailable(db, cleanSlug);
+    if (!nsCheck.available) {
+      return NextResponse.json({
+        error: nsCheck.takenBy === 'user'
+          ? 'This name is taken by a user'
+          : 'This org slug is already taken',
+      }, { status: 409 });
     }
 
     const orgId = crypto.randomUUID();
@@ -81,6 +86,9 @@ export async function POST(request) {
       INSERT INTO orgs (id, slug, name, description, bio, website, visibility, owner_id, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(orgId, cleanSlug, name.trim(), description || '', bio || '', website || '', visibility || 'public', session.userId, now, now).run();
+
+    // Reserve in shared namespace
+    await reserveName(db, cleanSlug, 'org', orgId);
 
     // Owner is also a member with admin role
     await db.prepare(`
@@ -156,16 +164,18 @@ export async function DELETE(request) {
     const { getDB } = await import('../../../lib/cloudflare');
     const db = getDB();
 
-    const org = await db.prepare('SELECT owner_id FROM orgs WHERE id = ?').bind(orgId).first();
+    const org = await db.prepare('SELECT owner_id, slug FROM orgs WHERE id = ?').bind(orgId).first();
     if (!org || org.owner_id !== session.userId) {
       return NextResponse.json({ error: 'Only the owner can delete an organization' }, { status: 403 });
     }
 
-    // Cascade: members, invites, collections removed by FK CASCADE
+    // Cascade: members, invites, collections, namespace
+    const { releaseName } = await import('../../../lib/namespace');
     await db.prepare('DELETE FROM org_members WHERE org_id = ?').bind(orgId).run();
     await db.prepare('DELETE FROM org_invites WHERE org_id = ?').bind(orgId).run();
     await db.prepare('DELETE FROM collections WHERE org_id = ?').bind(orgId).run();
     await db.prepare('DELETE FROM orgs WHERE id = ?').bind(orgId).run();
+    if (org.slug) await releaseName(db, org.slug);
 
     return NextResponse.json({ ok: true });
   } catch (e) {

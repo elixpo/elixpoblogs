@@ -23,9 +23,11 @@ export async function POST(request) {
 
   try {
     const { getDB } = await import('../../../../lib/cloudflare');
+    const { ensureUniqueBlogSlug } = await import('../../../../lib/namespace');
     const db = getDB();
     const now = Math.floor(Date.now() / 1000);
-    const slug = generateSlug(title);
+    const baseSlug = generateSlug(title);
+    const slug = await ensureUniqueBlogSlug(db, baseSlug, slugid);
     const readTime = Math.max(1, Math.ceil(countWords(editorContent) / 250));
 
     const existing = await db.prepare('SELECT id, author_id, status FROM blogs WHERE id = ?').bind(slugid).first();

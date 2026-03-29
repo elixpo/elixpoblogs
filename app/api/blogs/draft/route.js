@@ -38,7 +38,9 @@ export async function POST(request) {
       ).run();
     } else {
       // Create new draft
-      const slug = generateSlug(title);
+      const { ensureUniqueBlogSlug } = await import('../../../../lib/namespace');
+      const baseSlug = generateSlug(title);
+      const slug = await ensureUniqueBlogSlug(db, baseSlug, slugid);
       await db.prepare(`
         INSERT INTO blogs (id, slug, title, subtitle, content, author_id, published_as, status, page_emoji, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?)
