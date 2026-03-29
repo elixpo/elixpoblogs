@@ -1314,7 +1314,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   }, [editor]);
 
   return (
-    <div className={`blog-editor-wrapper${(aiGenerating || (showAIActions && aiBlockIds.size > 0)) ? ' ai-editor-locked' : ''}`} ref={wrapperRef} style={{ position: 'relative' }}>
+    <div className={`blog-editor-wrapper${(showAIActions && aiBlockIds.size > 0) ? ' ai-editor-locked' : ''}`} ref={wrapperRef} style={{ position: 'relative' }}>
       <BlockNoteView
         editor={editor}
         onChange={handleChange}
