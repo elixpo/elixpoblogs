@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { generatePixelAvatar } from '../../utils/pixelAvatar';
 import AppShell from '../../components/AppShell';
@@ -574,7 +575,10 @@ function SubscriptionTab() {
 // ── Main Settings Page ──
 export default function SettingsPage() {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState(0);
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialTab = tabParam ? TABS.findIndex(t => t.toLowerCase() === tabParam.toLowerCase()) : 0;
+  const [activeTab, setActiveTab] = useState(initialTab >= 0 ? initialTab : 0);
 
   if (loading) {
     return (
