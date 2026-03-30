@@ -1,5 +1,17 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
+import { decompressBlogContent } from '../../../lib/compress';
+
+function decompressBlog(blog) {
+  if (!blog) return blog;
+  try {
+    blog.content = decompressBlogContent(blog.content);
+  } catch {
+    // If decompression fails, try parsing as raw JSON
+    try { blog.content = JSON.parse(blog.content); } catch { /* leave as-is */ }
+  }
+  return blog;
+}
 
 // Resolve @name to user or org, optionally fetch a blog by slug
 export async function GET(request) {
@@ -54,7 +66,7 @@ export async function GET(request) {
         return NextResponse.json({
           type: 'blog',
           owner: { type: 'user', ...user },
-          blog: { ...blog, tags: (tags?.results || []).map(t => t.tag) },
+          blog: { ...decompressBlog(blog), tags: (tags?.results || []).map(t => t.tag) },
         });
       }
 
@@ -110,7 +122,7 @@ export async function GET(request) {
           type: 'blog',
           owner: { type: 'org', ...org },
           collection: { id: col.id, slug: collection },
-          blog: { ...blog, tags: (tags?.results || []).map(t => t.tag) },
+          blog: { ...decompressBlog(blog), tags: (tags?.results || []).map(t => t.tag) },
         });
       }
 
@@ -128,7 +140,7 @@ export async function GET(request) {
         return NextResponse.json({
           type: 'blog',
           owner: { type: 'org', ...org },
-          blog: { ...blog, tags: (tags?.results || []).map(t => t.tag) },
+          blog: { ...decompressBlog(blog), tags: (tags?.results || []).map(t => t.tag) },
         });
       }
 

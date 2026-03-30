@@ -65,7 +65,7 @@ export async function POST(request) {
           page_emoji, cover_image_r2_key, read_time_minutes, created_at, updated_at, published_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
-        slugid, slug, title, subtitle || '', JSON.stringify(editorContent),
+        slugid, slug, title, subtitle || '', compressedContent,
         session.userId, publishAs || 'personal', targetStatus,
         pageEmoji || '', coverUrl || '', readTime, now, now,
         (targetStatus === 'published' || targetStatus === 'unlisted') ? now : null
