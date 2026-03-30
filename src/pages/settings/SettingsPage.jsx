@@ -375,13 +375,17 @@ function CreateOrgModal({ onClose, onCreated }) {
   }, [name]);
 
   // Check slug availability (debounced)
+  const [slugError, setSlugError] = useState('');
   useEffect(() => {
-    if (!slug || slug.length < 2) { setSlugAvailable(null); return; }
+    if (!slug || slug.length < 2) { setSlugAvailable(null); setSlugError(''); return; }
     const timer = setTimeout(() => {
       fetch(`/api/check-name?name=${encodeURIComponent(slug)}`)
         .then(r => r.json())
-        .then(d => setSlugAvailable(d.available))
-        .catch(() => setSlugAvailable(null));
+        .then(d => {
+          setSlugAvailable(d.available);
+          setSlugError(d.available ? '' : (d.error || 'Already taken'));
+        })
+        .catch(() => { setSlugAvailable(null); setSlugError(''); });
     }, 400);
     return () => clearTimeout(timer);
   }, [slug]);
@@ -439,7 +443,7 @@ function CreateOrgModal({ onClose, onCreated }) {
               <label className="text-[12px] text-[#9ca3af] mb-1.5 block font-medium">
                 URL slug *
                 {slug && slugAvailable === true && <span className="text-[#4ade80] ml-2">Available</span>}
-                {slug && slugAvailable === false && <span className="text-[#f87171] ml-2">Taken</span>}
+                {slug && slugAvailable === false && <span className="text-[#f87171] ml-2">{slugError || 'Taken'}</span>}
               </label>
               <div className="flex items-center bg-[#131922] rounded-lg border border-[#232d3f] overflow-hidden">
                 <span className="text-[#8896a8] text-[13px] px-3 flex-shrink-0">@</span>
