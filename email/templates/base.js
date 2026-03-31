@@ -41,10 +41,10 @@ export function baseLayout({ title, body, preheader = '' }) {
   </div>
 
   <!-- Quote -->
-  <div style="padding:0 24px 36px">
-    <div style="border-left:3px solid #9b7bf7;padding:20px 24px;background-color:#111823;border-radius:0 10px 10px 0">
-      <p style="margin:0;font-size:14px;color:#9ca3af;line-height:1.65;font-style:italic">&ldquo;${quoteText}&rdquo;</p>
-      <p style="margin:10px 0 0;font-size:12px;color:#5a657a;font-weight:600">&mdash; ${quoteAuthor}</p>
+  <div style="padding:0 24px 36px;text-align:center">
+    <div style="display:inline-block;text-align:left;border-left:3px solid #9b7bf7;padding:14px 20px;background-color:#111823;border-radius:0 8px 8px 0;max-width:420px">
+      <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;font-style:italic">&ldquo;${quoteText}&rdquo;</p>
+      <p style="margin:8px 0 0;font-size:11px;color:#5a657a;font-weight:600">&mdash; ${quoteAuthor}</p>
     </div>
   </div>
 
