@@ -254,7 +254,7 @@ export default function AppShell({ children }) {
             </div>
           </nav>
           {user && (
-            <div className="px-3 py-3 rounded-xl bg-[#141a26] border border-[#232d3f]">
+            <Link href="/profile" className="block px-3 py-3 rounded-xl bg-[#141a26] border border-[#232d3f] hover:border-[#333] transition-colors cursor-pointer">
               <div className="flex items-center gap-2.5">
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover flex-shrink-0" />
@@ -268,7 +268,7 @@ export default function AppShell({ children }) {
                   <p className="text-[11px] text-[#8896a8] truncate">@{user.username}</p>
                 </div>
               </div>
-            </div>
+            </Link>
           )}
         </aside>
 
