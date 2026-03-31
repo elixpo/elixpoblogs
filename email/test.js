@@ -41,6 +41,8 @@ const SAMPLES = {
     blogEmoji: '🤖',
     inviterName: 'selenium-cutlet',
     inviterAvatar: 'https://lh3.googleusercontent.com/a/ACg8ocJlCSczaUeHuK0Vu79xKBwghqBj60V9evGwmf0aO_k36BCZ1aE=s96-c',
+    recipientName: 'Ada Lovelace',
+    recipientAvatar: '',
     role: 'editor',
     editUrl: 'https://blogs.elixpo.com/edit/abc123',
     message: 'Would love your input on this one!',
