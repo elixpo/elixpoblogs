@@ -434,16 +434,16 @@ export default function AppShell({ children }) {
               </>
             ) : (
               <>
-                <button
-                  onClick={handleLogin}
+                <Link
+                  href="/sign-in"
                   className="text-[14px] transition-colors px-3 py-1.5 rounded-lg"
                   style={{ color: 'var(--text-muted)' }}
                   onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                   onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
                 >
                   Sign In
-                </button>
-                <button onClick={handleLogin} className="text-[14px] font-medium text-[var(--text-primary)] bg-[#9b7bf7] hover:bg-[#8b6ae6] transition-colors px-4 py-1.5 rounded-full">
+                </Link>
+                <button onClick={handleLogin} className="text-[14px] font-medium text-white bg-[#9b7bf7] hover:bg-[#8b6ae6] transition-colors px-4 py-1.5 rounded-full">
                   Get Started
                 </button>
               </>
