@@ -437,13 +437,30 @@ export default function WritePage({ slugid }) {
     if (e.key === 'Enter') { e.preventDefault(); addTag(); }
   };
 
-  const handleEditorChange = useCallback((blocks) => {
-    setEditorContent(blocks);
+  // Count words from blocks (handles both array and JSON string)
+  const computeWordCount = useCallback((content) => {
+    let blocks = content;
+    if (typeof blocks === 'string') {
+      try { blocks = JSON.parse(blocks); } catch { return 0; }
+    }
+    if (!Array.isArray(blocks)) return 0;
     const text = blocks
       .map((b) => (b.content && Array.isArray(b.content)) ? b.content.map((c) => c.text || '').join('') : '')
       .join(' ');
-    setWordCount(text.trim().split(/\s+/).filter(Boolean).length);
+    return text.trim().split(/\s+/).filter(Boolean).length;
   }, []);
+
+  const handleEditorChange = useCallback((blocks) => {
+    setEditorContent(blocks);
+    setWordCount(computeWordCount(blocks));
+  }, [computeWordCount]);
+
+  // Recompute word count when content loads from server/localStorage
+  useEffect(() => {
+    if (editorContent && wordCount === 0) {
+      setWordCount(computeWordCount(editorContent));
+    }
+  }, [editorContent, wordCount, computeWordCount]);
 
   const [previewBlocks, setPreviewBlocks] = useState([]);
 
