@@ -43,11 +43,11 @@ export default function HandlePage({ path }) {
     return (
       <AppShell>
         <div className="max-w-3xl mx-auto px-6 py-10">
-          <div className="h-44 rounded-xl bg-[#1a2030] animate-pulse mb-16" />
-          <div className="h-8 bg-[#1a2030] animate-pulse rounded w-2/3 mb-4" />
-          <div className="h-4 bg-[#1a2030] animate-pulse rounded w-1/3 mb-6" />
+          <div className="h-44 rounded-xl bg-[var(--bg-elevated)] animate-pulse mb-16" />
+          <div className="h-8 bg-[var(--bg-elevated)] animate-pulse rounded w-2/3 mb-4" />
+          <div className="h-4 bg-[var(--bg-elevated)] animate-pulse rounded w-1/3 mb-6" />
           <div className="space-y-3">
-            {[...Array(4)].map((_, i) => <div key={i} className="h-4 bg-[#1a2030] animate-pulse rounded" style={{ width: `${60 + Math.random() * 40}%` }} />)}
+            {[...Array(4)].map((_, i) => <div key={i} className="h-4 bg-[var(--bg-elevated)] animate-pulse rounded" style={{ width: `${60 + Math.random() * 40}%` }} />)}
           </div>
         </div>
       </AppShell>
@@ -103,9 +103,9 @@ export default function HandlePage({ path }) {
           {/* ── Avatar + Header ── */}
           <div className="flex items-start gap-5 mb-5">
             {u.avatar_url ? (
-              <img src={u.avatar_url} alt="" className="h-[88px] w-[88px] rounded-full border-[3px] border-[#1e2736] object-cover shadow-lg shadow-black/20 shrink-0" />
+              <img src={u.avatar_url} alt="" className="h-[88px] w-[88px] rounded-full border-[3px] border-[var(--border-default)] object-cover shadow-lg shadow-black/20 shrink-0" />
             ) : (
-              <div className="h-[88px] w-[88px] rounded-full border-[3px] border-[#1e2736] bg-[#1a2030] flex items-center justify-center text-3xl text-[#7c8a9e] font-bold shadow-lg shadow-black/20 shrink-0">
+              <div className="h-[88px] w-[88px] rounded-full border-[3px] border-[var(--border-default)] bg-[var(--bg-elevated)] flex items-center justify-center text-3xl text-[#7c8a9e] font-bold shadow-lg shadow-black/20 shrink-0">
                 {(u.display_name || u.username || '?')[0].toUpperCase()}
               </div>
             )}
@@ -121,7 +121,7 @@ export default function HandlePage({ path }) {
                 {isOwnProfile && (
                   <Link
                     href="/settings"
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141a26] border border-[#232d3f] rounded-full text-[13px] text-[#9ca3af] hover:text-white hover:border-[#9b7bf7]/50 hover:bg-[#9b7bf7]/10 transition-all shrink-0"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-surface)] border border-[#232d3f] rounded-full text-[13px] text-[#9ca3af] hover:text-white hover:border-[#9b7bf7]/50 hover:bg-[#9b7bf7]/10 transition-all shrink-0"
                   >
                     <ion-icon name="create-outline" style={{ fontSize: '14px' }} />
                     Edit
@@ -177,7 +177,7 @@ export default function HandlePage({ path }) {
                 const icon = iconMap[link.type] || 'link-outline';
                 return (
                   <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#111823] border border-[#1e2736] rounded-full text-[12px] text-[#7c8a9e] hover:text-white hover:border-[#2d3a4d] transition-all">
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-full text-[12px] text-[#7c8a9e] hover:text-white hover:border-[var(--border-hover)] transition-all">
                     <ion-icon name={icon} style={{ fontSize: '14px' }} />
                     {link.label || link.type || 'Link'}
                   </a>
@@ -188,8 +188,8 @@ export default function HandlePage({ path }) {
 
           {/* ── Followers / Following ── */}
           <div className="flex items-center gap-5 text-[14px] text-[#7c8a9e] mt-4 mb-6">
-            <span><strong className="text-[#e0e0e0]">{u.followers}</strong> Followers</span>
-            <span><strong className="text-[#e0e0e0]">{u.following}</strong> Following</span>
+            <span><strong className="text-[var(--text-primary)]">{u.followers}</strong> Followers</span>
+            <span><strong className="text-[var(--text-primary)]">{u.following}</strong> Following</span>
           </div>
 
           <div className="h-px bg-[#1e2736] mb-6" />
@@ -202,13 +202,13 @@ export default function HandlePage({ path }) {
             <div className="space-y-2.5">
               {data.blogs.map(b => (
                 <Link key={b.id} href={`/${u.username}/${b.slug}`}
-                  className="block p-4 bg-[#111823] border border-[#1e2736] rounded-xl hover:border-[#2d3a4d] transition-colors group">
+                  className="block p-4 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-xl hover:border-[var(--border-hover)] transition-colors group">
                   <div className="flex items-start gap-3">
                     {b.cover_image_r2_key && (
                       <img src={b.cover_image_r2_key} alt="" className="w-20 h-14 rounded-lg object-cover shrink-0 mt-0.5" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-[15px] text-[#e0e0e0] font-semibold group-hover:text-white transition-colors leading-snug">
+                      <p className="text-[15px] text-[var(--text-primary)] font-semibold group-hover:text-white transition-colors leading-snug">
                         {b.page_emoji && <span className="mr-1.5">{b.page_emoji}</span>}
                         {b.title || 'Untitled'}
                       </p>
@@ -230,7 +230,7 @@ export default function HandlePage({ path }) {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 bg-[#111823] border border-[#1e2736] rounded-xl">
+            <div className="text-center py-16 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-xl">
               <ion-icon name="document-text-outline" style={{ fontSize: '36px', color: '#2d3a4d' }} />
               <p className="text-[#5a657a] text-[14px] mt-3">No published blogs yet</p>
             </div>
@@ -274,7 +274,7 @@ export default function HandlePage({ path }) {
             <img
               src={logoSrc}
               alt={org.name}
-              className="h-[88px] w-[88px] rounded-2xl border-[3px] border-[#1e2736] object-cover shadow-lg shadow-black/20 shrink-0"
+              className="h-[88px] w-[88px] rounded-2xl border-[3px] border-[var(--border-default)] object-cover shadow-lg shadow-black/20 shrink-0"
             />
             <div className="min-w-0 flex-1 pt-1">
               <div className="flex items-start justify-between gap-3">
@@ -284,7 +284,7 @@ export default function HandlePage({ path }) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {org.visibility === 'private' && (
-                    <span className="px-2.5 py-1 bg-[#141a26] border border-[#232d3f] rounded-full text-[11px] text-[#7c8a9e] flex items-center gap-1">
+                    <span className="px-2.5 py-1 bg-[var(--bg-surface)] border border-[#232d3f] rounded-full text-[11px] text-[#7c8a9e] flex items-center gap-1">
                       <ion-icon name="lock-closed" style={{ fontSize: '11px' }} />
                       Private
                     </span>
@@ -292,7 +292,7 @@ export default function HandlePage({ path }) {
                   {canManage && (
                     <Link
                       href={`/settings/org/${org.slug}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141a26] border border-[#232d3f] rounded-full text-[13px] text-[#9ca3af] hover:text-white hover:border-[#9b7bf7]/50 hover:bg-[#9b7bf7]/10 transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-surface)] border border-[#232d3f] rounded-full text-[13px] text-[#9ca3af] hover:text-white hover:border-[#9b7bf7]/50 hover:bg-[#9b7bf7]/10 transition-all"
                       title="Manage organization"
                     >
                       <ion-icon name="settings-outline" style={{ fontSize: '14px' }} />
@@ -387,7 +387,7 @@ export default function HandlePage({ path }) {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#111823] border border-[#1e2736] rounded-full text-[12px] text-[#7c8a9e] hover:text-white hover:border-[#2d3a4d] transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-full text-[12px] text-[#7c8a9e] hover:text-white hover:border-[var(--border-hover)] transition-all"
                   >
                     <ion-icon name={icon} style={{ fontSize: '14px' }} />
                     {link.label || link.type || 'Link'}
@@ -405,12 +405,12 @@ export default function HandlePage({ path }) {
               <h3 className="text-[11px] font-semibold text-[#5a657a] uppercase tracking-widest mb-3">Owned by</h3>
               <Link
                 href={`/${owner.username}`}
-                className="flex items-center gap-3.5 p-3.5 bg-[#111823] border border-[#1e2736] rounded-xl hover:border-[#2d3a4d] transition-colors group"
+                className="flex items-center gap-3.5 p-3.5 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-xl hover:border-[var(--border-hover)] transition-colors group"
               >
                 {owner.avatar_url ? (
                   <img src={owner.avatar_url} alt="" className="h-11 w-11 rounded-full object-cover ring-2 ring-[#9b7bf7]/30" />
                 ) : (
-                  <div className="h-11 w-11 rounded-full bg-[#232d3f] flex items-center justify-center text-lg text-[#9ca3af] font-bold ring-2 ring-[#9b7bf7]/30">
+                  <div className="h-11 w-11 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center text-lg text-[#9ca3af] font-bold ring-2 ring-[#9b7bf7]/30">
                     {(owner.display_name || owner.username || '?')[0].toUpperCase()}
                   </div>
                 )}
@@ -436,17 +436,17 @@ export default function HandlePage({ path }) {
                   <Link
                     key={m.id}
                     href={`/${m.username}`}
-                    className="flex items-center gap-3 p-3 bg-[#111823] border border-[#1e2736] rounded-xl hover:border-[#2d3a4d] transition-colors group"
+                    className="flex items-center gap-3 p-3 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-xl hover:border-[var(--border-hover)] transition-colors group"
                   >
                     {m.avatar_url ? (
                       <img src={m.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
                     ) : (
-                      <div className="h-9 w-9 rounded-full bg-[#232d3f] flex items-center justify-center text-sm text-[#9ca3af] font-bold">
+                      <div className="h-9 w-9 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center text-sm text-[#9ca3af] font-bold">
                         {(m.display_name || m.username || '?')[0].toUpperCase()}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] text-[#e0e0e0] font-medium group-hover:text-white transition-colors truncate">
+                      <p className="text-[14px] text-[var(--text-primary)] font-medium group-hover:text-white transition-colors truncate">
                         {m.display_name || m.username}
                       </p>
                       <p className="text-[12px] text-[#5a657a]">@{m.username}</p>
@@ -469,14 +469,14 @@ export default function HandlePage({ path }) {
                   <Link
                     key={c.id}
                     href={`/${org.slug}/${c.slug}`}
-                    className="p-4 bg-[#111823] border border-[#1e2736] rounded-xl hover:border-[#2d3a4d] transition-colors group"
+                    className="p-4 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-xl hover:border-[var(--border-hover)] transition-colors group"
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="h-9 w-9 rounded-lg bg-[#1a2030] flex items-center justify-center shrink-0">
+                      <div className="h-9 w-9 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center shrink-0">
                         <ion-icon name="folder" style={{ fontSize: '18px', color: '#60a5fa' }} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[14px] text-[#e0e0e0] font-medium group-hover:text-white transition-colors truncate">{c.name}</p>
+                        <p className="text-[14px] text-[var(--text-primary)] font-medium group-hover:text-white transition-colors truncate">{c.name}</p>
                         {c.description && <p className="text-[12px] text-[#5a657a] truncate">{c.description}</p>}
                       </div>
                     </div>
@@ -497,14 +497,14 @@ export default function HandlePage({ path }) {
                   <Link
                     key={b.id}
                     href={`/${org.slug}/${b.slug}`}
-                    className="block p-4 bg-[#111823] border border-[#1e2736] rounded-xl hover:border-[#2d3a4d] transition-colors group"
+                    className="block p-4 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-xl hover:border-[var(--border-hover)] transition-colors group"
                   >
                     <div className="flex items-start gap-3">
                       {b.cover_image_r2_key && (
                         <img src={b.cover_image_r2_key} alt="" className="w-20 h-14 rounded-lg object-cover shrink-0 mt-0.5" />
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-[15px] text-[#e0e0e0] font-semibold group-hover:text-white transition-colors leading-snug">
+                        <p className="text-[15px] text-[var(--text-primary)] font-semibold group-hover:text-white transition-colors leading-snug">
                           {b.page_emoji && <span className="mr-1.5">{b.page_emoji}</span>}
                           {b.title || 'Untitled'}
                         </p>
@@ -526,7 +526,7 @@ export default function HandlePage({ path }) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 bg-[#111823] border border-[#1e2736] rounded-xl">
+              <div className="text-center py-16 bg-[var(--card-bg)] border border-[var(--border-default)] rounded-xl">
                 <ion-icon name="document-text-outline" style={{ fontSize: '36px', color: '#2d3a4d' }} />
                 <p className="text-[#5a657a] text-[14px] mt-3">No published blogs yet</p>
               </div>
