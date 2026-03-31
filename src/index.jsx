@@ -261,9 +261,9 @@ export default function App() {
           <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
             <h3 className="text-[14px] font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Writing on LixBlogs</h3>
             <ul className="text-[13px] space-y-1.5 mt-3" style={{ color: 'var(--text-muted)' }}>
-              <li className="cursor-pointer transition-colors hover:opacity-70">New to LixBlogs? Start here</li>
-              <li className="cursor-pointer transition-colors hover:opacity-70">Read LixBlogs writing tips</li>
-              <li className="cursor-pointer transition-colors hover:opacity-70">Get practical writing advice</li>
+              <li><Link href="/elixpo/guides/getting-started" className="hover:opacity-70 transition-opacity">New to LixBlogs? Start here</Link></li>
+              <li><Link href="/elixpo/guides/writing-tips" className="hover:opacity-70 transition-opacity">Read LixBlogs writing tips</Link></li>
+              <li><Link href="/elixpo/guides/practical-advice" className="hover:opacity-70 transition-opacity">Get practical writing advice</Link></li>
             </ul>
             <Link
               href="/new-blog"
