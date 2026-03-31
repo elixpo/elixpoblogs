@@ -196,7 +196,7 @@ export default function HandlePage({ path }) {
 
           {/* ── Published blogs ── */}
           <h2 className="text-[11px] font-semibold text-[#5a657a] uppercase tracking-widest mb-4">
-            Published {(data.blogs || []).length > 0 && <span className="text-[#3d4a5e] ml-1">({(data.blogs || []).length})</span>}
+            Published {(data.blogs || []).length > 0 && <span className="text-[#6b7f99] ml-1">({(data.blogs || []).length})</span>}
           </h2>
           {(data.blogs || []).length > 0 ? (
             <div className="space-y-2.5">
@@ -489,7 +489,7 @@ export default function HandlePage({ path }) {
           {/* ── Published blogs ── */}
           <div>
             <h3 className="text-[11px] font-semibold text-[#5a657a] uppercase tracking-widest mb-3">
-              Published {blogs.length > 0 && <span className="text-[#3d4a5e] ml-1">({blogs.length})</span>}
+              Published {blogs.length > 0 && <span className="text-[#6b7f99] ml-1">({blogs.length})</span>}
             </h3>
             {blogs.length > 0 ? (
               <div className="space-y-2.5">

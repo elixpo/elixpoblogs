@@ -119,7 +119,7 @@ function AccountTab({ user, refetchUser }) {
     setSaving(false);
   };
 
-  const inputCls = "w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#3d4a5e]";
+  const inputCls = "w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#6b7f99]";
 
   return (
     <div className="space-y-8">
@@ -171,7 +171,7 @@ function AccountTab({ user, refetchUser }) {
               maxLength={300}
               className={`${inputCls} resize-none`}
             />
-            <p className="text-[10px] text-[#3d4a5e] mt-1 text-right">{bio.length}/300</p>
+            <p className="text-[10px] text-[#6b7f99] mt-1 text-right">{bio.length}/300</p>
           </div>
         </div>
       </section>
@@ -185,14 +185,14 @@ function AccountTab({ user, refetchUser }) {
           <div>
             <label className="text-[13px] text-[#e0e0e0] mb-1 block font-medium">Location</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3d4a5e]"><ion-icon name="location-outline" style={{ fontSize: '15px' }} /></span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7f99]"><ion-icon name="location-outline" style={{ fontSize: '15px' }} /></span>
               <input value={location} onChange={e => setLocation(e.target.value)} placeholder="City, Country" className={`${inputCls} pl-9`} />
             </div>
           </div>
           <div>
             <label className="text-[13px] text-[#e0e0e0] mb-1 block font-medium">Company</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3d4a5e]"><ion-icon name="business-outline" style={{ fontSize: '15px' }} /></span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7f99]"><ion-icon name="business-outline" style={{ fontSize: '15px' }} /></span>
               <input value={company} onChange={e => setCompany(e.target.value)} placeholder="Where you work" className={`${inputCls} pl-9`} />
             </div>
           </div>
@@ -206,7 +206,7 @@ function AccountTab({ user, refetchUser }) {
           <div>
             <label className="text-[13px] text-[#e0e0e0] mb-1 block font-medium">Website</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3d4a5e]"><ion-icon name="globe-outline" style={{ fontSize: '15px' }} /></span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7f99]"><ion-icon name="globe-outline" style={{ fontSize: '15px' }} /></span>
               <input value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://yoursite.com" className={`${inputCls} pl-9`} />
             </div>
           </div>
@@ -232,15 +232,15 @@ function AccountTab({ user, refetchUser }) {
                   <div className="flex-1 min-w-0 space-y-1">
                     {link.type === 'custom' && (
                       <input value={link.label || ''} onChange={e => updateLink(i, 'label', e.target.value)} placeholder="Label"
-                        className="w-full bg-transparent text-[12px] text-[#e0e0e0] outline-none placeholder-[#3d4a5e] font-medium" />
+                        className="w-full bg-transparent text-[12px] text-[#e0e0e0] outline-none placeholder-[#6b7f99] font-medium" />
                     )}
                     {link.type !== 'custom' && (
                       <p className="text-[11px] text-[#5a657a] font-medium">{preset.label}</p>
                     )}
                     <input value={link.url || ''} onChange={e => updateLink(i, 'url', e.target.value)} placeholder={preset.placeholder}
-                      className="w-full bg-transparent text-[13px] text-[#e0e0e0] outline-none placeholder-[#3d4a5e]" />
+                      className="w-full bg-transparent text-[13px] text-[#e0e0e0] outline-none placeholder-[#6b7f99]" />
                   </div>
-                  <button onClick={() => removeLink(i)} className="text-[#3d4a5e] hover:text-[#f87171] transition-colors p-1 opacity-0 group-hover:opacity-100">
+                  <button onClick={() => removeLink(i)} className="text-[#6b7f99] hover:text-[#f87171] transition-colors p-1 opacity-0 group-hover:opacity-100">
                     <ion-icon name="trash-outline" style={{ fontSize: '15px' }} />
                   </button>
                 </div>

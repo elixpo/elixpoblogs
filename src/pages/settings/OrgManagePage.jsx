@@ -277,7 +277,7 @@ export default function OrgManagePage({ slug }) {
       {sublabel && <p className="text-[11px] text-[#5a657a] mb-2">{sublabel}</p>}
       <input
         type={type} value={value} onChange={onChange} placeholder={placeholder}
-        className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#3d4a5e]"
+        className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#6b7f99]"
         {...props}
       />
     </div>
@@ -333,9 +333,9 @@ export default function OrgManagePage({ slug }) {
                     value={description} onChange={e => setDescription(e.target.value)}
                     placeholder="Building the future of..."
                     maxLength={160}
-                    className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#3d4a5e]"
+                    className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#6b7f99]"
                   />
-                  <p className="text-[10px] text-[#3d4a5e] mt-1 text-right">{description.length}/160</p>
+                  <p className="text-[10px] text-[#6b7f99] mt-1 text-right">{description.length}/160</p>
                 </div>
                 <div>
                   <label className="text-[13px] text-[#e0e0e0] mb-1 block font-medium">Bio</label>
@@ -343,7 +343,7 @@ export default function OrgManagePage({ slug }) {
                   <textarea
                     value={bio} onChange={e => setBio(e.target.value)} rows={4}
                     placeholder="We are a team of..."
-                    className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors resize-none placeholder-[#3d4a5e]"
+                    className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors resize-none placeholder-[#6b7f99]"
                   />
                 </div>
               </div>
@@ -454,7 +454,7 @@ export default function OrgManagePage({ slug }) {
                             <input
                               value={link.label || ''} onChange={e => updateLink(i, 'label', e.target.value)}
                               placeholder="Label"
-                              className="w-full bg-transparent text-[13px] text-[#e0e0e0] outline-none placeholder-[#3d4a5e] font-medium"
+                              className="w-full bg-transparent text-[13px] text-[#e0e0e0] outline-none placeholder-[#6b7f99] font-medium"
                             />
                           )}
                           {link.type !== 'custom' && (
@@ -463,12 +463,12 @@ export default function OrgManagePage({ slug }) {
                           <input
                             value={link.url || ''} onChange={e => updateLink(i, 'url', e.target.value)}
                             placeholder={preset.placeholder}
-                            className="w-full bg-transparent text-[13px] text-[#e0e0e0] outline-none placeholder-[#3d4a5e]"
+                            className="w-full bg-transparent text-[13px] text-[#e0e0e0] outline-none placeholder-[#6b7f99]"
                           />
                         </div>
                         <button
                           onClick={() => removeLink(i)}
-                          className="text-[#3d4a5e] hover:text-[#f87171] transition-colors p-1.5 opacity-0 group-hover:opacity-100"
+                          className="text-[#6b7f99] hover:text-[#f87171] transition-colors p-1.5 opacity-0 group-hover:opacity-100"
                         >
                           <ion-icon name="trash-outline" style={{ fontSize: '16px' }} />
                         </button>
@@ -535,7 +535,7 @@ export default function OrgManagePage({ slug }) {
                   </select>
                 )}
                 {!m.is_owner && (
-                  <button onClick={() => handleRemoveMember(m.id)} className="text-[#3d4a5e] hover:text-[#f87171] transition-colors p-1">
+                  <button onClick={() => handleRemoveMember(m.id)} className="text-[#6b7f99] hover:text-[#f87171] transition-colors p-1">
                     <ion-icon name="close" style={{ fontSize: '16px' }} />
                   </button>
                 )}
@@ -557,7 +557,7 @@ export default function OrgManagePage({ slug }) {
                   <p className="text-[14px] text-[#e0e0e0] font-medium">{c.name}</p>
                   <p className="text-[11px] text-[#5a657a]">/{c.slug} &middot; {c.blog_count || 0} blog{(c.blog_count || 0) !== 1 ? 's' : ''}</p>
                 </div>
-                <button onClick={() => handleDeleteCollection(c.id)} className="text-[#3d4a5e] hover:text-[#f87171] transition-colors p-1">
+                <button onClick={() => handleDeleteCollection(c.id)} className="text-[#6b7f99] hover:text-[#f87171] transition-colors p-1">
                   <ion-icon name="trash-outline" style={{ fontSize: '16px' }} />
                 </button>
               </div>
@@ -569,9 +569,9 @@ export default function OrgManagePage({ slug }) {
                 New Collection
               </p>
               <input value={newColName} onChange={e => { setNewColName(e.target.value); setNewColSlug(e.target.value.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 40)); }} placeholder="Collection name"
-                className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#3d4a5e]" />
+                className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#6b7f99]" />
               <input value={newColDesc} onChange={e => setNewColDesc(e.target.value)} placeholder="Description (optional)"
-                className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#3d4a5e]" />
+                className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#6b7f99]" />
               <button onClick={handleCreateCollection} disabled={!newColName.trim()}
                 className="px-4 py-2 bg-[#9b7bf7] text-white font-medium rounded-lg text-[12px] hover:bg-[#b69aff] disabled:opacity-40 transition-colors">
                 Create
@@ -595,7 +595,7 @@ export default function OrgManagePage({ slug }) {
                     value={directQuery}
                     onChange={e => { setDirectQuery(e.target.value); setDirectError(''); }}
                     placeholder="Search username..."
-                    className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#3d4a5e]"
+                    className="w-full bg-[#0c1017] text-[#e0e0e0] rounded-lg px-3.5 py-2.5 outline-none text-[13px] border border-[#1e2736] focus:border-[#9b7bf7]/50 transition-colors placeholder-[#6b7f99]"
                   />
                   {directResults.length > 0 && (
                     <div className="absolute top-full mt-1 left-0 right-0 bg-[#141a26] border border-[#1e2736] rounded-lg shadow-xl z-10 overflow-hidden max-h-[200px] overflow-y-auto">
@@ -653,12 +653,12 @@ export default function OrgManagePage({ slug }) {
                 <div>
                   <label className="text-[11px] text-[#5a657a] mb-1 block">Expires in (hours)</label>
                   <input value={inviteExpiry} onChange={e => setInviteExpiry(e.target.value)} placeholder="Never"
-                    className="w-full bg-[#0c1017] text-[#e0e0e0] border border-[#1e2736] rounded-lg px-2.5 py-2 text-[12px] outline-none focus:border-[#9b7bf7]/50 transition-colors placeholder-[#3d4a5e]" />
+                    className="w-full bg-[#0c1017] text-[#e0e0e0] border border-[#1e2736] rounded-lg px-2.5 py-2 text-[12px] outline-none focus:border-[#9b7bf7]/50 transition-colors placeholder-[#6b7f99]" />
                 </div>
                 <div>
                   <label className="text-[11px] text-[#5a657a] mb-1 block">Max uses</label>
                   <input value={inviteMaxUses} onChange={e => setInviteMaxUses(e.target.value)} placeholder="Unlimited"
-                    className="w-full bg-[#0c1017] text-[#e0e0e0] border border-[#1e2736] rounded-lg px-2.5 py-2 text-[12px] outline-none focus:border-[#9b7bf7]/50 transition-colors placeholder-[#3d4a5e]" />
+                    className="w-full bg-[#0c1017] text-[#e0e0e0] border border-[#1e2736] rounded-lg px-2.5 py-2 text-[12px] outline-none focus:border-[#9b7bf7]/50 transition-colors placeholder-[#6b7f99]" />
                 </div>
               </div>
               <button onClick={handleCreateInvite} disabled={creatingInvite}
@@ -682,7 +682,7 @@ export default function OrgManagePage({ slug }) {
                           {inv.expires_at && <span>&middot; Expires {new Date(inv.expires_at * 1000).toLocaleDateString()}</span>}
                         </div>
                       </div>
-                      <button onClick={() => handleDeleteInvite(inv.id)} className="text-[#3d4a5e] hover:text-[#f87171] transition-colors p-1">
+                      <button onClick={() => handleDeleteInvite(inv.id)} className="text-[#6b7f99] hover:text-[#f87171] transition-colors p-1">
                         <ion-icon name="trash-outline" style={{ fontSize: '16px' }} />
                       </button>
                     </div>
