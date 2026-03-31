@@ -3,9 +3,9 @@ import '../styles/community/trending.css'
 export default function FeedPage() {
     return (
         document.title = "LixBlogs - Feed",
-        <div className="container absolute flex flex-col h-full max-w-[2560px] bg-[#030712] box-border">
+        <div className="container absolute flex flex-col h-full max-w-[2560px] bg-[var(--bg-base)] box-border">
             <section className="w-full h-[60px]">
-                <div className="relative top-0 left-0 w-full h-[60px] border-b-2 border-[#1D202A] flex items-center bg-[#030712] z-[1000]">
+                <div className="relative top-0 left-0 w-full h-[60px] border-b-2 border-[#1D202A] flex items-center bg-[var(--bg-base)] z-[1000]">
                     <div className="absolute left-[3%] h-10 w-10 rounded-full bg-[url('/logo.png')] bg-cover"></div>
                     <p className="absolute left-[5%] text-3xl font-bold font-[Kanit,serif] text-[var(--text-primary)] cursor-pointer">LixBlogs</p>
                     <div className="absolute left-[80%] text-[var(--text-primary)] text-[1.3em] cursor-pointer px-2.5 py-1.5 bg-[#10141E] border border-[#7ba8f0] rounded-[15px] flex items-center">
@@ -24,29 +24,29 @@ export default function FeedPage() {
                     className="w-[30%] h-[40px] bg-[#1D202A] text-[var(--text-primary)] rounded-[20px] px-4 outline-none border border-[#888] focus:border-[#7ba8f0]"
                 />
                 <div className="trendingTopics h-[40px] max-w-full overflow-x-auto flex flex-row gap-[5px] px-5 box-border ml-[5px] items-center flex-nowrap scrollbar-thin scrollbar-thumb-[#7ba8f0] whitespace-nowrap">
-                    <div className="topic ai-recommend relative h-[80%] px-5 flex flex-row gap-[5px] items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[#191e49] hover:text-[var(--text-primary)] transition-all duration-300">
+                    <div className="topic ai-recommend relative h-[80%] px-5 flex flex-row gap-[5px] items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all duration-300">
                         <ion-icon name="sparkles" className="rotate-[25deg] text-[#7ba8f0] mr-1 mt-1"></ion-icon>
                         <p className="text-[#7ba8f0] text-[1em] font-bold"> For You</p>
                     </div>
-                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[#191e49] hover:text-[var(--text-primary)] transition-all duration-300">
+                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all duration-300">
                         <p className="text-[#7ba8f0] text-[1em] font-bold">Web Development</p>
                     </div>
-                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[#191e49] hover:text-[var(--text-primary)] transition-all duration-300">
+                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all duration-300">
                         <p className="text-[#7ba8f0] text-[1em] font-bold">App Analytics</p>
                     </div>
-                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[#191e49] hover:text-[var(--text-primary)] transition-all duration-300">
+                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all duration-300">
                         <p className="text-[#7ba8f0] text-[1em] font-bold">Dev-ops</p>
                     </div>
-                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[#191e49] hover:text-[var(--text-primary)] transition-all duration-300">
+                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all duration-300">
                         <p className="text-[#7ba8f0] text-[1em] font-bold">Dev-ops</p>
                     </div>
-                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[#191e49] hover:text-[var(--text-primary)] transition-all duration-300">
+                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all duration-300">
                         <p className="text-[#7ba8f0] text-[1em] font-bold">Dev-ops</p>
                     </div>
-                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[#191e49] hover:text-[var(--text-primary)] transition-all duration-300">
+                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all duration-300">
                         <p className="text-[#7ba8f0] text-[1em] font-bold">Dev-ops</p>
                     </div>
-                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[#191e49] hover:text-[var(--text-primary)] transition-all duration-300">
+                    <div className="topic relative h-[80%] px-3 box-border flex items-center justify-center bg-[#1D202A] rounded-[8px] cursor-pointer hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-all duration-300">
                         <p className="text-[#7ba8f0] text-[1em] font-bold">Dev-ops</p>
                     </div>
                 </div>
