@@ -41,7 +41,7 @@ function MentionChip({ username, displayName, avatarUrl }) {
     <>
       <a
         ref={chipRef}
-        href={`/handle/${username}`}
+        href={`/${username}`}
         className="mention-chip"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
