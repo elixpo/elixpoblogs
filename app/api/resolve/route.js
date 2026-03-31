@@ -171,7 +171,7 @@ export async function GET(request) {
 
     return NextResponse.json({ error: 'Unknown type' }, { status: 500 });
   } catch (e) {
-    console.error('Resolve error:', e);
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    console.error('Resolve error:', e?.message || e);
+    return NextResponse.json({ error: e?.message || 'Not found' }, { status: 500 });
   }
 }
