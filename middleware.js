@@ -14,7 +14,8 @@ export function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // Get the first path segment (e.g. /elixpo/slug → "elixpo")
-  const firstSegment = pathname.split('/')[1] || '';
+  const segments = pathname.split('/').filter(Boolean);
+  const firstSegment = segments[0] || '';
 
   // If it's not a known app route and not empty, rewrite to /handle/...
   if (firstSegment && !APP_ROUTES.has(firstSegment) && !firstSegment.startsWith('_')) {
