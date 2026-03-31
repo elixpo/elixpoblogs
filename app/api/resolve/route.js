@@ -97,7 +97,7 @@ export async function GET(request) {
       const org = await db.prepare(`
         SELECT id, slug, name, description, bio, website, links, visibility,
           logo_url, logo_r2_key, banner_url, banner_r2_key, featured_blog_ids,
-          owner_id, created_at
+          timezone, location, contact_email, owner_id, created_at
         FROM orgs WHERE id = ?
       `).bind(ns.owner_id).first();
 
