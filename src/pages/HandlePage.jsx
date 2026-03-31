@@ -150,9 +150,12 @@ export default function HandlePage({ path }) {
     const collections = data.collections || [];
     const blogs = data.blogs || [];
     const logoSrc = org.logo_url || generatePixelAvatar(org.slug);
-    const bannerSrc = org.banner_url || null;
     const links = (() => { try { return JSON.parse(org.links || '[]'); } catch { return []; } })();
     const founded = org.created_at ? new Date(org.created_at * 1000) : null;
+
+    // Check if current user can manage this org (admin or maintain role)
+    const currentMember = currentUser ? members.find(m => m.id === currentUser.id) : null;
+    const canManage = currentMember && ['admin', 'maintain'].includes(currentMember.role);
 
     const roleBadge = (role) => {
       const styles = {
@@ -168,49 +171,50 @@ export default function HandlePage({ path }) {
     return (
       <AppShell>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-          {/* ── Banner + Logo ── */}
-          <div className="relative mb-20">
-            <div
-              className="w-full h-48 rounded-2xl overflow-hidden"
-              style={bannerSrc
-                ? { backgroundImage: `url(${bannerSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                : { background: 'linear-gradient(135deg, #1a1040 0%, #0c1a2e 40%, #0f2a1a 100%)' }
-              }
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0c1017]/60 to-transparent rounded-2xl" />
+          {/* ── Logo + Header ── */}
+          <div className="flex items-start gap-5 mb-6">
+            <img
+              src={logoSrc}
+              alt={org.name}
+              className="h-[88px] w-[88px] rounded-2xl border-[3px] border-[#1e2736] object-cover shadow-lg shadow-black/20 shrink-0"
+            />
+            <div className="min-w-0 flex-1 pt-1">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h1 className="text-[26px] font-extrabold text-white tracking-tight leading-tight">{org.name}</h1>
+                  <p className="text-[#7c8a9e] text-[15px] mt-0.5 font-medium">@{org.slug}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {org.visibility === 'private' && (
+                    <span className="px-2.5 py-1 bg-[#141a26] border border-[#232d3f] rounded-full text-[11px] text-[#7c8a9e] flex items-center gap-1">
+                      <ion-icon name="lock-closed" style={{ fontSize: '11px' }} />
+                      Private
+                    </span>
+                  )}
+                  {canManage && (
+                    <Link
+                      href={`/settings/org/${org.slug}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141a26] border border-[#232d3f] rounded-full text-[13px] text-[#9ca3af] hover:text-white hover:border-[#9b7bf7]/50 hover:bg-[#9b7bf7]/10 transition-all"
+                      title="Manage organization"
+                    >
+                      <ion-icon name="settings-outline" style={{ fontSize: '14px' }} />
+                      Manage
+                    </Link>
+                  )}
+                </div>
+              </div>
+              {org.website && (
+                <a
+                  href={org.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-2 text-[13px] text-[#60a5fa] hover:text-[#93c5fd] transition-colors"
+                >
+                  <ion-icon name="globe-outline" style={{ fontSize: '13px' }} />
+                  {org.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </a>
+              )}
             </div>
-            <div className="absolute -bottom-14 left-6">
-              <img
-                src={logoSrc}
-                alt={org.name}
-                className="h-[104px] w-[104px] rounded-2xl border-[5px] border-[#0c1017] object-cover shadow-xl shadow-black/30"
-              />
-            </div>
-            {org.visibility === 'private' && (
-              <span className="absolute top-4 right-4 px-2.5 py-1 bg-black/50 backdrop-blur-sm border border-white/10 rounded-full text-[11px] text-[#9ca3af] flex items-center gap-1">
-                <ion-icon name="lock-closed" style={{ fontSize: '11px' }} />
-                Private
-              </span>
-            )}
-          </div>
-
-          {/* ── Header: Name, slug, website ── */}
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="min-w-0">
-              <h1 className="text-[28px] font-extrabold text-white tracking-tight leading-tight">{org.name}</h1>
-              <p className="text-[#7c8a9e] text-[15px] mt-0.5 font-medium">@{org.slug}</p>
-            </div>
-            {org.website && (
-              <a
-                href={org.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#141a26] border border-[#232d3f] rounded-full text-[13px] text-[#60a5fa] hover:text-[#93c5fd] hover:border-[#334155] transition-all shrink-0"
-              >
-                <ion-icon name="globe-outline" style={{ fontSize: '14px' }} />
-                {org.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-              </a>
-            )}
           </div>
 
           {/* ── Description / Bio ── */}
