@@ -63,12 +63,29 @@ export async function GET(request) {
         tagMap[t.blog_id].push(t.tag);
       }
 
-      posts = posts.map(p => ({
-        ...p,
-        author: authorMap[p.author_id] || { username: 'unknown', display_name: 'Unknown' },
-        tags: tagMap[p.id] || [],
-        is_staff: p.published_as === `org:${STAFF_ORG_ID}`,
-      }));
+      // Check edit permissions for org-published blogs
+      let orgMemberSet = new Set();
+      if (userId) {
+        const orgIds = [...new Set(posts.filter(p => p.published_as?.startsWith('org:')).map(p => p.published_as.replace('org:', '')))];
+        if (orgIds.length > 0) {
+          const memberRows = await batchQuery(db, "SELECT org_id || ':' || user_id as key FROM org_members WHERE role IN ('admin','maintain','write') AND user_id = '" + userId + "' AND org_id IN", orgIds);
+          orgMemberSet = new Set(memberRows.map(r => r.key));
+        }
+      }
+
+      posts = posts.map(p => {
+        const isAuthor = userId && p.author_id === userId;
+        const orgId = p.published_as?.startsWith('org:') ? p.published_as.replace('org:', '') : null;
+        const isOrgMember = orgId && orgMemberSet.has(`${orgId}:${userId}`);
+
+        return {
+          ...p,
+          author: authorMap[p.author_id] || { username: 'unknown', display_name: 'Unknown' },
+          tags: tagMap[p.id] || [],
+          is_staff: p.published_as === `org:${STAFF_ORG_ID}`,
+          can_edit: !!(isAuthor || isOrgMember),
+        };
+      });
     }
 
     return NextResponse.json({

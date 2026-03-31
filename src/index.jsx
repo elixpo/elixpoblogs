@@ -17,8 +17,8 @@ function timeAgo(ts) {
 function FeedCard({ post }) {
   const author = post.author || {};
   return (
-    <Link href={`/${author.username || 'unknown'}/${post.slug}`}>
-      <article className="group py-6 cursor-pointer" style={{ borderBottom: '1px solid var(--divider)' }}>
+    <article className="group py-6" style={{ borderBottom: '1px solid var(--divider)' }}>
+      <Link href={`/${author.username || 'unknown'}/${post.slug}`} className="block cursor-pointer">
         <div className="flex items-center gap-2 mb-2.5">
           {author.avatar_url ? (
             <img src={author.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
@@ -75,8 +75,21 @@ function FeedCard({ post }) {
             <div className="w-[120px] h-[80px] rounded-md flex-shrink-0 hidden sm:block" style={{ backgroundColor: 'var(--bg-elevated)' }} />
           )}
         </div>
-      </article>
-    </Link>
+      </Link>
+      {post.can_edit && (
+        <div className="mt-2 flex items-center">
+          <Link
+            href={`/edit/${post.id}`}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium transition-colors"
+            style={{ color: 'var(--text-faint)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <ion-icon name="create-outline" style={{ fontSize: '13px' }} />
+            Edit
+          </Link>
+        </div>
+      )}
+    </article>
   );
 }
 

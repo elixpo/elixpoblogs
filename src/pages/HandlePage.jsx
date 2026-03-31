@@ -72,9 +72,25 @@ export default function HandlePage({ path }) {
     let blocks = [];
     try { blocks = typeof blog.content === 'string' ? JSON.parse(blog.content) : blog.content || []; } catch { blocks = []; }
 
+    // Check if current user can edit
+    const isAuthor = currentUser && blog.author_id === currentUser.id;
+    const canEdit = isAuthor; // org membership check would need an extra API call — author check is sufficient for now
+
     return (
       <AppShell>
         <div className="max-w-3xl mx-auto px-6 py-8">
+          {canEdit && (
+            <div className="flex items-center justify-end mb-4">
+              <Link
+                href={`/edit/${blog.id}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors"
+                style={{ color: 'var(--accent)', backgroundColor: 'var(--accent-subtle)', border: '1px solid var(--accent)30' }}
+              >
+                <ion-icon name="create-outline" style={{ fontSize: '15px' }} />
+                Edit this post
+              </Link>
+            </div>
+          )}
           <BlogPreview
             title={blog.title}
             subtitle={blog.subtitle}
