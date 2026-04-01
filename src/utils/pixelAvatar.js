@@ -127,6 +127,6 @@ export function generateBlogBanner(seed) {
     }
   }
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${bg}" rx="12"/>${bgPixels}${rects}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><rect width="${W}" height="${H}" fill="${bg}"/>${bgPixels}${rects}</svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
