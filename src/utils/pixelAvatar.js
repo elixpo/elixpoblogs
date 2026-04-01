@@ -83,10 +83,10 @@ export function generateBlogBanner(seed) {
 
   const W = 720;
   const H = 240;
-  const PX = 8;
-  // Corner block size in cells — bigger = pixels reach further toward center
-  const CX = 14;
-  const CY = 12;
+  const PX = 10;
+  // Corner block size in cells
+  const CX = 7;
+  const CY = 6;
 
   // Generate one corner pattern (CX x CY), then mirror to all 4
   const bits = [];
@@ -117,12 +117,12 @@ export function generateBlogBanner(seed) {
   drawCorner(0, H, false, true);        // bottom-left
   drawCorner(W, H, true, true);         // bottom-right
 
-  // Scattered low-opacity pixels across the whole banner for blocksy texture
+  // Scattered low-opacity pixels for blocksy texture (sparse — every 3rd cell checked)
   let bgPixels = '';
-  for (let y = 0; y < Math.floor(H / PX); y++) {
-    for (let x = 0; x < Math.floor(W / PX); x++) {
+  for (let y = 0; y < Math.floor(H / PX); y += 2) {
+    for (let x = 0; x < Math.floor(W / PX); x += 2) {
       const val = ((h * (y * 53 + x * 37 + 19)) & 0xFF);
-      if (val > 230) {
+      if (val > 240) {
         const fill = val % 3 === 0 ? fgLight : fg;
         bgPixels += `<rect x="${x * PX}" y="${y * PX}" width="${PX}" height="${PX}" fill="${fill}" opacity="0.06" rx="1"/>`;
       }
