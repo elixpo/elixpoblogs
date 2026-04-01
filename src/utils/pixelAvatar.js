@@ -74,50 +74,48 @@ export function generatePixelAvatar(seed) {
 
 /**
  * Generate a deterministic blog banner SVG data URL.
- * GitHub contribution-graph style — tiny square pixels, dense at corners, sparse in center.
+ * Same style as org avatars — symmetric pixel blocks in 4 corners, solid center.
  */
 export function generateBlogBanner(seed) {
   const h = hashSeed(seed);
   const palette = PALETTES[h % PALETTES.length];
-  const palette2 = PALETTES[(h + 5) % PALETTES.length];
   const [bg, fg, fgLight] = palette;
-  const fg2 = palette2[1];
 
   const W = 720;
   const H = 240;
-  const PX = 6; // pixel size — small like GitHub squares
-  const GAP = 1;
-  const STEP = PX + GAP;
-  const COLS = Math.floor(W / STEP);
-  const ROWS = Math.floor(H / STEP);
+  const PX = 8;
+  // Corner block size in cells
+  const CX = 8; // how many cells wide each corner cluster is
+  const CY = 8; // how many cells tall
 
-  const colors = [fg, fgLight, fg2, fg, fgLight];
-
-  let rects = '';
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      // Distance from each corner (0 at corner, 1 at center)
-      const nx = x / (COLS - 1);
-      const ny = y / (ROWS - 1);
-      const dTL = Math.sqrt(nx * nx + ny * ny);
-      const dTR = Math.sqrt((1 - nx) * (1 - nx) + ny * ny);
-      const dBL = Math.sqrt(nx * nx + (1 - ny) * (1 - ny));
-      const dBR = Math.sqrt((1 - nx) * (1 - nx) + (1 - ny) * (1 - ny));
-      const minDist = Math.min(dTL, dTR, dBL, dBR);
-
-      // Probability: high near corners (minDist ~0), drops off toward center
-      const prob = Math.max(0, 1 - minDist * 1.6);
-      const rand = ((h * (y * 131 + x * 67 + 29)) & 0xFF) / 255;
-
-      if (rand < prob) {
-        // Opacity stronger near corners
-        const opacity = (0.2 + prob * 0.6).toFixed(2);
-        const colorIdx = ((h * (y * 7 + x * 3)) & 0xFF) % colors.length;
-        const fill = colors[colorIdx];
-        rects += `<rect x="${x * STEP}" y="${y * STEP}" width="${PX}" height="${PX}" fill="${fill}" opacity="${opacity}" rx="1"/>`;
-      }
+  // Generate one corner pattern (CX x CY), then mirror to all 4
+  const bits = [];
+  for (let y = 0; y < CY; y++) {
+    for (let x = 0; x < CX; x++) {
+      // Denser closer to the actual corner, sparser further
+      const dist = Math.sqrt(x * x + y * y) / Math.sqrt(CX * CX + CY * CY);
+      const threshold = 80 + dist * 140;
+      bits.push(((h * (y * 7 + x * 13 + 3)) & 0xFF) > threshold);
     }
   }
+
+  let rects = '';
+  const drawCorner = (ox, oy, flipX, flipY) => {
+    for (let y = 0; y < CY; y++) {
+      for (let x = 0; x < CX; x++) {
+        if (!bits[y * CX + x]) continue;
+        const fill = ((x + y) % 3 === 0) ? fgLight : fg;
+        const px = flipX ? ox - (x + 1) * PX : ox + x * PX;
+        const py = flipY ? oy - (y + 1) * PX : oy + y * PX;
+        rects += `<rect x="${px}" y="${py}" width="${PX}" height="${PX}" fill="${fill}" rx="1"/>`;
+      }
+    }
+  };
+
+  drawCorner(0, 0, false, false);       // top-left
+  drawCorner(W, 0, true, false);        // top-right
+  drawCorner(0, H, false, true);        // bottom-left
+  drawCorner(W, H, true, true);         // bottom-right
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${bg}" rx="12"/>${rects}</svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
