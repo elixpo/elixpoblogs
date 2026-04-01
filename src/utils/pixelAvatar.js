@@ -117,26 +117,16 @@ export function generateBlogBanner(seed) {
   drawCorner(0, H, false, true);        // bottom-left
   drawCorner(W, H, true, true);         // bottom-right
 
-  // Scattered low-opacity pixels for blocksy texture (sparse — every 3rd cell checked)
+  // Scattered low-opacity pixels for blocksy texture (very sparse)
   let bgPixels = '';
-  for (let y = 0; y < Math.floor(H / PX); y += 2) {
-    for (let x = 0; x < Math.floor(W / PX); x += 2) {
-      const val = ((h * (y * 53 + x * 37 + 19)) & 0xFF);
-      if (val > 240) {
-        const fill = val % 3 === 0 ? fgLight : fg;
-        bgPixels += `<rect x="${x * PX}" y="${y * PX}" width="${PX}" height="${PX}" fill="${fill}" opacity="0.06" rx="1"/>`;
+  for (let y = 0; y < Math.floor(H / PX); y += 3) {
+    for (let x = 0; x < Math.floor(W / PX); x += 3) {
+      if (((h * (y * 53 + x * 37 + 19)) & 0xFF) > 245) {
+        bgPixels += `<rect x="${x * PX}" y="${y * PX}" width="${PX}" height="${PX}" fill="${fg}" opacity="0.06" rx="1"/>`;
       }
     }
   }
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-    <rect width="${W}" height="${H}" fill="${bg}" rx="12"/>
-    <ellipse cx="${W/2}" cy="${H/2}" rx="220" ry="90" fill="${fg}" opacity="0.12" filter="url(#gb)"/>
-    <ellipse cx="${W*0.35}" cy="${H*0.4}" rx="140" ry="70" fill="${fgLight}" opacity="0.08" filter="url(#gb)"/>
-    <ellipse cx="${W*0.65}" cy="${H*0.6}" rx="160" ry="80" fill="${fg}" opacity="0.10" filter="url(#gb)"/>
-    <defs><filter id="gb"><feGaussianBlur stdDeviation="50"/></filter></defs>
-    ${bgPixels}
-    ${rects}
-  </svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${bg}" rx="12"/>${bgPixels}${rects}</svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
