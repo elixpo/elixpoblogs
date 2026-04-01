@@ -23,6 +23,7 @@ export default function BlogComments({ blogId }) {
   const [posting, setPosting] = useState(false);
   const [replyTo, setReplyTo] = useState(null); // { id, username }
   const [replyText, setReplyText] = useState('');
+  const [editing, setEditing] = useState(null); // { id, content }
 
   const fetchComments = useCallback(async () => {
     try {
@@ -56,6 +57,32 @@ export default function BlogComments({ blogId }) {
     setPosting(false);
   };
 
+  const saveEdit = async () => {
+    if (!editing || !editing.content.trim() || posting) return;
+    setPosting(true);
+    try {
+      const res = await fetch(`/api/blogs/${blogId}/comments/${editing.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editing.content.trim() }),
+      });
+      if (res.ok) { setEditing(null); fetchComments(); }
+    } catch {}
+    setPosting(false);
+  };
+
+  const deleteComment = async (commentId) => {
+    if (!confirm('Delete this comment?')) return;
+    try {
+      await fetch(`/api/blogs/${blogId}/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slugid: blogId, userId: user?.id }),
+      });
+      fetchComments();
+    } catch {}
+  };
+
   return (
     <div className="mt-10" id="comments">
       <h3 className="text-[18px] font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
@@ -76,20 +103,20 @@ export default function BlogComments({ blogId }) {
             <textarea
               value={newComment}
               onChange={e => setNewComment(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); postComment(newComment); } }}
               placeholder="Add a comment..."
-              rows={3}
-              className="w-full rounded-xl px-4 py-3 outline-none text-[14px] resize-none transition-colors"
-              style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
-              onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-              onBlur={e => e.target.style.borderColor = 'var(--border-default)'}
+              rows={2}
+              className="w-full px-1 py-3 outline-none text-[14px] resize-none bg-transparent"
+              style={{ borderBottom: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
             />
-            <div className="flex justify-end mt-2">
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-[11px]" style={{ color: 'var(--text-faint)' }}>Ctrl + Enter to post</span>
               <button
                 onClick={() => postComment(newComment)}
                 disabled={!newComment.trim() || posting}
-                className="px-4 py-2 text-[13px] font-medium text-white bg-[#9b7bf7] hover:bg-[#8b6ae6] rounded-lg transition-colors disabled:opacity-40"
+                className="px-4 py-1.5 text-[13px] font-medium text-white bg-[#9b7bf7] hover:bg-[#8b6ae6] rounded-lg transition-colors disabled:opacity-40"
               >
-                {posting ? 'Posting...' : 'Post Comment'}
+                {posting ? 'Posting...' : 'Post'}
               </button>
             </div>
           </div>
@@ -128,16 +155,47 @@ export default function BlogComments({ blogId }) {
                   <div className="flex items-center gap-2 mb-1">
                     <Link href={`/${c.username}`} className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{c.display_name || c.username}</Link>
                     <span className="text-[11px]" style={{ color: 'var(--text-faint)' }}>{timeAgo(c.created_at)}</span>
+                    {c.updated_at > c.created_at && <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>(edited)</span>}
                   </div>
-                  <p className="text-[14px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-body)' }}>{c.content}</p>
-                  {user && (
-                    <button
-                      onClick={() => setReplyTo(replyTo?.id === c.id ? null : { id: c.id, username: c.display_name || c.username })}
-                      className="text-[12px] font-medium mt-2 transition-colors"
-                      style={{ color: 'var(--text-faint)' }}
-                    >
-                      {replyTo?.id === c.id ? 'Cancel' : `Reply${c.reply_count > 0 ? ` (${c.reply_count})` : ''}`}
-                    </button>
+
+                  {/* Edit mode or display */}
+                  {editing?.id === c.id ? (
+                    <div>
+                      <textarea
+                        value={editing.content}
+                        onChange={e => setEditing({ ...editing, content: e.target.value })}
+                        onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveEdit(); } }}
+                        rows={3}
+                        className="w-full px-1 py-2 outline-none text-[14px] resize-none bg-transparent"
+                        style={{ borderBottom: '1px solid var(--accent)', color: 'var(--text-primary)' }}
+                        autoFocus
+                      />
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <button onClick={saveEdit} disabled={!editing.content.trim() || posting} className="text-[12px] font-medium px-3 py-1 rounded-md text-white bg-[#9b7bf7] hover:bg-[#8b6ae6] disabled:opacity-40">Save</button>
+                        <button onClick={() => setEditing(null)} className="text-[12px] font-medium" style={{ color: 'var(--text-faint)' }}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[14px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-body)' }}>{c.content}</p>
+                  )}
+
+                  {/* Actions: reply, edit, delete */}
+                  {user && editing?.id !== c.id && (
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        onClick={() => setReplyTo(replyTo?.id === c.id ? null : { id: c.id, username: c.display_name || c.username })}
+                        className="text-[12px] font-medium transition-colors"
+                        style={{ color: 'var(--text-faint)' }}
+                      >
+                        {replyTo?.id === c.id ? 'Cancel' : `Reply${c.reply_count > 0 ? ` (${c.reply_count})` : ''}`}
+                      </button>
+                      {user.id === c.user_id && (
+                        <>
+                          <button onClick={() => setEditing({ id: c.id, content: c.content })} className="text-[12px] font-medium transition-colors" style={{ color: 'var(--text-faint)' }}>Edit</button>
+                          <button onClick={() => deleteComment(c.id)} className="text-[12px] font-medium transition-colors" style={{ color: '#f87171' }}>Delete</button>
+                        </>
+                      )}
+                    </div>
                   )}
 
                   {/* Reply input */}
