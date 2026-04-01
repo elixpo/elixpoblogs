@@ -190,10 +190,10 @@ export default function BlogComments({ blogId, blogAuthorId }) {
                         {replyTo?.id === c.id ? 'Cancel' : `Reply${c.reply_count > 0 ? ` (${c.reply_count})` : ''}`}
                       </button>
                       {user.id === c.user_id && (
-                        <>
-                          <button onClick={() => setEditing({ id: c.id, content: c.content })} className="text-[12px] font-medium transition-colors" style={{ color: 'var(--text-faint)' }}>Edit</button>
-                          <button onClick={() => deleteComment(c.id)} className="text-[12px] font-medium transition-colors" style={{ color: '#f87171' }}>Delete</button>
-                        </>
+                        <button onClick={() => setEditing({ id: c.id, content: c.content })} className="text-[12px] font-medium transition-colors" style={{ color: 'var(--text-faint)' }}>Edit</button>
+                      )}
+                      {(user.id === c.user_id || user.id === blogAuthorId) && (
+                        <button onClick={() => deleteComment(c.id)} className="text-[12px] font-medium transition-colors" style={{ color: '#f87171' }}>Delete</button>
                       )}
                     </div>
                   )}
