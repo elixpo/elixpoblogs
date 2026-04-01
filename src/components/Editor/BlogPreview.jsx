@@ -1,6 +1,73 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+
+function FloatingTOC({ headings }) {
+  const [activeId, setActiveId] = useState('');
+
+  useEffect(() => {
+    const els = headings.map(h => document.getElementById(h.id)).filter(Boolean);
+    if (els.length === 0) return;
+
+    const onScroll = () => {
+      const scrollY = window.scrollY + 120; // offset for sticky header
+      let current = headings[0]?.id || '';
+      for (const el of els) {
+        if (el.offsetTop <= scrollY) current = el.id;
+      }
+      setActiveId(current);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [headings]);
+
+  const activeIndex = headings.findIndex(h => h.id === activeId);
+  const progress = headings.length > 1 ? Math.max(0, activeIndex) / (headings.length - 1) : 0;
+
+  return (
+    <nav className="preview-floating-toc">
+      <p className="preview-floating-toc-label">On this page</p>
+      <div className="relative flex">
+        {/* Track line + slider */}
+        <div className="relative mr-3 flex-shrink-0" style={{ width: '2px' }}>
+          <div className="absolute inset-0 rounded-full" style={{ backgroundColor: 'var(--border-default)' }} />
+          <div
+            className="absolute left-0 w-full rounded-full transition-all duration-300"
+            style={{
+              backgroundColor: '#9b7bf7',
+              top: `${progress * 100}%`,
+              height: `${Math.max(12, 100 / headings.length)}%`,
+              transform: 'translateY(-50%)',
+            }}
+          />
+        </div>
+        <ul className="preview-floating-toc-list flex-1">
+          {headings.map(h => (
+            <li key={h.id}>
+              <a
+                href={`#${h.id}`}
+                className="preview-floating-toc-link"
+                style={{
+                  paddingLeft: (h.level - 1) * 12,
+                  color: h.id === activeId ? 'var(--text-primary)' : undefined,
+                  fontWeight: h.id === activeId ? '600' : undefined,
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+  );
+}
 
 function renderBlocksToHTML(blocks) {
   if (!blocks || !blocks.length) return '';
