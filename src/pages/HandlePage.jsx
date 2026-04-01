@@ -116,7 +116,7 @@ export default function HandlePage({ path }) {
           <BlogInteractionBar blogId={blog.id} />
 
           {/* Comments section — always expanded */}
-          <BlogComments blogId={blog.id} />
+          <BlogComments blogId={blog.id} blogAuthorId={blog.author_id} />
         </div>
       </AppShell>
     );

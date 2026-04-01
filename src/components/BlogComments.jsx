@@ -14,7 +14,7 @@ function timeAgo(ts) {
   return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function BlogComments({ blogId }) {
+export default function BlogComments({ blogId, blogAuthorId }) {
   const { user } = useAuth();
   const [comments, setComments] = useState([]);
   const [total, setTotal] = useState(0);
