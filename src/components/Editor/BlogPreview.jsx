@@ -217,6 +217,13 @@ function renderBlocksToHTML(blocks) {
 
 export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, coverPos, pageEmoji, tags, html, blocks, user, wordCount }) {
   const contentRef = useRef(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Determine which HTML to use — prefer blocks-based rendering
   const renderedHTML = blocks && blocks.length > 0 ? renderBlocksToHTML(blocks) : html;
@@ -316,14 +323,16 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
       {/* Floating TOC with scroll spy */}
       {headings.length >= 2 && <FloatingTOC headings={headings} />}
 
-      {/* Back to top */}
-      <button
-        className="preview-back-to-top"
-        onClick={() => document.getElementById('blog-preview-top')?.scrollIntoView({ behavior: 'smooth' })}
-        title="Back to top"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-      </button>
+      {/* Back to top — only visible after scrolling down */}
+      {showBackToTop && (
+        <button
+          className="preview-back-to-top"
+          onClick={() => document.getElementById('blog-preview-top')?.scrollIntoView({ behavior: 'smooth' })}
+          title="Back to top"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+      )}
       {/* Cover + emoji */}
       <div className="relative mb-2">
         {coverPreview && (
