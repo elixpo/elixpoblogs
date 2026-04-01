@@ -4,7 +4,8 @@ import { getSession } from '../../../lib/auth';
 import { STAFF_ORG_ID } from '../../../lib/staff';
 
 const BLOG_FIELDS = `b.id, b.slug, b.title, b.subtitle, b.cover_image_r2_key, b.page_emoji,
-  b.author_id, b.published_as, b.published_at, b.read_time_minutes`;
+  b.author_id, b.published_as, b.published_at, b.read_time_minutes,
+  b.like_count, b.clap_total, b.comment_count, b.view_count`;
 
 /**
  * GET /api/feed — personalized feed
@@ -26,24 +27,38 @@ export async function GET(request) {
   const userId = session?.userId;
 
   try {
+    // Cache anonymous feeds (shared across all anonymous users)
+    if (!userId) {
+      const { kvCache } = await import('../../../lib/cache');
+      const cacheKey = filterTag
+        ? `v1:feed:anon:tag:${filterTag}:p${page}`
+        : `v1:feed:anon:trending:p${page}`;
+
+      const cached = await kvCache(cacheKey, 180, async () => {
+        const { getDB } = await import('../../../lib/cloudflare');
+        const db = getDB();
+        const now = Math.floor(Date.now() / 1000);
+        let posts = filterTag
+          ? await queryByTag(db, filterTag, now, limit, offset)
+          : await queryTrending(db, now, limit, offset);
+        posts = await enrichPosts(db, posts, null);
+        return { posts, page, hasMore: posts.length === limit };
+      });
+      return NextResponse.json(cached);
+    }
+
     const { getDB } = await import('../../../lib/cloudflare');
     const db = getDB();
     const now = Math.floor(Date.now() / 1000);
 
     let posts;
 
-    if (filterType === 'following' && userId) {
-      // Following-only feed
+    if (filterType === 'following') {
       posts = await queryFollowing(db, userId, now, limit, offset);
     } else if (filterTag) {
-      // Tag-filtered feed
       posts = await queryByTag(db, filterTag, now, limit, offset);
-    } else if (userId) {
-      // Blended personalized feed
-      posts = await queryBlended(db, userId, now, limit);
     } else {
-      // Anonymous — trending/recent
-      posts = await queryTrending(db, now, limit, offset);
+      posts = await queryBlended(db, userId, now, limit);
     }
 
     // Enrich with author info and tags
@@ -103,9 +118,7 @@ export async function GET(request) {
 async function queryFollowing(db, userId, now, limit, offset) {
   const cutoff = now - 30 * 86400;
   const result = await db.prepare(`
-    SELECT ${BLOG_FIELDS},
-      (SELECT COUNT(*) FROM likes WHERE blog_id = b.id) as like_count,
-      (SELECT COUNT(*) FROM comments WHERE blog_id = b.id) as comment_count
+    SELECT ${BLOG_FIELDS}
     FROM blogs b
     WHERE b.status = 'published' AND b.published_at > ?
       AND (
@@ -125,9 +138,7 @@ async function queryInterests(db, userId, now, limit) {
   const cutoff = now - 14 * 86400;
   const signalCutoff = now - 30 * 86400;
   const result = await db.prepare(`
-    SELECT ${BLOG_FIELDS},
-      (SELECT COUNT(*) FROM likes WHERE blog_id = b.id) as like_count,
-      (SELECT COUNT(*) FROM comments WHERE blog_id = b.id) as comment_count
+    SELECT ${BLOG_FIELDS}
     FROM blogs b
     WHERE b.status = 'published' AND b.published_at > ?
       AND b.id IN (
@@ -147,17 +158,13 @@ async function queryInterests(db, userId, now, limit) {
 // ─── Bucket C: Trending ──────────────────────────────────────────────
 async function queryTrending(db, now, limit, offset) {
   const cutoff = now - 14 * 86400;
-  const viewCutoff = now - 3 * 86400;
   const result = await db.prepare(`
-    SELECT ${BLOG_FIELDS},
-      (SELECT COUNT(*) FROM likes WHERE blog_id = b.id) as like_count,
-      (SELECT COUNT(*) FROM comments WHERE blog_id = b.id) as comment_count,
-      (SELECT COUNT(*) FROM blog_views WHERE blog_id = b.id AND created_at > ?) as recent_views
+    SELECT ${BLOG_FIELDS}
     FROM blogs b
     WHERE b.status = 'published' AND b.published_at > ?
-    ORDER BY like_count DESC, recent_views DESC, b.published_at DESC
+    ORDER BY b.like_count DESC, b.view_count DESC, b.published_at DESC
     LIMIT ? OFFSET ?
-  `).bind(viewCutoff, cutoff, limit, offset).all();
+  `).bind(cutoff, limit, offset).all();
   return result?.results || [];
 }
 
@@ -165,9 +172,7 @@ async function queryTrending(db, now, limit, offset) {
 async function queryByTag(db, tag, now, limit, offset) {
   const cutoff = now - 30 * 86400;
   const result = await db.prepare(`
-    SELECT ${BLOG_FIELDS},
-      (SELECT COUNT(*) FROM likes WHERE blog_id = b.id) as like_count,
-      (SELECT COUNT(*) FROM comments WHERE blog_id = b.id) as comment_count
+    SELECT ${BLOG_FIELDS}
     FROM blogs b
     WHERE b.status = 'published' AND b.published_at > ?
       AND b.id IN (SELECT blog_id FROM blog_tags WHERE LOWER(tag) = LOWER(?))
