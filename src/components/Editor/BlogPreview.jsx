@@ -402,11 +402,11 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
         </div>
       )}
 
-      {/* 30px gap before title */}
-      <div style={{ height: '30px' }} />
+      {/* Gap before title */}
+      <div style={{ height: '48px' }} />
 
       {title && (
-        <h1 className="text-[2em] font-extrabold leading-tight mb-1">{title}</h1>
+        <h1 className="text-[2.2em] font-extrabold leading-tight mb-2" style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}>{title}</h1>
       )}
 
       {subtitle && (
