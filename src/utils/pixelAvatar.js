@@ -117,6 +117,13 @@ export function generateBlogBanner(seed) {
   drawCorner(0, H, false, true);        // bottom-left
   drawCorner(W, H, true, true);         // bottom-right
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${bg}" rx="12"/>${rects}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+    <rect width="${W}" height="${H}" fill="${bg}" rx="12"/>
+    <ellipse cx="${W/2}" cy="${H/2}" rx="220" ry="90" fill="${fg}" opacity="0.12" filter="url(#gb)"/>
+    <ellipse cx="${W*0.35}" cy="${H*0.4}" rx="140" ry="70" fill="${fgLight}" opacity="0.08" filter="url(#gb)"/>
+    <ellipse cx="${W*0.65}" cy="${H*0.6}" rx="160" ry="80" fill="${fg}" opacity="0.10" filter="url(#gb)"/>
+    <defs><filter id="gb"><feGaussianBlur stdDeviation="50"/></filter></defs>
+    ${rects}
+  </svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
