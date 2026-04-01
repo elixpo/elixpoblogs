@@ -410,7 +410,7 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
       )}
 
       {subtitle && (
-        <p className="text-xl text-[var(--text-muted)] mb-4">{subtitle}</p>
+        <p className="text-xl mb-5" style={{ color: 'var(--text-muted)', fontFamily: "'Source Serif 4', Georgia, serif" }}>{subtitle}</p>
       )}
 
       <div className="mt-4">
