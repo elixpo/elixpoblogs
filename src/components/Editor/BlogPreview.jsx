@@ -4,13 +4,16 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 function FloatingTOC({ headings }) {
   const [activeId, setActiveId] = useState('');
+  const listRef = useRef(null);
+  const itemRefs = useRef({});
+  const [sliderStyle, setSliderStyle] = useState({ top: 0, height: 16 });
 
   useEffect(() => {
     const els = headings.map(h => document.getElementById(h.id)).filter(Boolean);
     if (els.length === 0) return;
 
     const onScroll = () => {
-      const scrollY = window.scrollY + 120; // offset for sticky header
+      const scrollY = window.scrollY + 120;
       let current = headings[0]?.id || '';
       for (const el of els) {
         if (el.offsetTop <= scrollY) current = el.id;
@@ -23,8 +26,18 @@ function FloatingTOC({ headings }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, [headings]);
 
-  const activeIndex = headings.findIndex(h => h.id === activeId);
-  const progress = headings.length > 1 ? Math.max(0, activeIndex) / (headings.length - 1) : 0;
+  // Update slider position based on active item's DOM position
+  useEffect(() => {
+    if (!activeId || !listRef.current) return;
+    const item = itemRefs.current[activeId];
+    if (!item) return;
+    const listRect = listRef.current.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    setSliderStyle({
+      top: itemRect.top - listRect.top,
+      height: itemRect.height,
+    });
+  }, [activeId]);
 
   return (
     <nav className="preview-floating-toc">
@@ -34,18 +47,17 @@ function FloatingTOC({ headings }) {
         <div className="relative mr-3 flex-shrink-0" style={{ width: '2px' }}>
           <div className="absolute inset-0 rounded-full" style={{ backgroundColor: 'var(--border-default)' }} />
           <div
-            className="absolute left-0 w-full rounded-full transition-all duration-300"
+            className="absolute left-0 w-full rounded-full transition-all duration-300 ease-out"
             style={{
               backgroundColor: '#9b7bf7',
-              top: `${progress * 100}%`,
-              height: `${Math.max(12, 100 / headings.length)}%`,
-              transform: 'translateY(-50%)',
+              top: sliderStyle.top,
+              height: sliderStyle.height,
             }}
           />
         </div>
-        <ul className="preview-floating-toc-list flex-1">
+        <ul className="preview-floating-toc-list flex-1" ref={listRef}>
           {headings.map(h => (
-            <li key={h.id}>
+            <li key={h.id} ref={el => { itemRefs.current[h.id] = el; }}>
               <a
                 href={`#${h.id}`}
                 className="preview-floating-toc-link"
