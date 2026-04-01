@@ -68,8 +68,12 @@ export default function BlogInteractionBar({ blogId }) {
     };
   }, [blogId, user]);
 
+  const [likeAnim, setLikeAnim] = useState(false);
+
   const toggleLike = async () => {
     if (!user) return;
+    setLikeAnim(true);
+    setTimeout(() => setLikeAnim(false), 400);
     const res = await fetch(`/api/blogs/${blogId}/like`, { method: 'POST' });
     if (res.ok) {
       const data = await res.json();
