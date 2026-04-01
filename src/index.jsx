@@ -50,7 +50,7 @@ function SearchBar() {
         setSuggestions(sugData.suggestions || []);
         setLoading(false);
       });
-    }, 300);
+    }, 120);
     return () => clearTimeout(timer);
   }, [query]);
 
@@ -80,8 +80,8 @@ function SearchBar() {
           style={{ color: 'var(--text-primary)' }}
         />
         {query && (
-          <button onClick={() => { setQuery(''); setOpen(false); }} style={{ color: 'var(--text-faint)' }}>
-            <ion-icon name="close-circle" style={{ fontSize: '16px' }} />
+          <button onClick={() => { setQuery(''); setOpen(false); }} className="flex items-center justify-center w-6 h-6 rounded-full transition-colors" style={{ color: 'var(--text-muted)', backgroundColor: 'var(--bg-elevated)' }}>
+            <ion-icon name="close" style={{ fontSize: '14px' }} />
           </button>
         )}
         <kbd className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-faint)', border: '1px solid var(--border-default)' }}>
