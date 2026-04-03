@@ -397,7 +397,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const [aiMenuPos, setAiMenuPos] = useState({ top: 0, left: 0, anchorBlockId: null });
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiGeneratingBlockId, setAiGeneratingBlockId] = useState(null);
-  const [aiPhase, setAiPhase] = useState('idle'); // idle | thinking | writing | generating_image | uploading
+  const [aiPhase, setAiPhase] = useState('idle'); // idle | thinking | writing | generating_image
   const [aiStatusInline, setAiStatusInline] = useState(false); // true = inline status bar, false = bottom bar
   const [aiInlinePos, setAiInlinePos] = useState({ top: 0 }); // position for inline status bar
   const [aiStatusText, setAiStatusText] = useState('is thinking'); // cycling status text
@@ -410,7 +410,6 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const aiBlockIdsRef = useRef(new Set());
   const aiBlockCountRef = useRef(0);
   const aiAnchorIdRef = useRef(null);
-  const resolvedImagesRef = useRef({}); // Track resolved AI image URLs: { imageId: { url, alt } }
   const wrapperRef = useRef(null);
 
   const sanitizedContent = useMemo(() => sanitizeInitialContent(initialContent), [initialContent]);
@@ -948,37 +947,6 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     } catch (e) { console.error('Failed to replace image placeholder:', e); }
   }, [editor]);
 
-  const removeImagePlaceholder = useCallback((imageId) => {
-    try {
-      const doc = editor.document;
-      for (const block of doc) {
-        if (block.type === 'image' && block.props?._imageId === imageId) {
-          // Convert to empty paragraph instead of removing — leaves an empty line
-          editor.updateBlock(block.id, { type: 'paragraph', props: {}, content: [] });
-          return;
-        }
-        // Also check paragraph blocks with IMG_LOADING text
-        if (block.type === 'paragraph') {
-          const text = (block.content || []).map(c => c.text || '').join('');
-          if (text.includes(`IMG_LOADING:${imageId}`)) {
-            editor.updateBlock(block.id, { type: 'paragraph', props: {}, content: [] });
-            return;
-          }
-        }
-      }
-      // Fallback: convert any image block with no URL (empty placeholder)
-      for (const block of doc) {
-        if (block.type === 'image' && (!block.props?.url || block.props.url === '')) {
-          const el = wrapperRef.current?.querySelector(`[data-id="${block.id}"]`);
-          if (el?.classList.contains('ai-image-skeleton')) {
-            editor.updateBlock(block.id, { type: 'paragraph', props: {}, content: [] });
-            return;
-          }
-        }
-      }
-    } catch {}
-  }, [editor]);
-
   const handleAISubmit = useCallback(async (userPrompt) => {
     const menuPos = aiMenuPos; // capture before closing
     setShowAIMenu(false);
@@ -1366,7 +1334,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     } catch (err) {
       handleAIError(err);
     }
-  }, [editor, getAiBlockIds, highlightAiBlocks, getFullBlogContext, blogId, handleAIKeep, aiMenuPos, hideSparkle, onTitleChange, replaceImagePlaceholder, removeImagePlaceholder]);
+  }, [editor, getAiBlockIds, highlightAiBlocks, getFullBlogContext, blogId, handleAIKeep, aiMenuPos, hideSparkle, onTitleChange, replaceImagePlaceholder]);
 
   return (
     <div className={`blog-editor-wrapper${aiGenerating ? ' ai-editor-locked' : ''}`} ref={wrapperRef} style={{ position: 'relative' }}>
@@ -1477,7 +1445,6 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
               <span className="elixpo-typing-status">{
                 aiPhase === 'thinking' ? 'is thinking' :
                 aiPhase === 'generating_image' ? 'is creating an image' :
-                aiPhase === 'uploading' ? 'is uploading' :
                 'is writing'
               }<span className="elixpo-typing-dots"><span /><span /><span /></span></span>
             </div>
