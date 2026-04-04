@@ -342,7 +342,7 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
     }
 
     return () => { cancelled = true; };
-  }, [renderedHTML]);
+  }, [renderedHTML, isDark]);
 
   return (
     <div className="blog-preview" id="blog-preview-top">

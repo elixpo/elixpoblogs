@@ -248,14 +248,23 @@
   gap: 8px;
   padding: 32px 16px;
   border-style: dashed;
-  background: rgba(20, 26, 38, 0.5);
+  background: rgba(240, 240, 245, 0.5);
   color: var(--text-muted);
   font-size: 13px;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
 
+[data-theme="dark"] .mermaid-block--empty {
+  background: rgba(20, 26, 38, 0.5);
+}
+
 .mermaid-block--empty:hover {
+  border-color: #ccc;
+  color: #7c5cbf;
+}
+
+[data-theme="dark"] .mermaid-block--empty:hover {
   border-color: #333;
   color: #c4b5fd;
 }
@@ -312,7 +321,7 @@
 }
 
 .mermaid-btn-cancel:hover {
-  color: white;
+  color: var(--text-primary);
 }
 
 .mermaid-btn-save {
@@ -391,12 +400,16 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(14, 18, 27, 0.85);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 4px 6px;
   z-index: 5;
+}
+
+[data-theme="dark"] .mermaid-zoom-controls {
+  background: rgba(14, 18, 27, 0.85);
 }
 
 .mermaid-zoom-btn {
@@ -448,16 +461,21 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: rgba(14, 18, 27, 0.85);
-  border: 1px solid #333;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #ddd;
   border-radius: 6px;
   color: var(--text-muted);
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
 
+[data-theme="dark"] .mermaid-hover-btn {
+  background: rgba(14, 18, 27, 0.85);
+  border-color: #333;
+}
+
 .mermaid-hover-btn:hover {
-  color: white;
+  color: var(--text-primary);
   background: var(--border-default);
 }
 
