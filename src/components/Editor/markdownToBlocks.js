@@ -177,8 +177,8 @@ export function parseMarkdownToBlocks(text) {
       i++; continue;
     }
 
-    // Horizontal rule: ---, ***, ___
-    if (/^([-*_])\1{2,}$/.test(trimmed)) {
+    // Horizontal rule: ---, ***, ___, ———, ———
+    if (/^([-*_])\1{2,}$/.test(trimmed) || /^[—–]{2,}$/.test(trimmed)) {
       blocks.push({ type: 'divider', content: [], props: {} });
       i++; continue;
     }
