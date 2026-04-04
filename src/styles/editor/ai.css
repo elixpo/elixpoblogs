@@ -1,8 +1,10 @@
-/* ===== AI Writing Active — blue text + highlight while AI is streaming ===== */
+/* ===== AI Writing Active — handwritten lavender text while AI is streaming ===== */
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap');
 
 .ai-writing-active {
-  background: rgba(96, 165, 250, 0.06) !important;
-  border-left: 3px solid rgba(96, 165, 250, 0.5) !important;
+  background: rgba(196, 181, 253, 0.06) !important;
+  border-left: 3px solid rgba(196, 181, 253, 0.4) !important;
   border-radius: 0 6px 6px 0;
   margin-left: -3px;
   transition: background 0.2s ease, border-color 0.2s ease;
@@ -26,16 +28,20 @@
 .ai-writing-active h1,
 .ai-writing-active h2,
 .ai-writing-active h3 {
-  color: #60a5fa !important;
-  caret-color: #60a5fa !important;
-  -webkit-text-fill-color: #60a5fa !important;
+  color: #c4b5fd !important;
+  caret-color: #c4b5fd !important;
+  -webkit-text-fill-color: #c4b5fd !important;
+  font-family: 'Caveat', cursive !important;
+  font-size: 1.35em !important;
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
 }
 
 /* ===== AI Generated Block Highlight (green, shown after AI is done) ===== */
 
 .ai-generated-highlight {
-  background: rgba(74, 222, 128, 0.08) !important;
-  border-left: 3px solid rgba(74, 222, 128, 0.5) !important;
+  background: rgba(196, 181, 253, 0.08) !important;
+  border-left: 3px solid rgba(196, 181, 253, 0.4) !important;
   border-radius: 0 6px 6px 0;
   margin-left: -3px;
 }
@@ -46,9 +52,13 @@
 
 .ai-generated-highlight [contenteditable="true"],
 .ai-generated-highlight [contenteditable="true"] * {
-  color: #4ade80 !important;
-  caret-color: #4ade80 !important;
-  -webkit-text-fill-color: #4ade80 !important;
+  color: #c4b5fd !important;
+  caret-color: #c4b5fd !important;
+  -webkit-text-fill-color: #c4b5fd !important;
+  font-family: 'Caveat', cursive !important;
+  font-size: 1.35em !important;
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
 }
 
 .ai-generated-highlight .bn-inline-content,
@@ -62,8 +72,12 @@
 .ai-generated-highlight h1,
 .ai-generated-highlight h2,
 .ai-generated-highlight h3 {
-  color: #4ade80 !important;
-  -webkit-text-fill-color: #4ade80 !important;
+  color: #c4b5fd !important;
+  -webkit-text-fill-color: #c4b5fd !important;
+  font-family: 'Caveat', cursive !important;
+  font-size: 1.35em !important;
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
 }
 
 /* ===== AI Edit Diff Styles (lavender theme) ===== */
@@ -417,25 +431,7 @@
   cursor: not-allowed !important;
 }
 
-.ai-editor-locked .bn-editor {
-  position: relative;
-}
-
-.ai-editor-locked .bn-editor::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(19, 25, 34, 0.15);
-  pointer-events: none;
-  z-index: 5;
-  border-radius: 8px;
-  animation: aiLockFadeIn 0.3s ease-out;
-}
-
-@keyframes aiLockFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+/* Grey overlay removed — only the anchor block gets the visual indicator via ai-edit-selected-block */
 
 .ai-editor-locked .bn-toolbar {
   display: none !important;
@@ -512,9 +508,9 @@
   height: 8px;
   background: linear-gradient(
     90deg,
-    rgba(96, 165, 250, 0.12) 0%,
-    rgba(96, 165, 250, 0.3) 50%,
-    rgba(96, 165, 250, 0.12) 100%
+    rgba(196, 181, 253, 0.12) 0%,
+    rgba(196, 181, 253, 0.3) 50%,
+    rgba(196, 181, 253, 0.12) 100%
   );
   background-size: 200% 100%;
   animation: aiSkeletonShimmer 1.8s ease-in-out infinite;
@@ -545,9 +541,9 @@
   height: 12px;
   background: linear-gradient(
     90deg,
-    rgba(96, 165, 250, 0.12) 0%,
-    rgba(96, 165, 250, 0.25) 50%,
-    rgba(96, 165, 250, 0.12) 100%
+    rgba(196, 181, 253, 0.12) 0%,
+    rgba(196, 181, 253, 0.25) 50%,
+    rgba(196, 181, 253, 0.12) 100%
   );
   background-size: 200% 100%;
   animation: aiSkeletonShimmer 1.8s ease-in-out infinite;
