@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -211,6 +211,99 @@ function HamburgerMenu({ onShareDraft, onChangeCover, onChangeTitle, onChangeTop
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Editor Outline with slider (matches preview TOC style) ──
+function EditorOutline({ editorContent }) {
+  const [activeId, setActiveId] = useState('');
+  const listRef = useRef(null);
+  const itemRefs = useRef({});
+  const [sliderStyle, setSliderStyle] = useState({ top: 0, height: 16 });
+
+  const blocks = useMemo(() => {
+    if (Array.isArray(editorContent)) return editorContent;
+    try { return JSON.parse(editorContent); } catch { return []; }
+  }, [editorContent]);
+
+  const headings = useMemo(() => {
+    return blocks
+      .filter((b) => b.type === 'heading' && b.content?.length > 0)
+      .map((h) => {
+        const level = parseInt(h.props?.level || '1', 10);
+        const text = h.content.map((c) => c.text || '').join('');
+        return { id: h.id, level, text: text.trim() };
+      })
+      .filter((h) => h.text);
+  }, [blocks]);
+
+  // Scroll spy — track which heading is in view
+  useEffect(() => {
+    if (headings.length === 0) return;
+    const onScroll = () => {
+      const scrollY = window.scrollY + 150;
+      let current = headings[0]?.id || '';
+      for (const h of headings) {
+        const el = document.querySelector(`[data-id="${h.id}"]`);
+        if (el && el.offsetTop <= scrollY) current = h.id;
+      }
+      setActiveId(current);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [headings]);
+
+  // Update slider position
+  useEffect(() => {
+    if (!activeId || !listRef.current) return;
+    const item = itemRefs.current[activeId];
+    if (!item) return;
+    const listRect = listRef.current.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    setSliderStyle({ top: itemRect.top - listRect.top, height: itemRect.height });
+  }, [activeId]);
+
+  if (headings.length === 0) return null;
+
+  return (
+    <div className="editor-outline-sidebar">
+      <p className="editor-outline-title">Outline</p>
+      <div className="relative flex">
+        {/* Track line + slider */}
+        <div className="relative mr-3 flex-shrink-0" style={{ width: '2px' }}>
+          <div className="absolute inset-0 rounded-full" style={{ backgroundColor: 'var(--border-default)' }} />
+          <div
+            className="absolute left-0 w-full rounded-full transition-all duration-300 ease-out"
+            style={{ backgroundColor: '#9b7bf7', top: sliderStyle.top, height: sliderStyle.height }}
+          />
+        </div>
+        <ul className="editor-outline-list flex-1" ref={listRef}>
+          {headings.map((h) => (
+            <li
+              key={h.id}
+              ref={(el) => { itemRefs.current[h.id] = el; }}
+              className="editor-outline-item"
+              style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
+              onClick={() => {
+                const el = document.querySelector(`[data-id="${h.id}"]`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+            >
+              <span
+                className="editor-outline-text"
+                style={{
+                  color: h.id === activeId ? 'var(--text-primary)' : undefined,
+                  fontWeight: h.id === activeId ? '600' : undefined,
+                }}
+              >
+                {h.text}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
@@ -1201,41 +1294,8 @@ export default function WritePage({ slugid }) {
                       onTitleChange={(newTitle) => { setTitle(newTitle); setAiTitleKey(k => k + 1); }}
                       blogId={slugid}
                     />
-                    {/* Outline sidebar — shows heading positions */}
-                    {editorContent && (() => {
-                      const blocks = Array.isArray(editorContent) ? editorContent : (() => { try { return JSON.parse(editorContent); } catch { return []; } })();
-                      if (!blocks.length) return null;
-                      const headings = blocks.filter(
-                        (b) => b.type === 'heading' && b.content?.length > 0
-                      );
-                      if (headings.length === 0) return null;
-                      return (
-                        <div className="editor-outline-sidebar">
-                          <p className="editor-outline-title">Outline</p>
-                          <ul className="editor-outline-list">
-                            {headings.map((h, i) => {
-                              const level = parseInt(h.props?.level || '1', 10);
-                              const text = h.content.map((c) => c.text || '').join('');
-                              if (!text.trim()) return null;
-                              return (
-                                <li
-                                  key={h.id || i}
-                                  className="editor-outline-item"
-                                  style={{ paddingLeft: `${(level - 1) * 12}px` }}
-                                  onClick={() => {
-                                    const el = document.querySelector(`[data-id="${h.id}"]`);
-                                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                  }}
-                                >
-                                  <span className="editor-outline-dot" style={{ opacity: level === 1 ? 1 : level === 2 ? 0.7 : 0.4 }} />
-                                  <span className="editor-outline-text">{text}</span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      );
-                    })()}
+                    {/* Outline sidebar — shows heading positions with slider */}
+                    {editorContent && <EditorOutline editorContent={editorContent} />}
                   </div>
                 </>
                 </div>
