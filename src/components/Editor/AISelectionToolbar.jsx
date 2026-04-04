@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { streamAI, getOrCreateSession } from '../../ai/agent';
 import { EDIT_SYSTEM_PROMPT } from '../../ai/prompts';
-import { parseMarkdownToBlocks } from './markdownToBlocks';
 import { computeWordDiff, diffToBlocks, diffToKeepBlocks } from './wordDiff';
 
 /**
@@ -351,8 +350,6 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
 
   const handleUndo = useCallback(() => {
     abortRef.current?.abort();
-    showToolbar();
-    unlockEditor();
     removeSkeletonLoading();
     clearSelectedLavender();
 
@@ -360,9 +357,11 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
       // Replace diff blocks with original block snapshots
       try {
         editor.replaceBlocks(diffBlockIds, selectedBlocks);
-      } catch {}
+      } catch (err) { console.error('Undo failed:', err); }
     }
 
+    unlockEditor();
+    showToolbar();
     resetState();
   }, [editor, diffBlockIds, selectedBlocks, showToolbar, unlockEditor, removeSkeletonLoading, clearSelectedLavender]);
 
@@ -453,7 +452,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
             return;
           }
 
-          // Store AI response for the Keep action
+          // Store AI response for reference
           setAiResponseText(contentText);
 
           // Strip markdown syntax for clean diff comparison
@@ -466,8 +465,9 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
             .replace(/`(.+?)`/g, '$1')
             .replace(/^#{1,6}\s+/gm, '');
 
-          // Compute word-level diff
+          // Compute word-level diff and store it for keep/undo
           const diff = computeWordDiff(selectedText, cleanAiText);
+          setDiffResult(diff);
           const diffBlocks = diffToBlocks(diff);
 
           // Find the block before the first selected block (anchor for finding new IDs)
