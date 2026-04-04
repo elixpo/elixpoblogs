@@ -171,18 +171,6 @@ graph TB
 </td>
 </tr>
 </table>
-
-| Layer | Technology |
-|:---|:---|
-| **Frontend** | Next.js 15, React 19, Tailwind CSS 3.4 |
-| **Editor** | BlockNote 0.47 with 20+ custom blocks |
-| **AI** | LixSearch — streaming SSE with session memory |
-| **Collaboration** | Yjs CRDT + Cloudflare Durable Objects |
-| **Database** | Cloudflare D1 (SQLite at the edge) |
-| **Media** | Cloudinary with client-side WebP compression |
-| **Auth** | Elixpo Accounts OAuth 2.0 |
-| **Hosting** | Cloudflare Pages + Workers (global edge) |
-
 </div>
 
 <br />
