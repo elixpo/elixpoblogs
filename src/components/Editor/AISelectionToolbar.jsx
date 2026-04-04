@@ -25,6 +25,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
   const aiBlockCountRef = useRef(0);
   const injectedRef = useRef(false);
   const originalBlockIdsRef = useRef([]); // Ref mirror for use in streaming callbacks
+  const savedSelectionRef = useRef(null); // Save native DOM selection range
 
   // Inject star button + color buttons into BlockNote's native toolbar
   useEffect(() => {
@@ -171,6 +172,12 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
         e.stopPropagation();
 
         try {
+          // Save the native DOM selection range before anything else
+          const nativeSel = window.getSelection();
+          if (nativeSel && nativeSel.rangeCount > 0) {
+            savedSelectionRef.current = nativeSel.getRangeAt(0).cloneRange();
+          }
+
           const sel = editor.getSelection();
           if (!sel?.blocks?.length) return;
 
@@ -207,7 +214,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
           setOriginalBlockIds([]);
           originalBlockIdsRef.current = [];
 
-          // Keep the native text selection visible and add subtle highlight
+          // Add subtle highlight on selected blocks
           requestAnimationFrame(() => {
             const wrapper = document.querySelector('.blog-editor-wrapper');
             if (wrapper) {
@@ -230,10 +237,20 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     return () => clearInterval(interval);
   }, [editor]);
 
-  // Focus prompt input when entering prompting mode
+  // Focus prompt input when entering prompting mode, then restore text selection
   useEffect(() => {
     if (mode === 'prompting') {
-      setTimeout(() => promptRef.current?.focus(), 50);
+      setTimeout(() => {
+        promptRef.current?.focus();
+        // Restore the saved native selection so highlighted text stays visible
+        const range = savedSelectionRef.current;
+        if (range) {
+          const nativeSel = window.getSelection();
+          if (nativeSel) {
+            nativeSel.addRange(range);
+          }
+        }
+      }, 50);
     }
   }, [mode]);
 
@@ -387,6 +404,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     setSelectedBlockIds([]);
     setOriginalBlockIds([]);
     originalBlockIdsRef.current = [];
+    savedSelectionRef.current = null;
     setAiBlockIds([]);
     aiBlockCountRef.current = 0;
     // Clean up leftover DOM classes
