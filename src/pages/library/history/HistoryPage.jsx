@@ -1,4 +1,4 @@
-import "../../../styles/history/history/history.css";
+import "../../../styles/history/history.css";
 
 
 
