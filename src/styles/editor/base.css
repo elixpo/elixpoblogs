@@ -86,17 +86,23 @@
   color: var(--text-primary);
 }
 
-/* Inline code — lavender theme */
+/* Inline code — purple accent, adapts to theme */
 .blog-editor-wrapper code,
 .blog-preview-content code {
-  color: #c4b5fd;
-  background: rgba(196, 181, 253, 0.1);
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.08);
   border-radius: 4px;
   padding: 0.15em 0.4em;
   font-size: 0.82em;
   font-family: 'lixCode', monospace;
   -webkit-hyphens: none;
   hyphens: none;
+}
+
+[data-theme="dark"] .blog-editor-wrapper code,
+[data-theme="dark"] .blog-preview-content code {
+  color: #c4b5fd;
+  background: rgba(196, 181, 253, 0.1);
 }
 
 /* Code blocks — lixCode font, no line highlights */
