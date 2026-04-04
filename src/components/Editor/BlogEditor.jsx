@@ -765,17 +765,26 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       el.classList.remove('ai-skeleton-nearby', 'ai-placeholder-skeleton', 'ai-edit-selected-block', 'ai-hide-placeholder', 'ai-writing-active');
     });
 
-    // Scroll to the AI-generated content and show keep/discard
+    // Ensure AI blocks have color props and show keep/discard
     const ids = aiBlockIdsRef.current;
     if (ids && ids.size > 0) {
+      for (const id of ids) {
+        try {
+          const block = editor.document.find((b) => b.id === id);
+          if (block && block.type !== 'image') {
+            editor.updateBlock(id, { props: { textColor: 'purple', backgroundColor: 'purple' } });
+          }
+        } catch {}
+      }
       setShowAIActions(true);
+      highlightAiBlocks([...ids], false);
       requestAnimationFrame(() => {
         const firstId = [...ids][0];
         const el = wrapperRef.current?.querySelector(`[data-id="${firstId}"]`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     }
-  }, []);
+  }, [editor, highlightAiBlocks]);
 
   // Re-apply ai-generated-highlight after BlockNote re-renders (which destroys DOM classes)
   useEffect(() => {
@@ -839,6 +848,15 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
   const handleAIKeep = useCallback(() => {
     hideSparkle();
+    // Reset textColor and backgroundColor to default on all AI blocks
+    for (const id of aiBlockIdsRef.current) {
+      try {
+        const block = editor.document.find((b) => b.id === id);
+        if (block && block.type !== 'image') {
+          editor.updateBlock(id, { props: { textColor: 'default', backgroundColor: 'default' } });
+        }
+      } catch {}
+    }
     wrapperRef.current?.querySelectorAll('.ai-generated-highlight, .ai-writing-active').forEach((el) => {
       el.classList.remove('ai-generated-highlight', 'ai-writing-active');
     });
@@ -847,7 +865,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     aiBlockCountRef.current = 0;
     aiAnchorIdRef.current = null;
     setShowAIActions(false);
-  }, [hideSparkle]);
+  }, [editor, hideSparkle]);
 
   const handleAIDiscard = useCallback(() => {
     hideSparkle();
@@ -1215,7 +1233,17 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
               aiBlockCountRef.current = currentIds.length;
             }
 
-            // Highlight blue while streaming and scroll
+            // Set BlockNote textColor + backgroundColor on AI blocks (survives re-renders)
+            for (const id of currentIds) {
+              try {
+                const block = editor.document.find((b) => b.id === id);
+                if (block && block.type !== 'image') {
+                  editor.updateBlock(id, { props: { textColor: 'purple', backgroundColor: 'purple' } });
+                }
+              } catch {}
+            }
+
+            // Highlight while streaming and scroll
             highlightAiBlocks(currentIds, true, true);
             requestAnimationFrame(() => {
               const lastId = currentIds[currentIds.length - 1];
@@ -1336,6 +1364,16 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
               editor.insertBlocks([{ type: 'paragraph', content: [] }], lastAiId, 'after');
             }
           } catch {}
+
+          // Set final BlockNote textColor + backgroundColor on AI blocks
+          for (const id of currentIds) {
+            try {
+              const block = editor.document.find((b) => b.id === id);
+              if (block && block.type !== 'image') {
+                editor.updateBlock(id, { props: { textColor: 'purple', backgroundColor: 'purple' } });
+              }
+            } catch {}
+          }
 
           const finalIds = new Set(currentIds);
           aiBlockIdsRef.current = finalIds;
