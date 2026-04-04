@@ -328,6 +328,20 @@
   border-color: #f87171;
 }
 
+/* ===== Stream preview — live SSE text in typing bar ===== */
+
+.elixpo-stream-preview {
+  max-width: 260px;
+  font-size: 12px;
+  color: rgba(196, 181, 253, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 1px solid rgba(196, 181, 253, 0.15);
+  padding-left: 10px;
+  margin-left: 2px;
+}
+
 /* ===== Elixpo Done Bar (keep/discard) ===== */
 
 .elixpo-done-bar {

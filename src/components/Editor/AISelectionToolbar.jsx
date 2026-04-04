@@ -19,6 +19,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
   const [diffBlockIds, setDiffBlockIds] = useState([]); // IDs of diff blocks that replaced originals
   const [aiResponseText, setAiResponseText] = useState(''); // AI's full response for keep
   const [diffResult, setDiffResult] = useState(null); // word-level diff array for keep/undo
+  const [streamingText, setStreamingText] = useState(''); // live SSE text feed for streaming bar
   const [promptPos, setPromptPos] = useState({ top: 0 });
   const abortRef = useRef(null);
   const promptRef = useRef(null);
@@ -374,6 +375,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     setDiffBlockIds([]);
     setAiResponseText('');
     setDiffResult(null);
+    setStreamingText('');
     savedSelectionRef.current = null;
     // Clean up leftover DOM classes
     const wrapper = document.querySelector('.blog-editor-wrapper');
@@ -425,9 +427,9 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
         userPrompt,
         signal: controller.signal,
 
-        onChunk: () => {
-          // Just remove skeleton once first chunk arrives — text stays highlighted
+        onChunk: (_chunk, fullText) => {
           removeSkeletonLoading();
+          setStreamingText(fullText);
         },
 
         onDone: (fullText) => {
@@ -606,7 +608,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     );
   }
 
-  // Streaming: show Elixpo typing bar at bottom
+  // Streaming: show Elixpo typing bar at bottom with live SSE text
   if (mode === 'streaming') {
     return (
       <div className="elixpo-typing-bar">
@@ -614,8 +616,18 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
           <img src="/base-logo.png" alt="Elixpo" className="elixpo-typing-avatar" />
           <div className="elixpo-typing-text">
             <span className="elixpo-typing-name">Elixpo</span>
-            <span className="elixpo-typing-status">is editing<span className="elixpo-typing-dots"><span /><span /><span /></span></span>
+            <span className="elixpo-typing-status">
+              {streamingText
+                ? 'is editing'
+                : 'is thinking'}
+              <span className="elixpo-typing-dots"><span /><span /><span /></span>
+            </span>
           </div>
+          {streamingText && (
+            <div className="elixpo-stream-preview">
+              {streamingText.length > 80 ? '...' + streamingText.slice(-80) : streamingText}
+            </div>
+          )}
           <button className="elixpo-stop-btn" onClick={handleUndo}>
             <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
               <rect x="1" y="1" width="10" height="10" rx="2" />
