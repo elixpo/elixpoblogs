@@ -451,7 +451,12 @@
   border-left: 3px solid rgba(196, 181, 253, 0.35) !important;
   border-radius: 0 6px 6px 0;
   margin-left: -3px;
-  transition: background 0.2s ease;
+  animation: aiSelectionPulse 2s ease-in-out infinite;
+}
+
+@keyframes aiSelectionPulse {
+  0%, 100% { background: rgba(196, 181, 253, 0.04) !important; }
+  50% { background: rgba(196, 181, 253, 0.1) !important; }
 }
 
 /* ===== AI Inline Input Container ===== */

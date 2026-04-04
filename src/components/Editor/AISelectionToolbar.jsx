@@ -4,11 +4,12 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { streamAI, getOrCreateSession } from '../../ai/agent';
 import { EDIT_SYSTEM_PROMPT } from '../../ai/prompts';
 import { parseMarkdownToBlocks } from './markdownToBlocks';
+import { computeWordDiff, diffToBlocks } from './wordDiff';
 
 /**
  * AI toolbar button injected into BlockNote's native formatting toolbar.
- * Star icon click → toolbar hides, inline AI prompt appears below selection →
- * AI edits inline with diff (strikethrough original, lavender new) → keep/undo.
+ * Star icon click → inline AI prompt below selection →
+ * AI edits inline with word-level diff (strikethrough deletions, purple additions) → keep/undo.
  */
 export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
   const [mode, setMode] = useState('idle'); // idle | prompting | streaming | done
@@ -16,15 +17,13 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
   const [selectedText, setSelectedText] = useState('');
   const [selectedBlocks, setSelectedBlocks] = useState([]); // full block snapshots for undo
   const [selectedBlockIds, setSelectedBlockIds] = useState([]);
-  const [originalBlockIds, setOriginalBlockIds] = useState([]); // IDs of strikethrough originals
-  const [aiBlockIds, setAiBlockIds] = useState([]); // IDs of AI-generated blocks
+  const [diffBlockIds, setDiffBlockIds] = useState([]); // IDs of diff blocks that replaced originals
+  const [aiResponseText, setAiResponseText] = useState(''); // AI's full response for keep
   const [promptPos, setPromptPos] = useState({ top: 0 });
   const abortRef = useRef(null);
   const promptRef = useRef(null);
   const menuRef = useRef(null);
-  const aiBlockCountRef = useRef(0);
   const injectedRef = useRef(false);
-  const originalBlockIdsRef = useRef([]); // Ref mirror for use in streaming callbacks
   const savedSelectionRef = useRef(null); // Save native DOM selection range
 
   // Inject star button + color buttons into BlockNote's native toolbar
@@ -210,9 +209,8 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
           setPromptPos({ top });
           setMode('prompting');
           setPrompt('');
-          setAiBlockIds([]);
-          setOriginalBlockIds([]);
-          originalBlockIdsRef.current = [];
+          setDiffBlockIds([]);
+          setAiResponseText('');
 
           // Add subtle highlight on selected blocks
           requestAnimationFrame(() => {
@@ -266,39 +264,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [mode]);
 
-  // No MutationObserver needed — CSS handles lavender via -webkit-text-fill-color
-
-  // Apply strikethrough + dim styling on original blocks via DOM
-  const markOriginalBlocks = useCallback((ids) => {
-    const wrapper = document.querySelector('.blog-editor-wrapper');
-    if (!wrapper) return;
-    for (const id of ids) {
-      const el = wrapper.querySelector(`[data-id="${id}"]`);
-      if (el) {
-        el.classList.add('ai-edit-original-block');
-      }
-    }
-  }, []);
-
-  // Apply lavender styling on AI blocks via DOM (CSS handles color)
-  const markAiBlocks = useCallback((ids) => {
-    const wrapper = document.querySelector('.blog-editor-wrapper');
-    if (!wrapper) return;
-    for (const id of ids) {
-      const el = wrapper.querySelector(`[data-id="${id}"]`);
-      if (el) el.classList.add('ai-edit-new-block');
-    }
-  }, []);
-
-  // Get current AI block IDs by position (after last original block)
-  const getAiBlockIdsFromDoc = useCallback(() => {
-    const origIds = originalBlockIdsRef.current;
-    if (origIds.length === 0) return [];
-    const doc = editor.document;
-    const lastOrigIdx = doc.findIndex((b) => b.id === origIds[origIds.length - 1]);
-    if (lastOrigIdx === -1) return [];
-    return doc.slice(lastOrigIdx + 1, lastOrigIdx + 1 + aiBlockCountRef.current).map((b) => b.id);
-  }, [editor]);
+  // (Old block-level helpers removed — diff is now inline via word-level diff)
 
   // Hide the native toolbar
   const hideToolbar = useCallback(() => {
@@ -367,15 +333,20 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     unlockEditor();
     removeSkeletonLoading();
     clearSelectedLavender();
-    // Remove original (strikethrough) blocks
-    try {
-      if (originalBlockIds.length > 0) editor.removeBlocks(originalBlockIds);
-    } catch {}
-    // Clean up highlight class from AI blocks
-    const wrapper = document.querySelector('.blog-editor-wrapper');
-    wrapper?.querySelectorAll('.ai-edit-new-block').forEach((el) => el.classList.remove('ai-edit-new-block'));
+
+    // Replace diff blocks with clean AI text (parsed from markdown)
+    const ids = [...diffBlockIds];
+    if (ids.length > 0 && aiResponseText) {
+      try {
+        const cleanBlocks = parseMarkdownToBlocks(aiResponseText);
+        if (cleanBlocks.length > 0) {
+          editor.replaceBlocks(ids, cleanBlocks);
+        }
+      } catch {}
+    }
+
     resetState();
-  }, [editor, originalBlockIds, showToolbar, unlockEditor, removeSkeletonLoading, clearSelectedLavender]);
+  }, [editor, diffBlockIds, aiResponseText, showToolbar, unlockEditor, removeSkeletonLoading, clearSelectedLavender]);
 
   const handleUndo = useCallback(() => {
     abortRef.current?.abort();
@@ -383,18 +354,16 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     unlockEditor();
     removeSkeletonLoading();
     clearSelectedLavender();
-    // Remove AI-generated blocks
-    const currentAiIds = getAiBlockIdsFromDoc();
-    try {
-      if (currentAiIds.length > 0) editor.removeBlocks(currentAiIds);
-    } catch {}
-    // Remove strikethrough from originals (restore to normal)
-    const wrapper = document.querySelector('.blog-editor-wrapper');
-    wrapper?.querySelectorAll('.ai-edit-original-block').forEach((el) => {
-      el.classList.remove('ai-edit-original-block');
-    });
+
+    if (diffBlockIds.length > 0 && selectedBlocks.length > 0) {
+      // Replace diff blocks with original block snapshots
+      try {
+        editor.replaceBlocks(diffBlockIds, selectedBlocks);
+      } catch {}
+    }
+
     resetState();
-  }, [editor, originalBlockIds, getAiBlockIdsFromDoc, showToolbar, unlockEditor, removeSkeletonLoading, clearSelectedLavender]);
+  }, [editor, diffBlockIds, selectedBlocks, showToolbar, unlockEditor, removeSkeletonLoading, clearSelectedLavender]);
 
   function resetState() {
     setMode('idle');
@@ -402,52 +371,39 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     setSelectedText('');
     setSelectedBlocks([]);
     setSelectedBlockIds([]);
-    setOriginalBlockIds([]);
-    originalBlockIdsRef.current = [];
+    setDiffBlockIds([]);
+    setAiResponseText('');
     savedSelectionRef.current = null;
-    setAiBlockIds([]);
-    aiBlockCountRef.current = 0;
     // Clean up leftover DOM classes
     const wrapper = document.querySelector('.blog-editor-wrapper');
-    wrapper?.querySelectorAll('.ai-edit-original-block, .ai-edit-new-block, .ai-edit-selected-block, .ai-edit-selection-highlight, .ai-skeleton-nearby').forEach((el) => {
-      el.classList.remove('ai-edit-original-block', 'ai-edit-new-block', 'ai-edit-selected-block', 'ai-edit-selection-highlight', 'ai-skeleton-nearby');
+    wrapper?.querySelectorAll('.ai-edit-selected-block, .ai-edit-selection-highlight, .ai-skeleton-nearby').forEach((el) => {
+      el.classList.remove('ai-edit-selected-block', 'ai-edit-selection-highlight', 'ai-skeleton-nearby');
     });
   }
 
-  // Core submit logic that accepts a prompt string directly
+  // Core submit logic — streams AI response, then applies word-level diff inline
   const submitWithPrompt = useCallback(async (promptText) => {
     if (!promptText.trim() || !editor) return;
 
     hideToolbar();
     lockEditor();
-    markSelectedLavender(selectedBlockIds);
+
+    // Highlight selected blocks during streaming (keeps text visible)
+    const wrapper = document.querySelector('.blog-editor-wrapper');
+    if (wrapper) {
+      selectedBlockIds.forEach((id) => {
+        const el = wrapper.querySelector(`[data-id="${id}"]`);
+        if (el) el.classList.add('ai-edit-selection-highlight');
+      });
+    }
     addSkeletonLoading(selectedBlockIds);
 
-    originalBlockIdsRef.current = [...selectedBlockIds];
-    setOriginalBlockIds([...selectedBlockIds]);
-
-    const lastOrigId = selectedBlockIds[selectedBlockIds.length - 1];
-    editor.insertBlocks([{ type: 'paragraph', content: [] }], lastOrigId, 'after');
-
-    const doc = editor.document;
-    const lastOrigIdx = doc.findIndex((b) => b.id === lastOrigId);
-    const insertedBlock = doc[lastOrigIdx + 1];
-    if (!insertedBlock) return;
-
-    aiBlockCountRef.current = 1;
-    const initialAiIds = [insertedBlock.id];
-    setAiBlockIds(initialAiIds);
     setMode('streaming');
-
-    requestAnimationFrame(() => {
-      markAiBlocks(initialAiIds);
-      const el = document.querySelector(`.blog-editor-wrapper [data-id="${insertedBlock.id}"]`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
 
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // Build context
     let fullBlogText = '';
     try {
       fullBlogText = editor.document.map((b) => {
@@ -467,101 +423,101 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
         systemPrompt: EDIT_SYSTEM_PROMPT,
         userPrompt,
         signal: controller.signal,
-        onChunk: (_chunk, fullText) => {
+
+        onChunk: () => {
+          // Just remove skeleton once first chunk arrives — text stays highlighted
+          removeSkeletonLoading();
+        },
+
+        onDone: (fullText) => {
           removeSkeletonLoading();
           clearSelectedLavender();
-          markOriginalBlocks(originalBlockIdsRef.current);
 
           let contentText = fullText;
+          // Handle TITLE: prefix
           if (contentText.trim().startsWith('TITLE:')) {
             const lines = contentText.trim().split('\n');
             const titleLine = lines.shift();
             const newTitle = titleLine.replace(/^TITLE:\s*/, '').trim();
             if (onTitleChange && newTitle) onTitleChange(newTitle);
             contentText = lines.join('\n').trim();
-            if (!contentText) return;
           }
 
-          const newBlocks = parseMarkdownToBlocks(contentText);
-          const oldAiIds = getAiBlockIdsFromDoc();
-          if (oldAiIds.length === 0) return;
+          if (!contentText) {
+            // No content — just clean up
+            setMode('idle');
+            unlockEditor();
+            showToolbar();
+            return;
+          }
 
+          // Store AI response for the Keep action
+          setAiResponseText(contentText);
+
+          // Strip markdown syntax for clean diff comparison
+          const cleanAiText = contentText
+            .replace(/\*\*(.+?)\*\*/g, '$1')
+            .replace(/\*(.+?)\*/g, '$1')
+            .replace(/__(.+?)__/g, '$1')
+            .replace(/_(.+?)_/g, '$1')
+            .replace(/~~(.+?)~~/g, '$1')
+            .replace(/`(.+?)`/g, '$1')
+            .replace(/^#{1,6}\s+/gm, '');
+
+          // Compute word-level diff
+          const diff = computeWordDiff(selectedText, cleanAiText);
+          const diffBlocks = diffToBlocks(diff);
+
+          // Find the block before the first selected block (anchor for finding new IDs)
+          const doc = editor.document;
+          const firstSelIdx = doc.findIndex((b) => b.id === selectedBlockIds[0]);
+          const beforeBlockId = firstSelIdx > 0 ? doc[firstSelIdx - 1].id : null;
+
+          // Replace original blocks with diff blocks
           try {
-            if (newBlocks.length !== aiBlockCountRef.current) {
-              editor.replaceBlocks(oldAiIds, newBlocks);
-              aiBlockCountRef.current = newBlocks.length;
-            } else {
-              const lastId = oldAiIds[oldAiIds.length - 1];
-              const lastBlock = newBlocks[newBlocks.length - 1];
-              editor.updateBlock(lastId, {
-                type: lastBlock.type,
-                props: lastBlock.props || {},
-                content: lastBlock.content,
-              });
-            }
-            const updatedIds = getAiBlockIdsFromDoc();
-            setAiBlockIds(updatedIds);
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                markAiBlocks(updatedIds);
-                const lastEl = document.querySelector(`.blog-editor-wrapper [data-id="${updatedIds[updatedIds.length - 1]}"]`);
-                if (lastEl) {
-                  const rect = lastEl.getBoundingClientRect();
-                  if (rect.bottom > window.innerHeight * 0.7) {
-                    window.scrollTo({ top: window.scrollY + rect.top - window.innerHeight * 0.5, behavior: 'smooth' });
-                  }
-                }
-              });
-            });
-          } catch {}
-        },
-        onDone: (fullText) => {
-          let contentText = fullText;
-          if (contentText.trim().startsWith('TITLE:')) {
-            const lines = contentText.trim().split('\n');
-            const titleLine = lines.shift();
-            const newTitle = titleLine.replace(/^TITLE:\s*/, '').trim();
-            if (onTitleChange && newTitle) onTitleChange(newTitle);
-            contentText = lines.join('\n').trim();
-          }
+            editor.replaceBlocks(selectedBlockIds, diffBlocks);
+          } catch { /* blocks may have been removed */ }
 
-          if (contentText) {
-            const newBlocks = parseMarkdownToBlocks(contentText);
-            const oldAiIds = getAiBlockIdsFromDoc();
-            try {
-              if (oldAiIds.length > 0) {
-                editor.replaceBlocks(oldAiIds, newBlocks);
-                aiBlockCountRef.current = newBlocks.length;
-              }
-            } catch {}
-          } else {
-            const oldAiIds = getAiBlockIdsFromDoc();
-            try { if (oldAiIds.length > 0) editor.removeBlocks(oldAiIds); } catch {}
-            const origIds = originalBlockIdsRef.current;
-            try { if (origIds.length > 0) editor.removeBlocks(origIds); } catch {}
-          }
+          // Track the new diff block IDs
+          const newDoc = editor.document;
+          const startIdx = beforeBlockId
+            ? newDoc.findIndex((b) => b.id === beforeBlockId) + 1
+            : 0;
+          const newDiffIds = newDoc
+            .slice(startIdx, startIdx + diffBlocks.length)
+            .map((b) => b.id);
+          setDiffBlockIds(newDiffIds);
 
-          const finalIds = getAiBlockIdsFromDoc();
-          setAiBlockIds(finalIds);
           setMode('done');
           abortRef.current = null;
 
+          // Scroll to diff
           requestAnimationFrame(() => {
-            if (finalIds.length > 0) markAiBlocks(finalIds);
+            const firstEl = document.querySelector(`.blog-editor-wrapper [data-id="${newDiffIds[0]}"]`);
+            if (firstEl) firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           });
         },
+
         onError: (err) => {
           console.error('AI stream error:', err);
-          handleUndo();
+          removeSkeletonLoading();
+          clearSelectedLavender();
+          unlockEditor();
+          showToolbar();
+          resetState();
         },
       });
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error('AI error:', err);
-        handleUndo();
+        removeSkeletonLoading();
+        clearSelectedLavender();
+        unlockEditor();
+        showToolbar();
+        resetState();
       }
     }
-  }, [selectedText, selectedBlockIds, editor, markOriginalBlocks, markAiBlocks, getAiBlockIdsFromDoc, hideToolbar, lockEditor, markSelectedLavender, addSkeletonLoading, removeSkeletonLoading, clearSelectedLavender, onTitleChange, blogId, handleUndo]);
+  }, [selectedText, selectedBlockIds, editor, hideToolbar, lockEditor, addSkeletonLoading, removeSkeletonLoading, clearSelectedLavender, unlockEditor, showToolbar, onTitleChange, blogId]);
 
   const handleSubmit = useCallback(async () => {
     if (!prompt.trim() || !editor) return;
