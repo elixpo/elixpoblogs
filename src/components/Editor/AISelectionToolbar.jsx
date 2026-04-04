@@ -20,6 +20,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
   const [aiResponseText, setAiResponseText] = useState(''); // AI's full response for keep
   const [diffResult, setDiffResult] = useState(null); // word-level diff array for keep/undo
   const [streamingText, setStreamingText] = useState(''); // live SSE text feed for streaming bar
+  const [statusText, setStatusText] = useState(''); // lixsearch task status text
   const [promptPos, setPromptPos] = useState({ top: 0 });
   const abortRef = useRef(null);
   const promptRef = useRef(null);
