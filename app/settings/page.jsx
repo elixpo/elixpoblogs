@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import SettingsPage from '../../src/views/settings/SettingsPage';
 
 export const metadata = {
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function Settings() {
-  return <SettingsPage />;
+  return (
+    <Suspense>
+      <SettingsPage />
+    </Suspense>
+  );
 }
