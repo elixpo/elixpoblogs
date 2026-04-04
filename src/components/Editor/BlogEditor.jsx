@@ -1035,13 +1035,13 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       anchorEl.classList.add('ai-edit-selected-block', 'ai-hide-placeholder');
     }
 
-    // Position inline status bar below anchor
+    // Position inline status bar below anchor (offset past the thin shimmer bar)
     const wrapperRect = wrapperRef.current?.getBoundingClientRect();
     const anchorBottom = anchorEl && wrapperRect
       ? anchorEl.getBoundingClientRect().bottom - wrapperRect.top
       : menuPos.top + 36;
     setAiStatusInline(true);
-    setAiInlinePos({ top: anchorBottom + 4 });
+    setAiInlinePos({ top: anchorBottom + 16 });
     setAiStatusText('is thinking');
 
     // Skeleton on placeholder block

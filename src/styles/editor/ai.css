@@ -435,30 +435,42 @@
   display: none !important;
 }
 
-/* ===== AI Selected Block — thin single-line grey bar with shimmer, non-editable ===== */
+/* ===== AI Selected Block — thin single-line bar with shimmer, non-editable ===== */
 
 .ai-edit-selected-block {
-  position: relative;
-  height: 6px !important;
-  min-height: 6px !important;
-  max-height: 6px !important;
-  overflow: hidden;
-  background: rgba(196, 181, 253, 0.15) !important;
-  border-radius: 3px;
-  margin: 6px 0 !important;
+  position: relative !important;
+  height: 3px !important;
+  min-height: 3px !important;
+  max-height: 3px !important;
+  overflow: hidden !important;
+  background: rgba(196, 181, 253, 0.18) !important;
+  border-radius: 2px !important;
+  border: none !important;
+  border-left: none !important;
+  margin: 8px 0 !important;
   padding: 0 !important;
   pointer-events: none !important;
   user-select: none !important;
 }
 
-/* Hide all inner content — just show the bar */
+/* Collapse all BlockNote inner elements to zero */
+.ai-edit-selected-block *,
+.ai-edit-selected-block .bn-block,
 .ai-edit-selected-block .bn-block-content,
 .ai-edit-selected-block .bn-inline-content,
 .ai-edit-selected-block [contenteditable],
 .ai-edit-selected-block p,
-.ai-edit-selected-block span {
-  opacity: 0 !important;
+.ai-edit-selected-block span,
+.ai-edit-selected-block .bn-side-menu,
+.ai-edit-selected-block .bn-drag-handle-menu {
+  display: none !important;
   height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  opacity: 0 !important;
   overflow: hidden !important;
   pointer-events: none !important;
   user-select: none !important;
@@ -466,19 +478,25 @@
 
 /* Shimmer animation across the thin bar */
 .ai-edit-selected-block::before {
-  content: '';
-  position: absolute;
-  inset: 0;
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
   background: linear-gradient(
     90deg,
-    rgba(196, 181, 253, 0.08) 0%,
-    rgba(196, 181, 253, 0.35) 50%,
-    rgba(196, 181, 253, 0.08) 100%
-  );
-  background-size: 200% 100%;
-  animation: aiSkeletonShimmer 1.8s ease-in-out infinite;
-  border-radius: 3px;
-  pointer-events: none;
+    rgba(196, 181, 253, 0.1) 0%,
+    rgba(196, 181, 253, 0.5) 50%,
+    rgba(196, 181, 253, 0.1) 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: aiBarShimmer 1.5s ease-in-out infinite !important;
+  border-radius: 2px !important;
+  pointer-events: none !important;
+}
+
+@keyframes aiBarShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* ===== AI Placeholder Skeleton — single-line shimmer where AI will start typing ===== */
