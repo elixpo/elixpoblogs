@@ -299,6 +299,42 @@ function doSanitize(blocks) {
     if (block.children && block.children.length > 0) {
       block = { ...block, children: doSanitize(block.children) };
     }
+    // Code block containing LaTeX \[...\] expressions → extract as blockEquations
+    if (block.type === 'codeBlock') {
+      const codeText = getText(block);
+      const latexPattern = /\\\[[\s\S]*?\\\]/g;
+      const latexMatches = codeText.match(latexPattern);
+      if (latexMatches && latexMatches.length > 0) {
+        // Split code block into text segments and LaTeX blocks
+        const parts = codeText.split(latexPattern);
+        let mIdx = 0;
+        for (let p = 0; p < parts.length; p++) {
+          const segment = parts[p].trim();
+          // Non-LaTeX text segments become paragraphs (e.g. comments like "% Time-Dependent...")
+          if (segment) {
+            const lines = segment.split('\n').filter(l => l.trim());
+            for (const line of lines) {
+              const trimLine = line.trim();
+              // Skip comment-only lines (% ...)
+              if (trimLine.startsWith('%')) {
+                result.push({ type: 'paragraph', content: [{ type: 'text', text: trimLine, styles: { italic: true } }], children: [] });
+              } else {
+                result.push({ type: 'paragraph', content: [{ type: 'text', text: trimLine }], children: [] });
+              }
+            }
+          }
+          if (mIdx < latexMatches.length) {
+            const latex = latexMatches[mIdx].replace(/^\\\[/, '').replace(/\\\]$/, '').trim();
+            if (latex) {
+              result.push({ type: 'blockEquation', props: { latex }, children: [] });
+            }
+            mIdx++;
+          }
+        }
+        i++; continue;
+      }
+    }
+
     if (block.type !== 'paragraph') { result.push(block); i++; continue; }
 
     const text = getText(block);

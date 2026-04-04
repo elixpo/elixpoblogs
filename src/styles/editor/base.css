@@ -119,6 +119,10 @@
   background: none !important;
 }
 
+/* AI-generated blocks use named 'purple' — ensure readable text in both themes */
+.blog-editor-wrapper [data-text-color="purple"] { color: var(--text-secondary) !important; }
+.blog-editor-wrapper [data-background-color="purple"] { background-color: rgba(155, 123, 247, 0.06) !important; }
+
 /* Map BlockNote block-level text color (data-text-color on block containers) */
 .blog-editor-wrapper [data-text-color="#ffffff"] { color: #ffffff !important; }
 .blog-editor-wrapper [data-text-color="#9ca3af"] { color: var(--text-muted) !important; }

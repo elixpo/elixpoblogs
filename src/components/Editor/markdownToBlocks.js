@@ -78,6 +78,26 @@ export function parseMarkdownToBlocks(text) {
           type: 'mermaidBlock',
           props: { diagram: codeText },
         });
+      } else if (!lang && /\\\[[\s\S]*?\\\]/.test(codeText)) {
+        // Code block containing LaTeX \[...\] → extract as block equations
+        const latexPattern = /\\\[[\s\S]*?\\\]/g;
+        const latexMatches = codeText.match(latexPattern);
+        const parts = codeText.split(latexPattern);
+        let mIdx = 0;
+        for (let p = 0; p < parts.length; p++) {
+          const segment = parts[p].trim();
+          if (segment) {
+            for (const line of segment.split('\n').filter(l => l.trim())) {
+              const t = line.trim();
+              blocks.push({ type: 'paragraph', content: [{ type: 'text', text: t, ...(t.startsWith('%') ? { styles: { italic: true } } : {}) }] });
+            }
+          }
+          if (mIdx < latexMatches.length) {
+            const latex = latexMatches[mIdx].replace(/^\\\[/, '').replace(/\\\]$/, '').trim();
+            if (latex) blocks.push({ type: 'blockEquation', props: { latex } });
+            mIdx++;
+          }
+        }
       } else {
         blocks.push({
           type: 'codeBlock',
