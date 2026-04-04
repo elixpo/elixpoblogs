@@ -32,12 +32,12 @@ import { OrgMentionInline } from './blocks/OrgMentionInline';
 
 // ── Schema ──
 
-// Code block with Shiki syntax highlighting
+// Code block with Shiki syntax highlighting (lazy-loaded)
 const codeBlockWithHighlighting = createCodeBlockSpec({
   createHighlighter: async () => {
     const { createHighlighter } = await import('shiki');
     return createHighlighter({
-      themes: ['github-dark', 'github-light'],
+      themes: ['vitesse-dark'],
       langs: [
         'javascript', 'typescript', 'python', 'java', 'c', 'cpp', 'csharp',
         'go', 'rust', 'ruby', 'php', 'swift', 'kotlin', 'html', 'css',

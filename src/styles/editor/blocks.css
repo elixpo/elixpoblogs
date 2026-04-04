@@ -38,6 +38,29 @@
   padding: 8px 16px !important;
 }
 
+/* Shiki syntax highlighting — let inline styles override default color */
+.blog-editor-wrapper [data-content-type="codeBlock"] code span[style] {
+  background: none !important;
+}
+
+/* Language selector dropdown (BlockNote built-in) */
+.blog-editor-wrapper [data-content-type="codeBlock"] select {
+  background: var(--code-lang-bg);
+  color: var(--code-lang-text);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: 'lixCode', monospace;
+  cursor: pointer;
+  outline: none;
+  margin: 4px 8px;
+}
+
+.blog-editor-wrapper [data-content-type="codeBlock"] select:focus {
+  border-color: #a78bfa;
+}
+
 /* Language label */
 .code-lang-label {
   position: absolute;
