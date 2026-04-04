@@ -345,168 +345,6 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     });
   }, []);
 
-  const handleSubmit = useCallback(async () => {
-    if (!prompt.trim() || !editor) return;
-
-    // Hide toolbar and prevent editing
-    hideToolbar();
-    lockEditor();
-
-    // Mark selected blocks with shimmer skeleton (thinking phase)
-    markSelectedLavender(selectedBlockIds);
-    addSkeletonLoading(selectedBlockIds);
-
-    originalBlockIdsRef.current = [...selectedBlockIds];
-    setOriginalBlockIds([...selectedBlockIds]);
-
-    // Insert initial AI placeholder block after the last selected block
-    const lastOrigId = selectedBlockIds[selectedBlockIds.length - 1];
-    editor.insertBlocks([{ type: 'paragraph', content: [] }], lastOrigId, 'after');
-
-    const doc = editor.document;
-    const lastOrigIdx = doc.findIndex((b) => b.id === lastOrigId);
-    const insertedBlock = doc[lastOrigIdx + 1];
-    if (!insertedBlock) return;
-
-    aiBlockCountRef.current = 1;
-    const initialAiIds = [insertedBlock.id];
-    setAiBlockIds(initialAiIds);
-
-    setMode('streaming');
-
-    // Apply lavender styling and remove skeleton once streaming starts
-    requestAnimationFrame(() => {
-      markAiBlocks(initialAiIds);
-      // CSS handles highlighting via -webkit-text-fill-color
-      const el = document.querySelector(`.blog-editor-wrapper [data-id="${insertedBlock.id}"]`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    // Build prompt with context
-    let fullBlogText = '';
-    try {
-      fullBlogText = editor.document.map((b) => {
-        const text = (b.content || []).map((c) => c.text || '').join('');
-        if (b.type === 'heading') return `${'#'.repeat(b.props?.level || 1)} ${text}`;
-        return text;
-      }).filter(Boolean).join('\n');
-    } catch {}
-
-    const userPrompt = `## Full blog (for context):\n${fullBlogText}\n\n---\n\nSelected text to edit:\n\`\`\`\n${selectedText}\n\`\`\`\n\nInstruction: ${prompt}`;
-
-    try {
-      // Get or create lixsearch session
-      const sessionId = await getOrCreateSession(blogId);
-
-      await streamAI({
-        sessionId,
-        systemPrompt: EDIT_SYSTEM_PROMPT,
-        userPrompt,
-        signal: controller.signal,
-        onChunk: (_chunk, fullText) => {
-          // First chunk: transition from skeleton to strikethrough originals
-          removeSkeletonLoading();
-          clearSelectedLavender();
-          markOriginalBlocks(originalBlockIdsRef.current);
-
-          // Handle TITLE: prefix — update blog title
-          let contentText = fullText;
-          if (contentText.trim().startsWith('TITLE:')) {
-            const lines = contentText.trim().split('\n');
-            const titleLine = lines.shift();
-            const newTitle = titleLine.replace(/^TITLE:\s*/, '').trim();
-            if (onTitleChange && newTitle) onTitleChange(newTitle);
-            contentText = lines.join('\n').trim();
-            if (!contentText) return;
-          }
-
-          const newBlocks = parseMarkdownToBlocks(contentText);
-          const oldAiIds = getAiBlockIdsFromDoc();
-          if (oldAiIds.length === 0) return;
-
-          try {
-            if (newBlocks.length !== aiBlockCountRef.current) {
-              editor.replaceBlocks(oldAiIds, newBlocks);
-              aiBlockCountRef.current = newBlocks.length;
-            } else {
-              const lastId = oldAiIds[oldAiIds.length - 1];
-              const lastBlock = newBlocks[newBlocks.length - 1];
-              editor.updateBlock(lastId, {
-                type: lastBlock.type,
-                props: lastBlock.props || {},
-                content: lastBlock.content,
-              });
-            }
-            const updatedIds = getAiBlockIdsFromDoc();
-            setAiBlockIds(updatedIds);
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                markAiBlocks(updatedIds);
-                // Auto-scroll to last AI block
-                const lastEl = document.querySelector(`.blog-editor-wrapper [data-id="${updatedIds[updatedIds.length - 1]}"]`);
-                if (lastEl) {
-                  const rect = lastEl.getBoundingClientRect();
-                  if (rect.bottom > window.innerHeight * 0.7) {
-                    window.scrollTo({ top: window.scrollY + rect.top - window.innerHeight * 0.5, behavior: 'smooth' });
-                  }
-                }
-              });
-            });
-          } catch { /* block may have been removed */ }
-        },
-        onDone: (fullText) => {
-          let contentText = fullText;
-          if (contentText.trim().startsWith('TITLE:')) {
-            const lines = contentText.trim().split('\n');
-            const titleLine = lines.shift();
-            const newTitle = titleLine.replace(/^TITLE:\s*/, '').trim();
-            if (onTitleChange && newTitle) onTitleChange(newTitle);
-            contentText = lines.join('\n').trim();
-          }
-
-          if (contentText) {
-            const newBlocks = parseMarkdownToBlocks(contentText);
-            const oldAiIds = getAiBlockIdsFromDoc();
-            try {
-              if (oldAiIds.length > 0) {
-                editor.replaceBlocks(oldAiIds, newBlocks);
-                aiBlockCountRef.current = newBlocks.length;
-              }
-            } catch {}
-          } else {
-            // Title-only response — remove placeholder blocks
-            const oldAiIds = getAiBlockIdsFromDoc();
-            try { if (oldAiIds.length > 0) editor.removeBlocks(oldAiIds); } catch {}
-            // Also remove original strikethrough blocks since title was changed
-            const origIds = originalBlockIdsRef.current;
-            try { if (origIds.length > 0) editor.removeBlocks(origIds); } catch {}
-          }
-
-          const finalIds = getAiBlockIdsFromDoc();
-          setAiBlockIds(finalIds);
-          setMode('done');
-          abortRef.current = null;
-
-          requestAnimationFrame(() => {
-            if (finalIds.length > 0) markAiBlocks(finalIds);
-          });
-        },
-        onError: (err) => {
-          console.error('AI stream error:', err);
-          handleUndo();
-        },
-      });
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error('AI error:', err);
-        handleUndo();
-      }
-    }
-  }, [prompt, selectedText, selectedBlockIds, editor, markOriginalBlocks, markAiBlocks, getAiBlockIdsFromDoc]);
-
   const handleKeep = useCallback(() => {
     showToolbar();
     unlockEditor();
@@ -558,6 +396,175 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
     });
   }
 
+  // Core submit logic that accepts a prompt string directly
+  const submitWithPrompt = useCallback(async (promptText) => {
+    if (!promptText.trim() || !editor) return;
+
+    hideToolbar();
+    lockEditor();
+    markSelectedLavender(selectedBlockIds);
+    addSkeletonLoading(selectedBlockIds);
+
+    originalBlockIdsRef.current = [...selectedBlockIds];
+    setOriginalBlockIds([...selectedBlockIds]);
+
+    const lastOrigId = selectedBlockIds[selectedBlockIds.length - 1];
+    editor.insertBlocks([{ type: 'paragraph', content: [] }], lastOrigId, 'after');
+
+    const doc = editor.document;
+    const lastOrigIdx = doc.findIndex((b) => b.id === lastOrigId);
+    const insertedBlock = doc[lastOrigIdx + 1];
+    if (!insertedBlock) return;
+
+    aiBlockCountRef.current = 1;
+    const initialAiIds = [insertedBlock.id];
+    setAiBlockIds(initialAiIds);
+    setMode('streaming');
+
+    requestAnimationFrame(() => {
+      markAiBlocks(initialAiIds);
+      const el = document.querySelector(`.blog-editor-wrapper [data-id="${insertedBlock.id}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    let fullBlogText = '';
+    try {
+      fullBlogText = editor.document.map((b) => {
+        const text = (b.content || []).map((c) => c.text || '').join('');
+        if (b.type === 'heading') return `${'#'.repeat(b.props?.level || 1)} ${text}`;
+        return text;
+      }).filter(Boolean).join('\n');
+    } catch {}
+
+    const userPrompt = `## Full blog (for context):\n${fullBlogText}\n\n---\n\nSelected text to edit:\n\`\`\`\n${selectedText}\n\`\`\`\n\nInstruction: ${promptText}`;
+
+    try {
+      const sessionId = await getOrCreateSession(blogId);
+
+      await streamAI({
+        sessionId,
+        systemPrompt: EDIT_SYSTEM_PROMPT,
+        userPrompt,
+        signal: controller.signal,
+        onChunk: (_chunk, fullText) => {
+          removeSkeletonLoading();
+          clearSelectedLavender();
+          markOriginalBlocks(originalBlockIdsRef.current);
+
+          let contentText = fullText;
+          if (contentText.trim().startsWith('TITLE:')) {
+            const lines = contentText.trim().split('\n');
+            const titleLine = lines.shift();
+            const newTitle = titleLine.replace(/^TITLE:\s*/, '').trim();
+            if (onTitleChange && newTitle) onTitleChange(newTitle);
+            contentText = lines.join('\n').trim();
+            if (!contentText) return;
+          }
+
+          const newBlocks = parseMarkdownToBlocks(contentText);
+          const oldAiIds = getAiBlockIdsFromDoc();
+          if (oldAiIds.length === 0) return;
+
+          try {
+            if (newBlocks.length !== aiBlockCountRef.current) {
+              editor.replaceBlocks(oldAiIds, newBlocks);
+              aiBlockCountRef.current = newBlocks.length;
+            } else {
+              const lastId = oldAiIds[oldAiIds.length - 1];
+              const lastBlock = newBlocks[newBlocks.length - 1];
+              editor.updateBlock(lastId, {
+                type: lastBlock.type,
+                props: lastBlock.props || {},
+                content: lastBlock.content,
+              });
+            }
+            const updatedIds = getAiBlockIdsFromDoc();
+            setAiBlockIds(updatedIds);
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                markAiBlocks(updatedIds);
+                const lastEl = document.querySelector(`.blog-editor-wrapper [data-id="${updatedIds[updatedIds.length - 1]}"]`);
+                if (lastEl) {
+                  const rect = lastEl.getBoundingClientRect();
+                  if (rect.bottom > window.innerHeight * 0.7) {
+                    window.scrollTo({ top: window.scrollY + rect.top - window.innerHeight * 0.5, behavior: 'smooth' });
+                  }
+                }
+              });
+            });
+          } catch {}
+        },
+        onDone: (fullText) => {
+          let contentText = fullText;
+          if (contentText.trim().startsWith('TITLE:')) {
+            const lines = contentText.trim().split('\n');
+            const titleLine = lines.shift();
+            const newTitle = titleLine.replace(/^TITLE:\s*/, '').trim();
+            if (onTitleChange && newTitle) onTitleChange(newTitle);
+            contentText = lines.join('\n').trim();
+          }
+
+          if (contentText) {
+            const newBlocks = parseMarkdownToBlocks(contentText);
+            const oldAiIds = getAiBlockIdsFromDoc();
+            try {
+              if (oldAiIds.length > 0) {
+                editor.replaceBlocks(oldAiIds, newBlocks);
+                aiBlockCountRef.current = newBlocks.length;
+              }
+            } catch {}
+          } else {
+            const oldAiIds = getAiBlockIdsFromDoc();
+            try { if (oldAiIds.length > 0) editor.removeBlocks(oldAiIds); } catch {}
+            const origIds = originalBlockIdsRef.current;
+            try { if (origIds.length > 0) editor.removeBlocks(origIds); } catch {}
+          }
+
+          const finalIds = getAiBlockIdsFromDoc();
+          setAiBlockIds(finalIds);
+          setMode('done');
+          abortRef.current = null;
+
+          requestAnimationFrame(() => {
+            if (finalIds.length > 0) markAiBlocks(finalIds);
+          });
+        },
+        onError: (err) => {
+          console.error('AI stream error:', err);
+          handleUndo();
+        },
+      });
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('AI error:', err);
+        handleUndo();
+      }
+    }
+  }, [selectedText, selectedBlockIds, editor, markOriginalBlocks, markAiBlocks, getAiBlockIdsFromDoc, hideToolbar, lockEditor, markSelectedLavender, addSkeletonLoading, removeSkeletonLoading, clearSelectedLavender, onTitleChange, blogId, handleUndo]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!prompt.trim() || !editor) return;
+    submitWithPrompt(prompt);
+  }, [prompt, editor, submitWithPrompt]);
+
+  // Quick-action: submit preset instruction directly
+  const handleQuickAction = useCallback((instruction) => {
+    submitWithPrompt(instruction);
+  }, [submitWithPrompt]);
+
+  // Quick action presets
+  const quickActions = [
+    { label: 'Fix Grammar', instruction: 'Fix all grammar, spelling, and punctuation errors. Keep the original meaning and tone intact.' },
+    { label: 'Paraphrase', instruction: 'Paraphrase this text while preserving the original meaning. Use different word choices and sentence structures.' },
+    { label: 'Improve Writing', instruction: 'Improve the clarity, flow, and readability of this text. Make the language more polished and professional while keeping the original voice.' },
+    { label: 'Make Concise', instruction: 'Make this text more concise and to the point. Remove unnecessary words and redundancy without losing meaning.' },
+    { label: 'Make Formal', instruction: 'Rewrite this text in a more formal and professional tone.' },
+    { label: 'Simplify', instruction: 'Simplify this text so it is easy to understand. Use shorter sentences and simpler vocabulary.' },
+  ];
+
   // Render the inline AI prompt (same style as space-trigger AICommandMenu)
   if (mode === 'prompting') {
     return (
@@ -604,6 +611,18 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
                 <polyline points="5 12 12 5 19 12" />
               </svg>
             </button>
+          </div>
+          {/* Quick action buttons — stacked vertically */}
+          <div className="flex flex-col gap-0 px-4 pb-2">
+            {quickActions.map((action) => (
+              <button
+                key={action.label}
+                onClick={() => handleQuickAction(action.instruction)}
+                className="ai-quick-action-btn"
+              >
+                {action.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>

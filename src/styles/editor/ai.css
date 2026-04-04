@@ -400,6 +400,34 @@
   background: rgba(248, 113, 113, 0.15);
 }
 
+/* ===== AI Quick Action Buttons (edit toolbar presets) ===== */
+
+.ai-quick-action-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted, #8b8fa3);
+  background: var(--bg-elevated, rgba(155, 123, 247, 0.06));
+  border: 1px solid var(--border-default, rgba(155, 123, 247, 0.15));
+  border-radius: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ai-quick-action-btn:hover {
+  background: rgba(155, 123, 247, 0.12);
+  border-color: rgba(155, 123, 247, 0.35);
+  color: #c4b5fd;
+}
+
+.ai-quick-action-btn:active {
+  background: rgba(155, 123, 247, 0.2);
+}
+
 /* ===== AI Inline Input Container ===== */
 
 .ai-inline-input-container {
