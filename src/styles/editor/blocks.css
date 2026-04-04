@@ -233,12 +233,17 @@
 
 /* ===== Mermaid diagram blocks ===== */
 
+.blog-editor-wrapper [data-content-type="mermaidBlock"] {
+  width: 100%;
+}
+
 .mermaid-block {
   border: 1px solid var(--border-default);
   border-radius: 12px;
   background: var(--bg-surface);
-  my: 8px;
+  margin: 8px 0;
   overflow: hidden;
+  width: 100%;
 }
 
 .mermaid-block--empty {
@@ -285,6 +290,7 @@
 
 .mermaid-block-textarea {
   width: 100%;
+  box-sizing: border-box;
   background: var(--bg-app);
   border: none;
   border-top: 1px solid var(--border-default);
@@ -295,7 +301,7 @@
   font-size: 13px;
   resize: vertical;
   outline: none;
-  min-height: 120px;
+  min-height: 160px;
 }
 
 .mermaid-block-textarea::placeholder {

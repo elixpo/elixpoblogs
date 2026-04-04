@@ -53,17 +53,13 @@ const lightConfig = {
 };
 
 let mermaidModule = null;
-let lastTheme = null;
 
 async function getMermaid(isDark) {
-  const theme = isDark ? 'dark' : 'light';
   if (!mermaidModule) {
     mermaidModule = (await import('mermaid')).default;
   }
-  if (lastTheme !== theme) {
-    mermaidModule.initialize(isDark ? darkConfig : lightConfig);
-    lastTheme = theme;
-  }
+  // Always re-initialize to ensure correct theme (mermaid is a singleton)
+  mermaidModule.initialize(isDark ? darkConfig : lightConfig);
   return mermaidModule;
 }
 
