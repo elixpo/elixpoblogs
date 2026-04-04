@@ -803,8 +803,8 @@ export default function WritePage({ slugid }) {
             ))}
           </div>
 
-          {/* === EDIT MODE === */}
-          {mode === 'edit' && (
+          {/* === EDIT MODE (always mounted, hidden when not active so AI can keep typing) === */}
+          <div style={{ display: mode === 'edit' ? 'block' : 'none' }}>
             <>
               {/* Skeleton — visible until editor is ready */}
               {(draftLoading || !editorReady) && (
@@ -1197,7 +1197,7 @@ export default function WritePage({ slugid }) {
                 </div>
               )}
             </>
-          )}
+          </div>
 
           {mode === 'preview' && (
             <div className="blog-preview-fullwidth">

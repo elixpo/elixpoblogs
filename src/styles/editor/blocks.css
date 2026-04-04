@@ -1,47 +1,58 @@
 /* ===== Code blocks ===== */
 
 .blog-editor-wrapper [data-content-type="codeBlock"] {
-  background: var(--bg-surface);
+  background: var(--code-bg);
   border: 1px solid var(--border-default);
   border-radius: 10px;
   font-family: 'lixCode', monospace;
-  padding: 2px 0;
+  padding: 4px 0;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+/* Light mode code block vars */
+:root {
+  --code-bg: #f8f8fb;
+  --code-text: #3d3d50;
+  --code-lang-bg: #eeeef2;
+  --code-lang-text: #6b7280;
+}
+
+[data-theme="dark"] {
+  --code-bg: #0e1219;
+  --code-text: #c8d1e0;
+  --code-lang-bg: #1a2030;
+  --code-lang-text: #6b7a8d;
 }
 
 .blog-editor-wrapper [data-content-type="codeBlock"] code {
-  color: var(--text-body);
-  font-size: 0.85em;
+  color: var(--code-text);
+  font-size: 0.84em;
   font-family: inherit;
   background: none;
   padding: 0;
+  line-height: 1.7;
 }
 
-/* Syntax highlighting — works in both light and dark */
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-keyword,
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-selector-tag,
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-built_in { color: #a78bfa; }
+.blog-editor-wrapper [data-content-type="codeBlock"] [contenteditable] {
+  padding: 8px 16px !important;
+}
 
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-string,
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-attr { color: #86efac; }
-
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-number,
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-literal { color: #fbbf24; }
-
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-comment,
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-quote { color: var(--text-muted); font-style: italic; }
-
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-function,
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-title { color: #60a5fa; }
-
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-params { color: var(--text-secondary); }
-
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-type,
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-class { color: #f472b6; }
-
-/* Remove line highlights from code blocks */
-.blog-editor-wrapper [data-content-type="codeBlock"] .hljs-ln-line,
-.blog-editor-wrapper [data-content-type="codeBlock"] .line-highlight {
-  background: none !important;
+/* Language label */
+.code-lang-label {
+  position: absolute;
+  top: 0;
+  left: 16px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--code-lang-text);
+  background: var(--code-lang-bg);
+  padding: 2px 8px;
+  border-radius: 0 0 6px 6px;
+  pointer-events: none;
+  line-height: 1.5;
 }
 
 /* Code block copy button */
@@ -55,10 +66,10 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: var(--bg-elevated);
+  background: var(--code-lang-bg);
   border: 1px solid var(--border-default);
   border-radius: 6px;
-  color: var(--text-muted);
+  color: var(--code-lang-text);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s, background 0.15s, color 0.15s;
@@ -70,7 +81,20 @@
 
 .code-copy-btn:hover {
   background: var(--bg-active);
-  color: #c4b5fd;
+  color: #a78bfa;
+}
+
+/* ===== Divider / Horizontal Rule ===== */
+
+.blog-editor-wrapper [data-content-type="divider"] {
+  margin: 16px 0;
+  padding: 8px 0;
+}
+
+.blog-editor-wrapper [data-content-type="divider"] hr {
+  border: none;
+  height: 1px;
+  background: var(--border-default);
 }
 
 /* ===== Lists ===== */
