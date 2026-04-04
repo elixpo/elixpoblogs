@@ -454,7 +454,7 @@ function doSanitize(blocks) {
   return result;
 }
 
-const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, onReady, onTitleChange, blogId }, ref) {
+const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, onReady, onTitleChange, blogId, collaboration }, ref) {
   const { isDark } = useTheme();
   const [showMentionMenu, setShowMentionMenu] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
@@ -483,7 +483,8 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
   const editor = useCreateBlockNote({
     schema,
-    initialContent: sanitizedContent || undefined,
+    // When in collab mode, Yjs doc is the source of truth — no initialContent
+    ...(collaboration ? { collaboration } : { initialContent: sanitizedContent || undefined }),
     domAttributes: {
       editor: { class: 'blog-editor' },
     },
