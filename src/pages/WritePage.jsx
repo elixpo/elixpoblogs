@@ -10,6 +10,7 @@ import '@blocknote/mantine/style.css';
 import '../styles/editor/editor.css';
 import { compressCoverImage } from '../utils/compressImage';
 import { generatePixelAvatar } from '../utils/pixelAvatar';
+import { useCollaboration } from '../hooks/useCollaboration';
 
 function AvatarImg({ src, name, size = 32 }) {
   const [failed, setFailed] = useState(false);
@@ -361,6 +362,14 @@ export default function WritePage({ slugid }) {
   const ownerDropdownRef = useRef(null);
 
   const username = user?.username || 'you';
+
+  // Real-time collaboration (enabled when blog has co-authors)
+  const hasCollaborators = collaborators.length > 0;
+  const { collaboration: collabConfig, isConnected: collabConnected, connectedUsers, error: collabError } = useCollaboration({
+    blogId: slugid,
+    user,
+    enabled: hasCollaborators,
+  });
 
   // Refs to always hold latest draft data (avoids stale closures in intervals/beforeunload)
   const draftDataRef = useRef({ title, subtitle, tags, publishAs, coverPreview, editorContent, pageEmoji });
@@ -1308,6 +1317,28 @@ export default function WritePage({ slugid }) {
                     )}
                   </div>
 
+                  {/* Collab presence banner */}
+                  {collabConnected && connectedUsers.length > 1 && (
+                    <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg bg-[var(--accent-subtle)] border border-[var(--accent)]/20">
+                      <div className="flex -space-x-1.5">
+                        {connectedUsers.slice(0, 5).map((u, i) => (
+                          <div
+                            key={u.id || i}
+                            className="w-6 h-6 rounded-full border-2 border-[var(--bg-app)] flex items-center justify-center text-[10px] font-bold text-white"
+                            style={{ backgroundColor: u.color || '#9b7bf7' }}
+                            title={u.name}
+                          >
+                            {(u.name || '?')[0].toUpperCase()}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-[12px] text-[var(--text-muted)]">
+                        {connectedUsers.length} {connectedUsers.length === 1 ? 'person' : 'people'} editing
+                      </span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    </div>
+                  )}
+
                   <div className="min-h-[60vh] pb-[100px] relative">
                     <BlockNoteEditor
                       ref={editorRef}
@@ -1316,6 +1347,7 @@ export default function WritePage({ slugid }) {
                       onReady={() => setEditorReady(true)}
                       onTitleChange={(newTitle) => { setTitle(newTitle); setAiTitleKey(k => k + 1); }}
                       blogId={slugid}
+                      collaboration={collabConfig}
                     />
                     {/* Outline sidebar — shows heading positions with slider */}
                     {editorContent && <EditorOutline editorContent={editorContent} />}
