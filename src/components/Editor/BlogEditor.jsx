@@ -800,11 +800,12 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
     // Ensure AI blocks have color props and show keep/discard
     const ids = aiBlockIdsRef.current;
+    const _noColorTypes = new Set(['image', 'divider', 'mermaidBlock']);
     if (ids && ids.size > 0) {
       for (const id of ids) {
         try {
           const block = editor.document.find((b) => b.id === id);
-          if (block && block.type !== 'image') {
+          if (block && !_noColorTypes.has(block.type)) {
             editor.updateBlock(id, { props: { textColor: 'purple', backgroundColor: 'purple' } });
           }
         } catch {}
@@ -891,10 +892,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     hideSparkle();
     wrapperRef.current?.classList.remove('ai-editor-locked');
     // Reset textColor and backgroundColor to default on all AI blocks
+    const _noReset = new Set(['image', 'divider', 'mermaidBlock']);
     for (const id of aiBlockIdsRef.current) {
       try {
         const block = editor.document.find((b) => b.id === id);
-        if (block && block.type !== 'image') {
+        if (block && !_noReset.has(block.type)) {
           editor.updateBlock(id, { props: { textColor: 'default', backgroundColor: 'default' } });
         }
       } catch {}
@@ -1278,10 +1280,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
             }
 
             // Set BlockNote textColor + backgroundColor on AI blocks (survives re-renders)
+            const noColorProps = new Set(['image', 'divider', 'mermaidBlock']);
             for (const id of currentIds) {
               try {
                 const block = editor.document.find((b) => b.id === id);
-                if (block && block.type !== 'image') {
+                if (block && !noColorProps.has(block.type)) {
                   editor.updateBlock(id, { props: { textColor: 'purple', backgroundColor: 'purple' } });
                 }
               } catch {}
@@ -1410,10 +1413,11 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           } catch {}
 
           // Set final BlockNote textColor + backgroundColor on AI blocks
+          const _skipColor = new Set(['image', 'divider', 'mermaidBlock']);
           for (const id of currentIds) {
             try {
               const block = editor.document.find((b) => b.id === id);
-              if (block && block.type !== 'image') {
+              if (block && !_skipColor.has(block.type)) {
                 editor.updateBlock(id, { props: { textColor: 'purple', backgroundColor: 'purple' } });
               }
             } catch {}
