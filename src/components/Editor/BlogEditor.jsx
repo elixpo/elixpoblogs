@@ -264,9 +264,9 @@ function isCurrentBlockEmpty(editor) {
 // Block types known to the schema — used to filter out stale/removed block types
 const KNOWN_BLOCK_TYPES = new Set([
   'paragraph', 'heading', 'bulletListItem', 'numberedListItem', 'image',
-  'table', 'codeBlock', 'checkListItem', 'file', 'video', 'audio',
+  'table', 'codeBlock', 'checkListItem', 'file', 'video', 'audio', 'divider',
   'tableOfContents', 'blockEquation', 'buttonBlock', 'breadcrumbs',
-  'tabsBlock', 'aiBlock', 'mermaidBlock',
+  'tabsBlock', 'aiBlock', 'mermaidBlock', 'pdfEmbed',
 ]);
 
 function sanitizeInitialContent(blocks) {
@@ -1250,34 +1250,72 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
             const anchorIdxNow = docNow.findIndex((b) => b.id === anchorId);
             if (anchorIdxNow === -1) return;
 
-            // Filter out image blocks from newBlocks — images come through onImage
-            const textBlocks = newBlocks.filter((b) => b.type !== 'image');
+            // Separate blocks: inline-content blocks go through replaceBlocks,
+            // content-none blocks (image, mermaid, divider) are inserted after
+            const specialTypes = new Set(['image', 'mermaidBlock', 'divider']);
+            const inlineBlocks = newBlocks.filter((b) => !specialTypes.has(b.type));
+            const specialBlocks = newBlocks
+              .map((b, idx) => ({ block: b, origIdx: idx }))
+              .filter(({ block }) => specialTypes.has(block.type) && block.type !== 'image');
 
-            // Get existing AI text block IDs (exclude image placeholders)
-            const existingAiIds = currentIds.filter((id) => {
+            // Get existing AI inline block IDs (exclude special blocks)
+            const existingInlineIds = currentIds.filter((id) => {
               const block = docNow.find((b) => b.id === id);
-              return block && block.type !== 'image';
+              return block && !specialTypes.has(block.type);
             });
 
-            if (existingAiIds.length > 0 && textBlocks.length > 0) {
-              // Replace existing text AI blocks with updated parsed blocks
-              editor.replaceBlocks(existingAiIds, textBlocks);
+            // Keep track of special block IDs already in the document
+            const existingSpecialIds = currentIds.filter((id) => {
+              const block = docNow.find((b) => b.id === id);
+              return block && specialTypes.has(block.type) && block.type !== 'image';
+            });
 
-              // Refresh currentIds after replacement
-              const refreshedDoc = editor.document;
-              const newAnchorIdx = refreshedDoc.findIndex((b) => b.id === anchorId);
-              // Collect new IDs: text blocks after anchor + any image blocks we're tracking
-              const imageIds = currentIds.filter((id) => {
-                const block = docNow.find((b) => b.id === id);
-                return block && block.type === 'image';
-              });
-              const newTextIds = refreshedDoc
-                .slice(newAnchorIdx + 1, newAnchorIdx + 1 + textBlocks.length)
-                .map((b) => b.id);
-              currentIds = [...newTextIds, ...imageIds];
-              aiBlockIdsRef.current = new Set(currentIds);
-              aiBlockCountRef.current = currentIds.length;
+            // Remove old special blocks (they'll be re-inserted in correct positions)
+            if (existingSpecialIds.length > 0) {
+              try { editor.removeBlocks(existingSpecialIds); } catch {}
             }
+
+            // Replace inline blocks
+            if (existingInlineIds.length > 0 && inlineBlocks.length > 0) {
+              editor.replaceBlocks(existingInlineIds, inlineBlocks);
+            }
+
+            // Refresh doc and collect new inline IDs
+            const refreshedDoc = editor.document;
+            const newAnchorIdx = refreshedDoc.findIndex((b) => b.id === anchorId);
+            const imageIds = currentIds.filter((id) => {
+              const block = docNow.find((b) => b.id === id);
+              return block && block.type === 'image';
+            });
+            const newInlineIds = refreshedDoc
+              .slice(newAnchorIdx + 1, newAnchorIdx + 1 + inlineBlocks.length)
+              .map((b) => b.id);
+
+            // Insert special blocks (mermaid, divider) at their correct positions
+            // They go after the inline block that precedes them in the original order
+            let insertedSpecialIds = [];
+            for (const { block: specBlock, origIdx } of specialBlocks) {
+              // Find how many inline blocks come before this special block
+              const inlineBefore = newBlocks.slice(0, origIdx).filter((b) => !specialTypes.has(b.type)).length;
+              const afterId = inlineBefore > 0 && inlineBefore <= newInlineIds.length
+                ? newInlineIds[inlineBefore - 1]
+                : (newInlineIds.length > 0 ? newInlineIds[newInlineIds.length - 1] : anchorId);
+              try {
+                editor.insertBlocks([specBlock], afterId, 'after');
+                const updDoc = editor.document;
+                const afterIdx = updDoc.findIndex((b) => b.id === afterId);
+                const inserted = updDoc[afterIdx + 1];
+                if (inserted) {
+                  insertedSpecialIds.push(inserted.id);
+                  // Update newInlineIds to account for insertion shifting
+                  newInlineIds.splice(inlineBefore, 0, inserted.id);
+                }
+              } catch {}
+            }
+
+            currentIds = [...newInlineIds, ...imageIds];
+            aiBlockIdsRef.current = new Set(currentIds);
+            aiBlockCountRef.current = currentIds.length;
 
             // Set BlockNote textColor + backgroundColor on AI blocks (survives re-renders)
             const noColorProps = new Set(['image', 'divider', 'mermaidBlock']);
@@ -1372,30 +1410,58 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
           if (contentText) {
             const finalBlocks = parseMarkdownToBlocks(contentText);
-            const textBlocks = finalBlocks.filter((b) => b.type !== 'image');
-            if (textBlocks.length > 0) {
+            const _special = new Set(['image', 'mermaidBlock', 'divider']);
+            const inlineOnly = finalBlocks.filter((b) => !_special.has(b.type));
+            const specialOnly = finalBlocks
+              .map((b, idx) => ({ block: b, origIdx: idx }))
+              .filter(({ block }) => _special.has(block.type) && block.type !== 'image');
+
+            if (inlineOnly.length > 0) {
               try {
                 const anchorId = aiAnchorIdRef.current;
                 const docNow = editor.document;
-                const existingAiIds = currentIds.filter((id) => {
+                const existingInline = currentIds.filter((id) => {
                   const block = docNow.find((b) => b.id === id);
-                  return block && block.type !== 'image';
+                  return block && !_special.has(block.type);
                 });
-                if (existingAiIds.length > 0) {
-                  editor.replaceBlocks(existingAiIds, textBlocks);
-                  const refreshedDoc = editor.document;
-                  const newAnchorIdx = refreshedDoc.findIndex((b) => b.id === anchorId);
-                  const imageIds = currentIds.filter((id) => {
-                    const block = docNow.find((b) => b.id === id);
-                    return block && block.type === 'image';
-                  });
-                  const newTextIds = refreshedDoc
-                    .slice(newAnchorIdx + 1, newAnchorIdx + 1 + textBlocks.length)
-                    .map((b) => b.id);
-                  currentIds = [...newTextIds, ...imageIds];
-                  aiBlockIdsRef.current = new Set(currentIds);
-                  aiBlockCountRef.current = currentIds.length;
+                const existingSpecial = currentIds.filter((id) => {
+                  const block = docNow.find((b) => b.id === id);
+                  return block && _special.has(block.type) && block.type !== 'image';
+                });
+                if (existingSpecial.length > 0) {
+                  try { editor.removeBlocks(existingSpecial); } catch {}
                 }
+                if (existingInline.length > 0) {
+                  editor.replaceBlocks(existingInline, inlineOnly);
+                }
+                const refreshedDoc = editor.document;
+                const newAnchorIdx = refreshedDoc.findIndex((b) => b.id === anchorId);
+                const imageIds = currentIds.filter((id) => {
+                  const block = docNow.find((b) => b.id === id);
+                  return block && block.type === 'image';
+                });
+                const newInlineIds = refreshedDoc
+                  .slice(newAnchorIdx + 1, newAnchorIdx + 1 + inlineOnly.length)
+                  .map((b) => b.id);
+
+                // Insert special blocks at correct positions
+                for (const { block: specBlock, origIdx } of specialOnly) {
+                  const inlineBefore = finalBlocks.slice(0, origIdx).filter((b) => !_special.has(b.type)).length;
+                  const afterId = inlineBefore > 0 && inlineBefore <= newInlineIds.length
+                    ? newInlineIds[inlineBefore - 1]
+                    : (newInlineIds.length > 0 ? newInlineIds[newInlineIds.length - 1] : anchorId);
+                  try {
+                    editor.insertBlocks([specBlock], afterId, 'after');
+                    const updDoc = editor.document;
+                    const afterIdx = updDoc.findIndex((b) => b.id === afterId);
+                    const inserted = updDoc[afterIdx + 1];
+                    if (inserted) newInlineIds.splice(inlineBefore, 0, inserted.id);
+                  } catch {}
+                }
+
+                currentIds = [...newInlineIds, ...imageIds];
+                aiBlockIdsRef.current = new Set(currentIds);
+                aiBlockCountRef.current = currentIds.length;
               } catch {}
             }
           } else {
