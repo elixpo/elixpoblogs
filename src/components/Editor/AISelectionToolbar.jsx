@@ -207,13 +207,13 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
           setOriginalBlockIds([]);
           originalBlockIdsRef.current = [];
 
-          // Highlight selected blocks so user sees what's being edited
+          // Keep the native text selection visible and add subtle highlight
           requestAnimationFrame(() => {
             const wrapper = document.querySelector('.blog-editor-wrapper');
             if (wrapper) {
               blockIds.forEach((id) => {
                 const el = wrapper.querySelector(`[data-id="${id}"]`);
-                if (el) el.classList.add('ai-edit-selected-block');
+                if (el) el.classList.add('ai-edit-selection-highlight');
               });
             }
           });
@@ -612,18 +612,18 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
               </svg>
             </button>
           </div>
-          {/* Quick action buttons — stacked vertically */}
-          <div className="flex flex-col gap-0 px-4 pb-2">
-            {quickActions.map((action) => (
-              <button
-                key={action.label}
-                onClick={() => handleQuickAction(action.instruction)}
-                className="ai-quick-action-btn"
-              >
-                {action.label}
-              </button>
-            ))}
-          </div>
+        </div>
+        {/* Quick action buttons — floating below the input card */}
+        <div className="mx-auto w-full max-w-[600px] flex flex-col mt-1 py-1">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => handleQuickAction(action.instruction)}
+              className="ai-quick-action-btn"
+            >
+              {action.label}
+            </button>
+          ))}
         </div>
       </div>
     );
