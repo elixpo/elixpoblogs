@@ -360,16 +360,31 @@ export default function WritePage({ slugid }) {
   const [collaborators, setCollaborators] = useState([]);
   const [inviteError, setInviteError] = useState('');
   const ownerDropdownRef = useRef(null);
+  const [collabLock, setCollabLock] = useState(null); // { lockedBy, expiresIn } when someone else is editing
+  const [collabLockDismissed, setCollabLockDismissed] = useState(false);
 
   const username = user?.username || 'you';
 
   // Real-time collaboration (enabled when blog has co-authors)
   const hasCollaborators = collaborators.length > 0;
-  const { collaboration: collabConfig, isConnected: collabConnected, connectedUsers, error: collabError } = useCollaboration({
+  const { collaboration: collabConfig, isConnected: collabConnected, connectedUsers, error: collabError, needsSeed, clearSeed } = useCollaboration({
     blogId: slugid,
     user,
     enabled: hasCollaborators,
   });
+
+  // Check collab status / lock on mount when collaborators exist
+  useEffect(() => {
+    if (!slugid || !hasCollaborators) return;
+    fetch(`/api/collab/status?blogId=${slugid}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.isLocked && d.lockedBy) {
+          setCollabLock({ lockedBy: d.lockedBy, expiresIn: 300 });
+        }
+      })
+      .catch(() => {});
+  }, [slugid, hasCollaborators]);
 
   // Refs to always hold latest draft data (avoids stale closures in intervals/beforeunload)
   const draftDataRef = useRef({ title, subtitle, tags, publishAs, coverPreview, editorContent, pageEmoji });
@@ -1317,6 +1332,32 @@ export default function WritePage({ slugid }) {
                     )}
                   </div>
 
+                  {/* Collab lock warning — someone else was editing */}
+                  {collabLock && !collabLockDismissed && (
+                    <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                      <ion-icon name="warning-outline" style={{ fontSize: '16px', color: '#f59e0b' }} />
+                      <span className="text-[12px] text-[var(--text-muted)] flex-1">
+                        <strong>{collabLock.lockedBy?.displayName || collabLock.lockedBy?.username || 'Someone'}</strong> was recently editing this blog. Your changes will sync in real-time.
+                      </span>
+                      <button
+                        onClick={() => setCollabLockDismissed(true)}
+                        className="text-[11px] px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 transition-colors"
+                      >
+                        Got it
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Collab error toast */}
+                  {collabError && (
+                    <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                      <ion-icon name="alert-circle-outline" style={{ fontSize: '16px', color: '#ef4444' }} />
+                      <span className="text-[12px] text-red-400 flex-1">
+                        Collaboration failed to connect: {collabError}. Editing locally.
+                      </span>
+                    </div>
+                  )}
+
                   {/* Collab presence banner */}
                   {collabConnected && connectedUsers.length > 1 && (
                     <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg bg-[var(--accent-subtle)] border border-[var(--accent)]/20">
@@ -1348,6 +1389,7 @@ export default function WritePage({ slugid }) {
                       onTitleChange={(newTitle) => { setTitle(newTitle); setAiTitleKey(k => k + 1); }}
                       blogId={slugid}
                       collaboration={collabConfig}
+                      onCollabSeeded={needsSeed ? clearSeed : undefined}
                     />
                     {/* Outline sidebar — shows heading positions with slider */}
                     {editorContent && <EditorOutline editorContent={editorContent} />}

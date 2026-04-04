@@ -2,7 +2,7 @@
 // useCollaboration — manages Yjs doc, WebSocket provider, and editing lock
 // Returns collaboration props for BlockNote's useCreateBlockNote({ collaboration })
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Collab worker URL — set this to your deployed collab worker domain
 const COLLAB_WS_URL = process.env.NEXT_PUBLIC_COLLAB_URL || 'wss://collab.elixpo.com';
@@ -11,6 +11,7 @@ export function useCollaboration({ blogId, user, enabled = false }) {
   const [isConnected, setIsConnected] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [error, setError] = useState(null);
+  const [needsSeed, setNeedsSeed] = useState(false);
   const ydocRef = useRef(null);
   const providerRef = useRef(null);
   const heartbeatRef = useRef(null);
@@ -60,6 +61,15 @@ export function useCollaboration({ blogId, user, enabled = false }) {
         // Track connection state
         provider.on('status', ({ status }) => {
           if (!cancelled) setIsConnected(status === 'connected');
+        });
+
+        // After initial sync, check if the Yjs fragment is empty (needs seeding from existing content)
+        provider.once('synced', () => {
+          if (cancelled) return;
+          const fragment = ydoc.getXmlFragment('prosemirror');
+          if (fragment.length === 0) {
+            setNeedsSeed(true);
+          }
         });
 
         // Track connected users via awareness
@@ -124,6 +134,7 @@ export function useCollaboration({ blogId, user, enabled = false }) {
       setCollaboration(null);
       setIsConnected(false);
       setConnectedUsers([]);
+      setNeedsSeed(false);
 
       // Release editing lock
       fetch('/api/collab/lock', {
@@ -139,6 +150,8 @@ export function useCollaboration({ blogId, user, enabled = false }) {
     isConnected,
     connectedUsers,
     error,
+    needsSeed,
+    clearSeed: () => setNeedsSeed(false),
   };
 }
 
