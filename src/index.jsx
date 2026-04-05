@@ -441,7 +441,7 @@ export default function App() {
           <div className="mb-8">
             <h3 className="text-[14px] font-bold mb-3 tracking-wide" style={{ color: 'var(--text-primary)' }}>Recommended Topics</h3>
             <div className="flex flex-wrap gap-2">
-              {(popularTags.length > 0 ? popularTags.slice(0, 8) : RECOMMENDED_TOPICS).map(topic => (
+              {(popularTags.length > 0 ? popularTags.slice(0, 8) : FIXED_TAGS).map(topic => (
                 <button
                   key={topic}
                   onClick={() => {
