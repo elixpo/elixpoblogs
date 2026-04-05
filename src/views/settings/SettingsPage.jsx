@@ -741,6 +741,133 @@ function CreateOrgModal({ onClose, onCreated }) {
   );
 }
 
+// ── Confirmation Modal ──
+function ConfirmModal({ title, description, confirmLabel, onConfirm, onCancel, destructive = false }) {
+  const [typed, setTyped] = useState('');
+  const confirmWord = destructive ? 'DELETE' : 'CONFIRM';
+  const canConfirm = typed === confirmWord;
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="w-full max-w-sm rounded-2xl p-6" style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(248,113,113,0.1)' }}>
+            <ion-icon name="warning-outline" style={{ fontSize: '20px', color: '#f87171' }} />
+          </div>
+          <h3 className="text-[16px] font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+        </div>
+        <p className="text-[13px] leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>{description}</p>
+        <p className="text-[12px] mb-2" style={{ color: 'var(--text-faint)' }}>
+          Type <strong style={{ color: 'var(--text-primary)' }}>{confirmWord}</strong> to confirm:
+        </p>
+        <input
+          value={typed}
+          onChange={e => setTyped(e.target.value)}
+          className="w-full px-3 py-2 rounded-lg text-[13px] outline-none mb-5"
+          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
+          placeholder={confirmWord}
+          autoFocus
+        />
+        <div className="flex items-center gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
+            style={{ color: 'var(--text-body)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={!canConfirm}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#ef4444' }}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Danger Zone ──
+function DangerZone() {
+  const [showDisable, setShowDisable] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const { logout } = useAuth();
+
+  const handleDisable = async () => {
+    try {
+      await fetch('/api/users/me/disable', { method: 'POST' });
+      logout();
+    } catch {}
+    setShowDisable(false);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await fetch('/api/users/me', { method: 'DELETE' });
+      logout();
+    } catch {}
+    setShowDelete(false);
+  };
+
+  return (
+    <section>
+      <h3 className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(248,113,113,0.5)' }}>Danger Zone</h3>
+      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(248,113,113,0.2)' }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(248,113,113,0.1)' }}>
+          <div>
+            <p className="text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>Disable Account</p>
+            <p className="text-[11px]" style={{ color: 'var(--text-faint)' }}>Temporarily hide your profile and content.</p>
+          </div>
+          <button
+            onClick={() => setShowDisable(true)}
+            className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+            style={{ color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', backgroundColor: 'rgba(248,113,113,0.05)' }}
+          >
+            Disable
+          </button>
+        </div>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div>
+            <p className="text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>Delete Account</p>
+            <p className="text-[11px]" style={{ color: 'var(--text-faint)' }}>Permanently delete your account, blogs, and all data.</p>
+          </div>
+          <button
+            onClick={() => setShowDelete(true)}
+            className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+            style={{ color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', backgroundColor: 'rgba(248,113,113,0.05)' }}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+
+      {showDisable && (
+        <ConfirmModal
+          title="Disable Account"
+          description="Your profile and blogs will be hidden from everyone. You can reactivate anytime by signing back in."
+          confirmLabel="Disable Account"
+          onConfirm={handleDisable}
+          onCancel={() => setShowDisable(false)}
+        />
+      )}
+
+      {showDelete && (
+        <ConfirmModal
+          title="Delete Account"
+          description="This will permanently delete your account, all your blogs, comments, likes, and data. This action cannot be undone."
+          confirmLabel="Delete Account"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDelete(false)}
+          destructive
+        />
+      )}
+    </section>
+  );
+}
+
 // ── Organization Tab ──
 function OrganizationTab({ user }) {
   const [orgs, setOrgs] = useState([]);
