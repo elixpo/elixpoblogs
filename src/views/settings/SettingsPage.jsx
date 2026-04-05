@@ -275,14 +275,7 @@ function AccountTab({ user, refetchUser }) {
       <div className="h-px bg-[#1e2736]" />
 
       {/* ── Danger zone ── */}
-      <section>
-        <h3 className="text-[11px] font-semibold text-[#f8717180] uppercase tracking-widest mb-4">Danger Zone</h3>
-        <div className="space-y-2">
-          <button className="text-[13px] text-[#f87171]/70 hover:text-[#f87171] transition-colors">Disable Account</button>
-          <br />
-          <button className="text-[13px] text-[#f87171]/70 hover:text-[#f87171] transition-colors">Delete Account</button>
-        </div>
-      </section>
+      <DangerZone />
     </div>
   );
 }
@@ -791,10 +784,16 @@ function OrganizationTab({ user }) {
                   @{org.slug} &middot; {org.role} &middot; {org.member_count || 1} member{(org.member_count || 1) !== 1 ? 's' : ''}
                 </p>
               </div>
-              <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${org.visibility === 'private' ? 'bg-[#f8717114] text-[#f87171]' : 'bg-[#4ade8014] text-[#4ade80]'}`}>
-                {org.visibility}
-              </span>
-              <Link href={`/settings/org/${org.slug}`} className="text-[12px] text-[#9b7bf7] hover:text-[#b69aff] transition-colors font-medium">
+              <ion-icon
+                name={org.visibility === 'private' ? 'lock-closed-outline' : 'globe-outline'}
+                style={{ fontSize: '16px', color: org.visibility === 'private' ? '#f87171' : '#4ade80' }}
+                title={org.visibility === 'private' ? 'Private' : 'Public'}
+              />
+              <Link
+                href={`/settings/org/${org.slug}`}
+                className="px-3 py-1.5 text-[12px] font-medium rounded-lg transition-colors"
+                style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-body)', border: '1px solid var(--border-default)' }}
+              >
                 Manage
               </Link>
             </div>
@@ -823,26 +822,159 @@ function OrganizationTab({ user }) {
   );
 }
 
+// ── Usage Meter ──
+function UsageMeter({ label, icon, used, limit, unit, percent, color = '#9b7bf7' }) {
+  const capped = Math.min(percent, 100);
+  return (
+    <div className="py-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <ion-icon name={icon} style={{ fontSize: '16px', color: 'var(--text-faint)' }} />
+          <span className="text-[13px] font-medium text-[var(--text-primary)]">{label}</span>
+        </div>
+        <span className="text-[12px] text-[var(--text-muted)]">
+          {used}{unit ? ` ${unit}` : ''} <span className="text-[var(--text-faint)]">/ {limit}{unit ? ` ${unit}` : ''}</span>
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${capped}%`, backgroundColor: capped >= 90 ? '#ef4444' : capped >= 70 ? '#f59e0b' : color }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Subscription Tab ──
 function SubscriptionTab({ user }) {
   const currentTier = user?.tier || 'free';
+  const [usage, setUsage] = useState(null);
+  const [loadingUsage, setLoadingUsage] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/tier/usage')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setUsage(d); })
+      .catch(() => {})
+      .finally(() => setLoadingUsage(false));
+  }, []);
+
   return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <div className="w-14 h-14 rounded-full bg-[#9b7bf714] flex items-center justify-center mb-5">
-        <ion-icon name={currentTier === 'member' ? 'diamond' : 'diamond-outline'} style={{ fontSize: '28px', color: '#9b7bf7' }} />
+    <div>
+      {/* Plan header */}
+      <div className="flex items-center justify-between py-6 mb-2">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#9b7bf714] flex items-center justify-center">
+            <ion-icon name={currentTier === 'member' ? 'diamond' : 'diamond-outline'} style={{ fontSize: '24px', color: '#9b7bf7' }} />
+          </div>
+          <div>
+            <h3 className="text-[16px] font-bold text-[var(--text-primary)]">
+              {currentTier === 'member' ? 'Member' : 'Free'} Plan
+            </h3>
+            <p className="text-[12px] text-[var(--text-muted)]">
+              {currentTier === 'member' ? 'Full access to all features' : 'Basic access with usage limits'}
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/pricing"
+          className="px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
+          style={currentTier === 'member'
+            ? { color: 'var(--text-body)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)' }
+            : { color: 'white', background: 'linear-gradient(135deg, #9b7bf7, #7c5ce7)' }
+          }
+        >
+          {currentTier === 'member' ? 'Manage' : 'Upgrade'}
+        </Link>
       </div>
-      <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">Your Plan</h3>
-      <p className="text-[14px] text-[var(--text-muted)] mb-6">
-        You're currently on the <span className="font-semibold text-[var(--text-primary)]">{currentTier === 'member' ? 'Member' : 'Free'}</span> plan.
-      </p>
-      <Link
-        href="/pricing"
-        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-[14px] font-semibold text-white transition-all hover:-translate-y-0.5"
-        style={{ background: 'linear-gradient(135deg, #9b7bf7, #7c5ce7)', boxShadow: '0 2px 12px rgba(155,123,247,0.3)' }}
-      >
-        <ion-icon name="pricetags-outline" style={{ fontSize: '16px' }} />
-        {currentTier === 'member' ? 'Manage Subscription' : 'View Plans & Upgrade'}
-      </Link>
+
+      <div className="h-px bg-[var(--bg-elevated)]" />
+
+      {/* Usage section */}
+      <SectionHeader title="Usage" />
+
+      {loadingUsage ? (
+        <div className="space-y-6 py-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i}>
+              <div className="h-4 w-32 bg-[var(--bg-elevated)] animate-pulse rounded mb-2" />
+              <div className="h-2 bg-[var(--bg-elevated)] animate-pulse rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : usage ? (
+        <>
+          <UsageMeter
+            label="Storage"
+            icon="cloud-outline"
+            used={usage.storage.usedFormatted}
+            limit={usage.storage.limitFormatted}
+            percent={usage.storage.percent}
+          />
+          <div className="h-px bg-[var(--bg-elevated)]" />
+          <UsageMeter
+            label="AI Requests (today)"
+            icon="sparkles-outline"
+            used={usage.ai.used}
+            limit={usage.ai.limit}
+            percent={usage.ai.percent}
+            color="#c084fc"
+          />
+          <div className="h-px bg-[var(--bg-elevated)]" />
+          <UsageMeter
+            label="Organizations"
+            icon="people-outline"
+            used={usage.orgs.owned}
+            limit={usage.orgs.limit}
+            percent={usage.orgs.limit > 0 ? Math.round((usage.orgs.owned / usage.orgs.limit) * 100) : 0}
+            color="#60a5fa"
+          />
+        </>
+      ) : (
+        <p className="text-[13px] text-[var(--text-muted)] py-4">Unable to load usage data.</p>
+      )}
+
+      {/* Limits breakdown */}
+      <SectionHeader title="Plan Limits" />
+
+      <div className="rounded-xl border border-[var(--border-default)] overflow-hidden">
+        {[
+          { label: 'Total storage', value: usage?.storage.limitFormatted || '50 MB', icon: 'cloud-outline' },
+          { label: 'Images per blog', value: usage?.limits.imagePerBlogFormatted || '2 MB', icon: 'image-outline' },
+          { label: 'AI requests / day', value: `${usage?.ai.limit || 15}`, icon: 'sparkles-outline' },
+          { label: 'Co-authors per blog', value: `${usage?.limits.coAuthorsPerBlog || 3}`, icon: 'people-outline' },
+          { label: 'Organizations', value: `${usage?.orgs.limit || 1}`, icon: 'business-outline' },
+          { label: 'Member-only content', value: usage?.limits.canMarkMemberOnly ? 'Yes' : 'No', icon: 'lock-closed-outline' },
+        ].map((item, i, arr) => (
+          <div
+            key={item.label}
+            className="flex items-center justify-between px-4 py-3"
+            style={i < arr.length - 1 ? { borderBottom: '1px solid var(--border-default)' } : {}}
+          >
+            <div className="flex items-center gap-3">
+              <ion-icon name={item.icon} style={{ fontSize: '15px', color: 'var(--text-faint)' }} />
+              <span className="text-[13px] text-[var(--text-body)]">{item.label}</span>
+            </div>
+            <span className="text-[13px] font-medium text-[var(--text-primary)]">{item.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {currentTier === 'free' && (
+        <div className="mt-6 p-4 rounded-xl text-center" style={{ background: 'rgba(155,123,247,0.06)', border: '1px solid rgba(155,123,247,0.15)' }}>
+          <p className="text-[13px] text-[var(--text-muted)] mb-3">
+            Need more storage, AI requests, or co-authors?
+          </p>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-medium text-white bg-[#9b7bf7] hover:bg-[#8b6ae6] transition-colors"
+          >
+            <ion-icon name="arrow-up-circle-outline" style={{ fontSize: '16px' }} />
+            Upgrade to Member
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
