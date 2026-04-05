@@ -428,6 +428,7 @@ run_command() {
     worker)  worker ;;
     secrets) secrets ;;
     build)   build ;;
+    sync)    sync_d1 ;;
     all)     worker; secrets; deploy ;;
     release) shift; do_release "$@"; exit 0 ;;
     -h|--help|help) usage ;;
