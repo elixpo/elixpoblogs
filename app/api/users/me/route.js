@@ -58,6 +58,9 @@ export async function DELETE() {
     const db = getDB();
     const now = Math.floor(Date.now() / 1000);
 
+    // Fetch email before wiping for the goodbye email
+    const user = await db.prepare('SELECT email, display_name FROM users WHERE id = ?').bind(session.userId).first();
+
     // Mark as removed and wipe personal data
     await db.prepare(`
       UPDATE users SET
@@ -82,6 +85,14 @@ export async function DELETE() {
     await db.prepare(
       "UPDATE blogs SET status = 'archived' WHERE author_id = ?"
     ).bind(session.userId).run();
+
+    // Send deletion confirmation email
+    if (user?.email) {
+      try {
+        const { sendAccountDeleted } = await import('../../../../lib/email');
+        sendAccountDeleted(user.email, { displayName: user.display_name }).catch(() => {});
+      } catch {}
+    }
 
     // Clear session
     const { clearSession } = await import('../../../../lib/auth');

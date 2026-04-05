@@ -14,9 +14,19 @@ export async function POST() {
     const db = getDB();
     const now = Math.floor(Date.now() / 1000);
 
+    const user = await db.prepare('SELECT email, display_name FROM users WHERE id = ?').bind(session.userId).first();
+
     await db.prepare(
       "UPDATE users SET account_status = 'disabled', updated_at = ? WHERE id = ?"
     ).bind(now, session.userId).run();
+
+    // Send disable confirmation email
+    if (user?.email) {
+      try {
+        const { sendAccountDisabled } = await import('../../../../../lib/email');
+        sendAccountDisabled(user.email, { displayName: user.display_name }).catch(() => {});
+      } catch {}
+    }
 
     await clearSession();
     return NextResponse.json({ ok: true });

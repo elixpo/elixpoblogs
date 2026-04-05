@@ -136,6 +136,20 @@ export async function GET(request) {
     console.warn('D1 not available, skipping user upsert:', e.message);
   }
 
+  // Send login alert email (fire and forget)
+  if (!isNewUser && userInfo.email) {
+    try {
+      const { sendLoginAlert } = await import('../../../../lib/email');
+      const ip = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || '';
+      const city = request.headers.get('cf-ipcity') || '';
+      const country = request.headers.get('cf-ipcountry') || '';
+      const location = [city, country].filter(Boolean).join(', ') || 'Unknown location';
+      const ua = request.headers.get('user-agent') || '';
+      const time = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
+      sendLoginAlert(userInfo.email, { displayName: userInfo.displayName, ip, location, userAgent: ua, time }).catch(() => {});
+    } catch {}
+  }
+
   // Build session with user profile from OAuth provider
   const session = JSON.stringify({
     accessToken: tokenData.access_token,
