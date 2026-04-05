@@ -26,6 +26,8 @@ export async function GET(request) {
   }
 
   const config = getOAuthConfig();
+  const redirectBase = new URL(request.url).origin;
+  const redirectUri = `${redirectBase}/api/auth/callback`;
 
   // Exchange code for tokens
   const tokenRes = await fetch(config.tokenUrl, {
@@ -36,7 +38,7 @@ export async function GET(request) {
       code,
       client_id: config.clientId,
       client_secret: config.clientSecret,
-      redirect_uri: config.redirectUri,
+      redirect_uri: redirectUri,
     }),
   });
 
