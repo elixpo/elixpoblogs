@@ -261,27 +261,49 @@ function FeedCard({ post }) {
   );
 }
 
-function TopPickCard({ post }) {
+function TopPickCard({ post, index }) {
   const author = post.author || {};
+  const gradients = [
+    'linear-gradient(135deg, rgba(155,123,247,0.1) 0%, rgba(96,165,250,0.06) 100%)',
+    'linear-gradient(135deg, rgba(96,165,250,0.1) 0%, rgba(74,222,128,0.06) 100%)',
+    'linear-gradient(135deg, rgba(244,114,182,0.1) 0%, rgba(155,123,247,0.06) 100%)',
+  ];
+  const accents = ['#9b7bf7', '#60a5fa', '#f472b6'];
   return (
     <Link href={`/${author.username || 'unknown'}/${post.slug}`}>
-      <div className="py-3.5 cursor-pointer group" style={{ borderBottom: '1px solid var(--divider)' }}>
-        <div className="flex items-center gap-2 mb-1.5">
+      <div
+        className="p-3.5 rounded-xl cursor-pointer group mb-2.5 transition-all duration-200 hover:scale-[1.02]"
+        style={{
+          background: gradients[index % 3],
+          border: `1px solid color-mix(in srgb, ${accents[index % 3]} 15%, transparent)`,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        }}
+      >
+        <div className="flex items-center gap-2 mb-2">
           {author.avatar_url ? (
-            <img src={author.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />
+            <img src={author.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover ring-1 ring-white/10" />
           ) : (
             <div className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-faint)' }}>
               {(author.display_name || author.username || '?')[0].toUpperCase()}
             </div>
           )}
-          <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>
             {author.display_name || author.username}
           </span>
+          <span className="ml-auto text-[10px]" style={{ color: 'var(--text-faint)' }}>{timeAgo(post.published_at)}</span>
         </div>
-        <h3 className="text-[14px] font-bold leading-[1.35] group-hover:opacity-75 transition-opacity font-serif" style={{ color: 'var(--text-primary)' }}>
+        <h3 className="text-[13.5px] font-bold leading-[1.35] group-hover:opacity-80 transition-opacity font-serif" style={{ color: 'var(--text-primary)' }}>
+          {post.page_emoji && <span className="mr-1">{post.page_emoji}</span>}
           {post.title || 'Untitled'}
         </h3>
-        <span className="text-[11px] mt-1 block" style={{ color: 'var(--text-faint)' }}>{timeAgo(post.published_at)}</span>
+        {post.read_time_minutes > 0 && (
+          <div className="flex items-center gap-1.5 mt-2">
+            <div className="h-[3px] flex-1 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+              <div className="h-full rounded-full" style={{ width: `${Math.min(100, post.read_time_minutes * 20)}%`, backgroundColor: accents[index % 3], opacity: 0.5 }} />
+            </div>
+            <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>{post.read_time_minutes} min</span>
+          </div>
+        )}
       </div>
     </Link>
   );
@@ -430,7 +452,7 @@ export default function App() {
             <h3 className="text-[14px] font-bold pb-2 mb-1 tracking-wide" style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--divider)' }}>Top Picks</h3>
             {topPicks.length > 0 ? (
               <div>
-                {topPicks.map(pick => <TopPickCard key={pick.id} post={pick} />)}
+                {topPicks.map((pick, i) => <TopPickCard key={pick.id} post={pick} index={i} />)}
               </div>
             ) : (
               <p className="text-[13px] py-4" style={{ color: 'var(--text-faint)' }}>No picks yet</p>
