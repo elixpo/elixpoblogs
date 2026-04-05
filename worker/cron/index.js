@@ -11,7 +11,7 @@ export default {
     const secret = env.CRON_SECRET || '';
 
     // Weekly digest — every Sunday
-    if (event.cron === '0 9 * * 0') {
+    if (event.cron === '0 9 * * SUN') {
       try {
         const res = await fetch(`${baseUrl}/api/cron/weekly-digest`, {
           headers: { 'Authorization': `Bearer ${secret}` },

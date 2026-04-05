@@ -88,11 +88,15 @@ secrets() {
     [[ "$key" =~ ^(CLOUDFLARE_ACCOUNT|D1_DATABASE_ID|KV_NAMESPACE_ID)$ ]] && continue
 
     echo "  -> $key (collab worker)"
-    printf '%s\n' "$value" | sudo npx wrangler versions secret put "$key" --name lixblogs-collab || echo "    [warn] collab worker secret failed for $key"
-    echo "  -> $key (cron worker)"
-    printf '%s\n' "$value" | sudo npx wrangler versions secret put "$key" --name lixblogs-cron || echo "    [warn] cron worker secret failed for $key"
+    printf '%s\n' "$value" | sudo npx wrangler versions secret put "$key" --name elixpoblogs-collab || echo "    [warn] collab worker secret failed for $key"
     echo "  -> $key (pages)"
     printf '%s\n' "$value" | sudo npx wrangler pages secret put "$key" --project-name "$PAGES_PROJECT" || echo "    [warn] pages secret failed for $key"
+
+    # Only push to cron worker if it's enabled
+    if grep -q 'ENABLE_WEEKLY_DIGEST=true' "$ENV_FILE" 2>/dev/null; then
+      echo "  -> $key (cron worker)"
+      printf '%s\n' "$value" | sudo npx wrangler versions secret put "$key" --name elixpoblogs-cron || echo "    [warn] cron worker secret failed for $key"
+    fi
   done < "$ENV_FILE"
 
   echo "==> Secrets uploaded to Workers + Pages."
@@ -131,15 +135,20 @@ deploy() {
 }
 
 worker() {
-  echo "==> Deploying Worker (lixblogs-collab)..."
+  echo "==> Deploying Worker (elixpoblogs-collab)..."
   cd "$SCRIPT_DIR/worker/collab" && sudo npx wrangler deploy
   cd "$SCRIPT_DIR"
   echo "==> Collab worker deployed."
 
-  echo "==> Deploying Worker (lixblogs-cron)..."
-  cd "$SCRIPT_DIR/worker/cron" && sudo npx wrangler deploy
-  cd "$SCRIPT_DIR"
-  echo "==> Cron worker deployed."
+  # Cron worker — only deploy if digest is enabled
+  if grep -q 'ENABLE_WEEKLY_DIGEST=true' "$ENV_FILE" 2>/dev/null; then
+    echo "==> Deploying Worker (elixpoblogs-cron)..."
+    cd "$SCRIPT_DIR/worker/cron" && sudo npx wrangler deploy
+    cd "$SCRIPT_DIR"
+    echo "==> Cron worker deployed."
+  else
+    echo "==> Skipping cron worker (ENABLE_WEEKLY_DIGEST is not true)"
+  fi
 }
 
 # ── Release Commands ─────────────────────────────────────────
