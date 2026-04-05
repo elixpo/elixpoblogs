@@ -87,13 +87,15 @@ secrets() {
     [[ -z "$key" || "$key" =~ ^# || "$key" =~ ^NEXT_PUBLIC_ ]] && continue
     [[ "$key" =~ ^(CLOUDFLARE_ACCOUNT|D1_DATABASE_ID|KV_NAMESPACE_ID)$ ]] && continue
 
-    echo "  -> $key (worker)"
-    printf '%s\n' "$value" | sudo npx wrangler versions secret put "$key" --name lixblogs-collab || echo "    [warn] worker secret failed for $key"
+    echo "  -> $key (collab worker)"
+    printf '%s\n' "$value" | sudo npx wrangler versions secret put "$key" --name lixblogs-collab || echo "    [warn] collab worker secret failed for $key"
+    echo "  -> $key (cron worker)"
+    printf '%s\n' "$value" | sudo npx wrangler versions secret put "$key" --name lixblogs-cron || echo "    [warn] cron worker secret failed for $key"
     echo "  -> $key (pages)"
     printf '%s\n' "$value" | sudo npx wrangler pages secret put "$key" --project-name "$PAGES_PROJECT" || echo "    [warn] pages secret failed for $key"
   done < "$ENV_FILE"
 
-  echo "==> Secrets uploaded to Worker + Pages."
+  echo "==> Secrets uploaded to Workers + Pages."
 }
 
 build() {
@@ -132,7 +134,12 @@ worker() {
   echo "==> Deploying Worker (lixblogs-collab)..."
   cd "$SCRIPT_DIR/worker/collab" && sudo npx wrangler deploy
   cd "$SCRIPT_DIR"
-  echo "==> Worker deploy complete."
+  echo "==> Collab worker deployed."
+
+  echo "==> Deploying Worker (lixblogs-cron)..."
+  cd "$SCRIPT_DIR/worker/cron" && sudo npx wrangler deploy
+  cd "$SCRIPT_DIR"
+  echo "==> Cron worker deployed."
 }
 
 # ── Release Commands ─────────────────────────────────────────

@@ -8,6 +8,11 @@ import { NextResponse } from 'next/server';
  * Protected by a shared secret in the Authorization header.
  */
 export async function GET(request) {
+  // Check if digest is enabled
+  if (process.env.ENABLE_WEEKLY_DIGEST !== 'true') {
+    return NextResponse.json({ ok: false, reason: 'Weekly digest is disabled (ENABLE_WEEKLY_DIGEST != true)' });
+  }
+
   // Verify cron secret (prevents public access)
   const authHeader = request.headers.get('Authorization') || '';
   const cronSecret = process.env.CRON_SECRET || '';
