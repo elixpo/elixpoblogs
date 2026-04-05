@@ -245,20 +245,17 @@ function FeedCard({ post }) {
               )}
             </div>
           </div>
-          <div
-            className="w-[140px] h-[48px] rounded-lg flex-shrink-0 hidden sm:block overflow-hidden self-center"
-            style={{ backgroundColor: post.cover_image_r2_key ? 'transparent' : 'var(--bg-elevated)' }}
-          >
+          <div className="w-[100px] h-[100px] rounded-xl flex-shrink-0 hidden sm:block overflow-hidden self-center" style={{ backgroundColor: 'var(--bg-elevated)' }}>
             <img
               src={post.cover_image_r2_key || generateBlogBanner(post.id || post.slug)}
               alt=""
-              className={`w-full h-full transition-transform duration-300 group-hover:scale-105 ${post.cover_image_r2_key ? 'object-cover' : 'object-contain'}`}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </div>
         </div>
       </Link>
       {post.can_edit && (
-        <div className="mt-3 pt-3 flex items-center" style={{ borderTop: '1px solid var(--divider)' }}>
+        <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: '1px solid var(--divider)' }}>
           <Link
             href={`/edit/${post.id}`}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
@@ -267,6 +264,15 @@ function FeedCard({ post }) {
           >
             <ion-icon name="create-outline" style={{ fontSize: '13px' }} />
             Edit
+          </Link>
+          <Link
+            href={`/edit/${post.id}?panel=settings`}
+            className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+            style={{ color: 'var(--text-faint)', backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
+            onClick={e => e.stopPropagation()}
+            title="Blog settings"
+          >
+            <ion-icon name="settings-outline" style={{ fontSize: '14px' }} />
           </Link>
         </div>
       )}
@@ -421,7 +427,7 @@ export default function App() {
           </div>
 
           {/* Feed */}
-          <div className="px-6">
+          <div className="px-6 pt-4">
             {loading ? (
               <FeedSkeleton />
             ) : posts.length > 0 ? (
