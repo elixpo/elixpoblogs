@@ -398,6 +398,8 @@ export default function WritePage({ slugid }) {
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingLeaveUrl, setPendingLeaveUrl] = useState(null);
+  const [showMdReplaceConfirm, setShowMdReplaceConfirm] = useState(false);
+  const [pendingMdFile, setPendingMdFile] = useState(null);
   const mdUploadRef = useRef(null);
 
   const username = user?.username || 'you';
@@ -716,31 +718,43 @@ export default function WritePage({ slugid }) {
     syncToCloud({ showToast: true });
   };
 
-  // Handle .md file upload
-  const handleMdUpload = useCallback(async (e) => {
+  // Handle .md file upload — check for existing content first
+  const handleMdUpload = useCallback((e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
 
+    // Check if editor has content beyond an empty paragraph
+    const editor = editorRef.current?.getEditor?.();
+    const hasContent = editor && editor.document.some(b => {
+      const text = (b.content || []).map(c => c.text || '').join('').trim();
+      return text.length > 0 || (b.type && b.type !== 'paragraph');
+    });
+
+    if (hasContent) {
+      setPendingMdFile(file);
+      setShowMdReplaceConfirm(true);
+    } else {
+      importMdFile(file);
+    }
+  }, []);
+
+  const importMdFile = useCallback(async (file) => {
     try {
       const text = await file.text();
       const lines = text.split('\n');
 
-      // Extract title from first # heading if present
       let mdTitle = '';
       let contentStart = 0;
       if (lines[0]?.startsWith('# ')) {
         mdTitle = lines[0].replace(/^#\s+/, '').trim();
         contentStart = 1;
-        // Skip blank line after title
         if (lines[contentStart]?.trim() === '') contentStart++;
       }
 
       const mdContent = lines.slice(contentStart).join('\n').trim();
+      if (mdTitle) setTitle(mdTitle);
 
-      if (mdTitle && !title) setTitle(mdTitle);
-
-      // Convert markdown to BlockNote blocks via the editor
       const editor = editorRef.current?.getEditor?.();
       if (editor) {
         try {
@@ -749,7 +763,6 @@ export default function WritePage({ slugid }) {
             editor.replaceBlocks(editor.document, blocks);
           }
         } catch {
-          // Fallback: insert as a single paragraph
           editor.replaceBlocks(editor.document, [{
             type: 'paragraph',
             content: [{ type: 'text', text: mdContent }],
@@ -760,7 +773,7 @@ export default function WritePage({ slugid }) {
     } catch (err) {
       console.error('Failed to import markdown:', err);
     }
-  }, [title]);
+  }, []);
 
   const doPublish = async (targetStatus) => {
     if (!title.trim() || publishing) return;
@@ -1795,6 +1808,22 @@ export default function WritePage({ slugid }) {
           confirmLabel={isPublished ? 'Update' : 'Publish'}
           onConfirm={() => { setShowPublishConfirm(false); setShowPublishPanel(true); }}
           onCancel={() => setShowPublishConfirm(false)}
+        />
+      )}
+
+      {/* Markdown replace confirmation modal */}
+      {showMdReplaceConfirm && pendingMdFile && (
+        <EditorConfirmModal
+          title="Replace editor content?"
+          description="Importing this markdown file will replace all existing content in the editor. This cannot be undone."
+          confirmLabel="Replace"
+          destructive
+          onConfirm={() => {
+            setShowMdReplaceConfirm(false);
+            importMdFile(pendingMdFile);
+            setPendingMdFile(null);
+          }}
+          onCancel={() => { setShowMdReplaceConfirm(false); setPendingMdFile(null); }}
         />
       )}
 
