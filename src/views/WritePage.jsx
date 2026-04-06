@@ -920,11 +920,12 @@ export default function WritePage({ slugid }) {
           <input ref={mdUploadRef} type="file" accept=".md,.markdown,.txt" className="hidden" onChange={handleMdUpload} />
           <button
             onClick={() => mdUploadRef.current?.click()}
-            className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors"
-            style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-faint)' }}
+            className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-[12px] font-medium transition-colors"
+            style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }}
             title="Import markdown file"
           >
-            <ion-icon name="cloud-upload-outline" style={{ fontSize: '15px' }} />
+            <ion-icon name="folder-open-outline" style={{ fontSize: '14px' }} />
+            <span className="hidden sm:inline">Import</span>
           </button>
 
           {/* Publish / Update split button */}
