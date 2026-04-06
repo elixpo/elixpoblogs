@@ -97,6 +97,34 @@ function truncateSlug(s, max = 18) {
   return s && s.length > max ? s.slice(0, max) + '...' : s;
 }
 
+// ── Confirm Modal ──
+function EditorConfirmModal({ title, description, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onConfirm, onCancel, destructive = false }) {
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="w-full max-w-sm rounded-2xl p-6 animate-in" style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)' }}>
+        <h3 className="text-[16px] font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+        <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>{description}</p>
+        <div className="flex items-center gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
+            style={{ color: 'var(--text-body)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+          >
+            {cancelLabel}
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium text-white transition-colors"
+            style={{ backgroundColor: destructive ? '#ef4444' : '#9b7bf7' }}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Profile Dropdown (header) ──
 function HeaderProfileDropdown({ user, logout }) {
   const [open, setOpen] = useState(false);
@@ -365,8 +393,12 @@ export default function WritePage({ slugid }) {
   const [collaborators, setCollaborators] = useState([]);
   const [inviteError, setInviteError] = useState('');
   const ownerDropdownRef = useRef(null);
-  const [collabLock, setCollabLock] = useState(null); // { lockedBy, expiresIn } when someone else is editing
+  const [collabLock, setCollabLock] = useState(null);
   const [collabLockDismissed, setCollabLockDismissed] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [pendingLeaveUrl, setPendingLeaveUrl] = useState(null);
+  const mdUploadRef = useRef(null);
 
   const username = user?.username || 'you';
 
@@ -462,21 +494,27 @@ export default function WritePage({ slugid }) {
     }
   }, [draftLoading, syncToCloud]);
 
-  // Sync before page unload
+  // Sync before page unload + warn about unsaved edits
   useEffect(() => {
-    function handleBeforeUnload() {
+    function handleBeforeUnload(e) {
       const data = draftDataRef.current;
-      if (!data.title && !data.editorContent) return;
-      saveDraft(slugid, data);
-      // Use sendBeacon with Blob for reliable fire-and-forget on unload
-      try {
-        const blob = new Blob([JSON.stringify({ slugid, ...data })], { type: 'application/json' });
-        navigator.sendBeacon('/api/blogs/draft', blob);
-      } catch { /* best effort */ }
+      // Always save to localStorage so nothing is lost
+      if (data.title || data.editorContent) {
+        saveDraft(slugid, data);
+        try {
+          const blob = new Blob([JSON.stringify({ slugid, ...data })], { type: 'application/json' });
+          navigator.sendBeacon('/api/blogs/draft', blob);
+        } catch {}
+      }
+      // Warn user if there are unsaved edits
+      if (hasUnsavedEdits) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
     }
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [slugid]);
+  }, [slugid, hasUnsavedEdits]);
 
   useEffect(() => {
     // Try local draft first, then fetch from server
@@ -678,6 +716,52 @@ export default function WritePage({ slugid }) {
     syncToCloud({ showToast: true });
   };
 
+  // Handle .md file upload
+  const handleMdUpload = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    try {
+      const text = await file.text();
+      const lines = text.split('\n');
+
+      // Extract title from first # heading if present
+      let mdTitle = '';
+      let contentStart = 0;
+      if (lines[0]?.startsWith('# ')) {
+        mdTitle = lines[0].replace(/^#\s+/, '').trim();
+        contentStart = 1;
+        // Skip blank line after title
+        if (lines[contentStart]?.trim() === '') contentStart++;
+      }
+
+      const mdContent = lines.slice(contentStart).join('\n').trim();
+
+      if (mdTitle && !title) setTitle(mdTitle);
+
+      // Convert markdown to BlockNote blocks via the editor
+      const editor = editorRef.current?.getEditor?.();
+      if (editor) {
+        try {
+          const blocks = await editor.tryParseMarkdownToBlocks(mdContent);
+          if (blocks?.length > 0) {
+            editor.replaceBlocks(editor.document, blocks);
+          }
+        } catch {
+          // Fallback: insert as a single paragraph
+          editor.replaceBlocks(editor.document, [{
+            type: 'paragraph',
+            content: [{ type: 'text', text: mdContent }],
+          }]);
+        }
+        setHasUnsavedEdits(true);
+      }
+    } catch (err) {
+      console.error('Failed to import markdown:', err);
+    }
+  }, [title]);
+
   const doPublish = async (targetStatus) => {
     if (!title.trim() || publishing) return;
     setPublishing(true);
@@ -819,18 +903,38 @@ export default function WritePage({ slugid }) {
             {isPublished ? (blogVersion?.isDraftAhead ? 'Edited' : 'Published') : 'Draft'}
           </span>
 
+          {/* Upload .md */}
+          <input ref={mdUploadRef} type="file" accept=".md,.markdown,.txt" className="hidden" onChange={handleMdUpload} />
+          <button
+            onClick={() => mdUploadRef.current?.click()}
+            className="h-8 w-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-faint)' }}
+            title="Import markdown file"
+          >
+            <ion-icon name="cloud-upload-outline" style={{ fontSize: '15px' }} />
+          </button>
+
           {/* Publish / Update split button */}
           <div className="relative">
-            <div className="flex items-center">
+            <div className="flex items-center rounded-full overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(155,123,247,0.25)' }}>
               <button
-                onClick={() => setShowPublishPanel(!showPublishPanel)}
-                className="px-4 py-1.5 bg-[#9b7bf7] text-white font-semibold rounded-l-full text-[13px] hover:bg-[#b69aff] transition-colors"
+                onClick={() => {
+                  if (isPublished) {
+                    setShowPublishConfirm(true);
+                  } else {
+                    setShowPublishPanel(!showPublishPanel);
+                  }
+                }}
+                className="px-4 py-1.5 text-white font-semibold text-[13px] transition-colors flex items-center gap-1.5"
+                style={{ background: 'linear-gradient(135deg, #9b7bf7 0%, #8b6ae6 100%)' }}
               >
+                <ion-icon name={isPublished ? 'cloud-upload-outline' : 'send-outline'} style={{ fontSize: '14px' }} />
                 {isPublished ? 'Update' : 'Publish'}
               </button>
               <button
                 onClick={() => setShowPublishMenu(!showPublishMenu)}
-                className="px-2 py-1.5 bg-[#9b7bf7] text-white rounded-r-full border-l border-white/10 hover:bg-[#b69aff] transition-colors"
+                className="px-2 py-1.5 text-white transition-colors border-l border-white/15"
+                style={{ background: 'linear-gradient(135deg, #9b7bf7 0%, #8b6ae6 100%)' }}
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 12 15 18 9" />
@@ -1680,6 +1784,35 @@ export default function WritePage({ slugid }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Publish/Update confirmation modal */}
+      {showPublishConfirm && (
+        <EditorConfirmModal
+          title={isPublished ? 'Update published blog?' : 'Publish this blog?'}
+          description={isPublished
+            ? 'This will push your changes live. Readers will see the updated version immediately.'
+            : 'Your blog will be visible to everyone. You can unpublish it later from the publish settings.'}
+          confirmLabel={isPublished ? 'Update' : 'Publish'}
+          onConfirm={() => { setShowPublishConfirm(false); setShowPublishPanel(true); }}
+          onCancel={() => setShowPublishConfirm(false)}
+        />
+      )}
+
+      {/* Leave confirmation modal */}
+      {showLeaveConfirm && (
+        <EditorConfirmModal
+          title="Leave editor?"
+          description="You have unsaved changes. Your draft is saved locally, but cloud sync may be incomplete."
+          confirmLabel="Leave"
+          cancelLabel="Stay"
+          destructive
+          onConfirm={() => {
+            setShowLeaveConfirm(false);
+            if (pendingLeaveUrl) window.location.href = pendingLeaveUrl;
+          }}
+          onCancel={() => { setShowLeaveConfirm(false); setPendingLeaveUrl(null); }}
+        />
+      )}
     </div>
   );
 }
