@@ -99,16 +99,40 @@ function truncateSlug(s, max = 18) {
 
 // ── Confirm Modal ──
 function EditorConfirmModal({ title, description, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onConfirm, onCancel, destructive = false }) {
+  // Close on Escape key
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onCancel]);
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="w-full max-w-sm rounded-2xl p-6 animate-in" style={{ backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)' }}>
-        <h3 className="text-[16px] font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{title}</h3>
-        <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>{description}</p>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 editor-confirm-overlay" onClick={onCancel}>
+      <div
+        className="w-full max-w-sm rounded-2xl p-6 editor-confirm-dialog"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3 mb-3">
+          {destructive ? (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(239,68,68,0.12)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(155,123,247,0.12)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9b7bf7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </div>
+          )}
+          <h3 className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+        </div>
+        <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--text-muted)', paddingLeft: '44px' }}>{description}</p>
         <div className="flex items-center gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
-            style={{ color: 'var(--text-body)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium transition-colors editor-confirm-cancel"
           >
             {cancelLabel}
           </button>
