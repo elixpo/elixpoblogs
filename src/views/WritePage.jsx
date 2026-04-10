@@ -472,7 +472,7 @@ export default function WritePage({ slugid }) {
     }
   }, [slugid]);
 
-  // Ctrl+S → save + sync, Ctrl+O → import markdown
+  // Ctrl+S → save + sync, Ctrl+O → import markdown, Ctrl+D → insert date
   useEffect(() => {
     function handleKeyDown(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -482,6 +482,15 @@ export default function WritePage({ slugid }) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
         e.preventDefault();
         mdUploadRef.current?.click();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        const editor = editorRef.current?.getEditor?.();
+        if (editor) {
+          try {
+            editor.insertInlineContent([{ type: 'dateInline', props: { date: new Date().toISOString().split('T')[0] } }]);
+          } catch {}
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown);

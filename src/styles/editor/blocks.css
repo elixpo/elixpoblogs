@@ -112,6 +112,9 @@
 .blog-editor-wrapper [data-content-type="divider"] {
   margin: 16px 0;
   padding: 8px 0;
+  pointer-events: none;
+  user-select: none;
+  cursor: default;
 }
 
 .blog-editor-wrapper [data-content-type="divider"] hr {
@@ -133,6 +136,82 @@
 
 .blog-editor-wrapper [data-content-type="numberedListItem"]::before {
   color: var(--text-muted);
+}
+
+/* ===== Fancy Checkboxes ===== */
+
+.blog-editor-wrapper [data-content-type="checkListItem"] [data-checked-icon],
+.blog-editor-wrapper [data-content-type="checkListItem"] [data-unchecked-icon],
+.blog-editor-wrapper [data-content-type="checkListItem"] input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 2px solid var(--border-default);
+  background-color: var(--bg-surface);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.blog-editor-wrapper [data-content-type="checkListItem"] input[type="checkbox"]:hover {
+  border-color: #9b7bf7;
+  box-shadow: 0 0 0 3px rgba(155, 123, 247, 0.12);
+}
+
+.blog-editor-wrapper [data-content-type="checkListItem"] input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, #9b7bf7, #8b6ae6);
+  border-color: #9b7bf7;
+  box-shadow: 0 1px 4px rgba(155, 123, 247, 0.3);
+}
+
+.blog-editor-wrapper [data-content-type="checkListItem"] input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Checked item text gets muted + strikethrough */
+.blog-editor-wrapper [data-content-type="checkListItem"][data-checked="true"] .bn-inline-content {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* BlockNote's native checkbox SVG icons — style them too */
+.blog-editor-wrapper [data-content-type="checkListItem"] .bn-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 2px solid var(--border-default);
+  background-color: var(--bg-surface);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blog-editor-wrapper [data-content-type="checkListItem"] .bn-checkbox:hover {
+  border-color: #9b7bf7;
+  box-shadow: 0 0 0 3px rgba(155, 123, 247, 0.12);
+}
+
+.blog-editor-wrapper [data-content-type="checkListItem"][data-checked="true"] .bn-checkbox {
+  background: linear-gradient(135deg, #9b7bf7, #8b6ae6);
+  border-color: #9b7bf7;
+  box-shadow: 0 1px 4px rgba(155, 123, 247, 0.3);
+}
+
+.blog-editor-wrapper [data-content-type="checkListItem"][data-checked="true"] .bn-checkbox svg {
+  color: white;
 }
 
 /* ===== Image blocks ===== */
