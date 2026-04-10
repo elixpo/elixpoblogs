@@ -883,17 +883,19 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   // Auto-convert codeBlock with language "mermaid" → live mermaidBlock
   // Converts immediately so user gets the mermaid editor right away
   const convertMermaidCodeBlocks = useCallback(() => {
-    const doc = editor.document;
-    for (const block of doc) {
-      if (block.type === 'codeBlock' && block.props?.language === 'mermaid') {
-        const code = (block.content || []).map(c => c.text || '').join('').trim();
-        editor.updateBlock(block.id, {
-          type: 'mermaidBlock',
-          props: { diagram: code },
-          content: undefined,
-        });
+    try {
+      const doc = editor.document;
+      for (const block of doc) {
+        if (block.type === 'codeBlock' && block.props?.language === 'mermaid') {
+          const code = (block.content || []).map(c => c.text || '').join('').trim();
+          editor.updateBlock(block.id, {
+            type: 'mermaidBlock',
+            props: { diagram: code },
+            content: undefined,
+          });
+        }
       }
-    }
+    } catch {}
   }, [editor]);
 
   const handleChange = useCallback(() => {
