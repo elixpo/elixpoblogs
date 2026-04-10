@@ -87,7 +87,7 @@ async function getMermaid(isDark) {
     if (!mermaidLoadPromise) {
       // Import the full ESM bundle — the default 'mermaid' export maps to mermaid.core.mjs
       // which strips gitGraph, pie, timeline, etc. via lazy-loading that breaks with webpack.
-      mermaidLoadPromise = import('mermaid/dist/mermaid.esm.mjs').then(m => {
+      mermaidLoadPromise = import('mermaid').then(m => {
         mermaidModule = m.default;
         return mermaidModule;
       });
@@ -133,12 +133,22 @@ function MermaidPreview({ diagram, isDark, interactive }) {
       try {
         const mermaid = await getMermaid(isDark);
         if (cancelled) return;
+
+        // Normalize diagram type keywords to correct casing (mermaid is case-sensitive)
+        let diagramText = diagram.trim();
+        diagramText = diagramText.replace(/^\s*gitgraph/i, 'gitGraph');
+        diagramText = diagramText.replace(/^\s*sequencediagram/i, 'sequenceDiagram');
+        diagramText = diagramText.replace(/^\s*classDiagram/i, 'classDiagram');
+        diagramText = diagramText.replace(/^\s*stateDiagram/i, 'stateDiagram');
+        diagramText = diagramText.replace(/^\s*erDiagram/i, 'erDiagram');
+        diagramText = diagramText.replace(/^\s*gantt/i, 'gantt');
+
         const tempDiv = document.createElement('div');
         tempDiv.id = 'container-' + id;
         tempDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;opacity:0;pointer-events:none;z-index:-9999;';
         document.body.appendChild(tempDiv);
 
-        const { svg } = await mermaid.render(id, diagram.trim(), tempDiv);
+        const { svg } = await mermaid.render(id, diagramText, tempDiv);
         tempDiv.remove();
 
         if (!cancelled) {

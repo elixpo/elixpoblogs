@@ -1017,7 +1017,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     }
   }, [onChange, editor, patchCodeBlocks]);
 
-  // Patch code blocks on initial mount only
+  // Patch code blocks on mount + when new code blocks appear in the DOM
   useEffect(() => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -1026,6 +1026,18 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         onReady?.();
       });
     });
+
+    // Lightweight observer: only watch for direct children being added (new blocks),
+    // NOT subtree mutations (which fire on every keystroke inside code blocks)
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const editorRoot = wrapper.querySelector('.bn-editor');
+    if (!editorRoot) return;
+    const observer = new MutationObserver(() => {
+      requestAnimationFrame(patchCodeBlocks);
+    });
+    observer.observe(editorRoot, { childList: true });
+    return () => observer.disconnect();
   }, [patchCodeBlocks, onReady, editor]);
 
 
