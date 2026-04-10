@@ -73,6 +73,25 @@ const schema = BlockNoteSchema.create({
   },
 });
 
+// ── Inline LaTeX live preview (lazy-loads katex) ──
+
+function InlineLatexPreview({ latex }) {
+  const [html, setHtml] = useState('');
+  useEffect(() => {
+    const s = latex?.trim();
+    if (!s) { setHtml(''); return; }
+    import('katex').then(({ default: katex }) => {
+      let expr = s;
+      if (expr.startsWith('\\(') && expr.endsWith('\\)')) expr = expr.slice(2, -2).trim();
+      else if (expr.startsWith('$') && expr.endsWith('$') && expr.length > 2) expr = expr.slice(1, -1).trim();
+      try { setHtml(katex.renderToString(expr, { displayMode: false, throwOnError: false })); }
+      catch { setHtml(''); }
+    });
+  }, [latex]);
+  if (!html) return null;
+  return <div className="inline-latex-preview" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 // ── Helpers ──
 
 function filterItems(items, query) {
@@ -2060,19 +2079,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
               placeholder="E = mc^2"
               autoFocus
             />
-            {inlineLatexValue.trim() && (
-              <div className="inline-latex-preview" dangerouslySetInnerHTML={{
-                __html: (() => {
-                  try {
-                    const katex = require('katex');
-                    let s = inlineLatexValue.trim();
-                    if (s.startsWith('\\(') && s.endsWith('\\)')) s = s.slice(2, -2).trim();
-                    if (s.startsWith('$') && s.endsWith('$') && s.length > 2) s = s.slice(1, -1).trim();
-                    return katex.renderToString(s, { displayMode: false, throwOnError: false });
-                  } catch { return ''; }
-                })()
-              }} />
-            )}
+            <InlineLatexPreview latex={inlineLatexValue} />
             <div className="inline-latex-actions">
               <button className="mermaid-btn-cancel" onClick={() => { setShowInlineLatex(false); setInlineLatexValue(''); }}>Cancel</button>
               <button
