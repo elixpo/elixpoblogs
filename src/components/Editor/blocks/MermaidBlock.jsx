@@ -67,7 +67,6 @@ async function getMermaid(isDark) {
     }
     await mermaidLoadPromise;
   }
-  // Only re-initialize when theme actually changes
   const theme = isDark ? 'dark' : 'light';
   if (lastTheme !== theme) {
     lastTheme = theme;
@@ -82,7 +81,8 @@ function queueRender(fn) {
   return renderQueue;
 }
 
-function MermaidViewer({ diagram, isDark }) {
+// Shared component that renders a mermaid diagram to SVG
+function MermaidPreview({ diagram, isDark, interactive }) {
   const containerRef = useRef(null);
   const [svgHTML, setSvgHTML] = useState('');
   const [error, setError] = useState('');
@@ -92,9 +92,12 @@ function MermaidViewer({ diagram, isDark }) {
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
 
-  // Render mermaid to SVG string — re-render on theme change
   useEffect(() => {
-    if (!diagram?.trim()) return;
+    if (!diagram?.trim()) {
+      setSvgHTML('');
+      setError('');
+      return;
+    }
     let cancelled = false;
     const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -109,7 +112,6 @@ function MermaidViewer({ diagram, isDark }) {
         document.body.appendChild(tempDiv);
 
         const { svg } = await mermaid.render(id, diagram.trim(), tempDiv);
-
         tempDiv.remove();
 
         if (!cancelled) {
@@ -126,7 +128,6 @@ function MermaidViewer({ diagram, isDark }) {
           setPan({ x: 0, y: 0 });
         }
       } catch (err) {
-        console.error('[Mermaid] Render error:', err);
         if (!cancelled) {
           setError(err.message || 'Invalid diagram syntax');
           setSvgHTML('');
@@ -139,8 +140,9 @@ function MermaidViewer({ diagram, isDark }) {
     return () => { cancelled = true; };
   }, [diagram, isDark]);
 
-  // Mouse wheel zoom — use native listener to avoid passive event issue
+  // Mouse wheel zoom
   useEffect(() => {
+    if (!interactive) return;
     const el = containerRef.current;
     if (!el) return;
     const handleWheel = (e) => {
@@ -153,16 +155,16 @@ function MermaidViewer({ diagram, isDark }) {
     };
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
-  }, [svgHTML]); // re-attach when SVG loads since containerRef might change
+  }, [svgHTML, interactive]);
 
   // Pan via drag
   const handleMouseDown = useCallback((e) => {
-    if (e.button !== 0) return;
+    if (!interactive || e.button !== 0) return;
     e.preventDefault();
     dragging.current = true;
     dragStart.current = { x: e.clientX, y: e.clientY };
     panStart.current = { ...pan };
-  }, [pan]);
+  }, [pan, interactive]);
 
   const handleMouseMove = useCallback((e) => {
     if (!dragging.current) return;
@@ -176,13 +178,14 @@ function MermaidViewer({ diagram, isDark }) {
   }, []);
 
   useEffect(() => {
+    if (!interactive) return;
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [handleMouseMove, handleMouseUp]);
+  }, [handleMouseMove, handleMouseUp, interactive]);
 
   const resetView = useCallback(() => {
     setZoom(1);
@@ -191,16 +194,24 @@ function MermaidViewer({ diagram, isDark }) {
 
   if (error) {
     return (
-      <div className="mermaid-viewport">
+      <div className="mermaid-viewport mermaid-viewport--compact">
         <pre style={{ color: '#f87171', fontSize: '12px', whiteSpace: 'pre-wrap', padding: '16px', margin: 0 }}>{error}</pre>
+      </div>
+    );
+  }
+
+  if (!diagram?.trim()) {
+    return (
+      <div className="mermaid-viewport mermaid-viewport--compact" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: 'var(--text-faint)', fontSize: '12px' }}>Preview will appear here...</span>
       </div>
     );
   }
 
   if (!svgHTML) {
     return (
-      <div className="mermaid-viewport" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color: 'var(--text-faint)', fontSize: '13px' }}>Loading diagram...</span>
+      <div className="mermaid-viewport mermaid-viewport--compact" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: 'var(--text-faint)', fontSize: '13px' }}>Rendering...</span>
       </div>
     );
   }
@@ -208,7 +219,7 @@ function MermaidViewer({ diagram, isDark }) {
   return (
     <div
       ref={containerRef}
-      className="mermaid-viewport"
+      className={interactive ? 'mermaid-viewport' : 'mermaid-viewport mermaid-viewport--compact'}
       onMouseDown={handleMouseDown}
     >
       <div
@@ -219,37 +230,38 @@ function MermaidViewer({ diagram, isDark }) {
         }}
         dangerouslySetInnerHTML={{ __html: svgHTML }}
       />
-      {/* Zoom controls */}
-      <div className="mermaid-zoom-controls">
-        <button
-          onClick={(e) => { e.stopPropagation(); setZoom((z) => Math.min(3, z + 0.2)); }}
-          className="mermaid-zoom-btn"
-          title="Zoom in"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-        </button>
-        <span className="mermaid-zoom-label">{Math.round(zoom * 100)}%</span>
-        <button
-          onClick={(e) => { e.stopPropagation(); setZoom((z) => Math.max(0.3, z - 0.2)); }}
-          className="mermaid-zoom-btn"
-          title="Zoom out"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); resetView(); }}
-          className="mermaid-zoom-btn"
-          title="Reset view"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/><polyline points="1 4 1 10 7 10"/>
-          </svg>
-        </button>
-      </div>
+      {interactive && (
+        <div className="mermaid-zoom-controls">
+          <button
+            onClick={(e) => { e.stopPropagation(); setZoom((z) => Math.min(3, z + 0.2)); }}
+            className="mermaid-zoom-btn"
+            title="Zoom in"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+          <span className="mermaid-zoom-label">{Math.round(zoom * 100)}%</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); setZoom((z) => Math.max(0.3, z - 0.2)); }}
+            className="mermaid-zoom-btn"
+            title="Zoom out"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); resetView(); }}
+            className="mermaid-zoom-btn"
+            title="Reset view"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/><polyline points="1 4 1 10 7 10"/>
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -267,11 +279,25 @@ export const MermaidBlock = createReactBlockSpec(
       const { isDark } = useTheme();
       const [editing, setEditing] = useState(!block.props.diagram);
       const [value, setValue] = useState(block.props.diagram || '');
+      const [livePreview, setLivePreview] = useState(block.props.diagram || '');
       const inputRef = useRef(null);
+      const debounceRef = useRef(null);
 
       useEffect(() => {
         if (editing && inputRef.current) inputRef.current.focus();
       }, [editing]);
+
+      // Debounced live preview update while typing
+      const handleCodeChange = useCallback((e) => {
+        const v = e.target.value;
+        setValue(v);
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => setLivePreview(v), 400);
+      }, []);
+
+      useEffect(() => {
+        return () => clearTimeout(debounceRef.current);
+      }, []);
 
       const save = useCallback(() => {
         editor.updateBlock(block, { props: { diagram: value } });
@@ -290,22 +316,39 @@ export const MermaidBlock = createReactBlockSpec(
                 <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
               </svg>
               <span>Mermaid Diagram</span>
+              <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-faint)' }}>Shift+Enter to save</span>
             </div>
             <textarea
               ref={inputRef}
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={handleCodeChange}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); save(); }
-                if (e.key === 'Escape') { setEditing(false); setValue(block.props.diagram || ''); }
+                if (e.key === 'Escape') { setEditing(false); setValue(block.props.diagram || ''); setLivePreview(block.props.diagram || ''); }
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  const start = e.target.selectionStart;
+                  const end = e.target.selectionEnd;
+                  const newVal = value.substring(0, start) + '    ' + value.substring(end);
+                  setValue(newVal);
+                  setLivePreview(newVal);
+                  requestAnimationFrame(() => {
+                    e.target.selectionStart = e.target.selectionEnd = start + 4;
+                  });
+                }
               }}
               placeholder={`graph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[OK]\n    B -->|No| D[End]`}
               rows={8}
               className="mermaid-block-textarea"
             />
+            {/* Live preview panel */}
+            <div className="mermaid-live-preview">
+              <div className="mermaid-live-preview-label">Preview</div>
+              <MermaidPreview diagram={livePreview} isDark={isDark} interactive={false} />
+            </div>
             <div className="mermaid-block-actions">
-              <button onClick={() => { setEditing(false); setValue(block.props.diagram || ''); }} className="mermaid-btn-cancel">Cancel</button>
-              <button onClick={save} className="mermaid-btn-save" disabled={!value.trim()}>Render</button>
+              <button onClick={() => { setEditing(false); setValue(block.props.diagram || ''); setLivePreview(block.props.diagram || ''); }} className="mermaid-btn-cancel">Cancel</button>
+              <button onClick={save} className="mermaid-btn-save" disabled={!value.trim()}>Done</button>
             </div>
           </div>
         );
@@ -330,9 +373,9 @@ export const MermaidBlock = createReactBlockSpec(
 
       return (
         <div className="mermaid-block mermaid-block--rendered group" onDoubleClick={() => setEditing(true)}>
-          <MermaidViewer diagram={block.props.diagram} isDark={isDark} />
+          <MermaidPreview diagram={block.props.diagram} isDark={isDark} interactive={true} />
           <div className="mermaid-block-hover">
-            <button onClick={() => setEditing(true)} className="mermaid-hover-btn" title="Edit">
+            <button onClick={() => setEditing(true)} className="mermaid-hover-btn" title="Edit diagram">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>

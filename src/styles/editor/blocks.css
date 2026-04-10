@@ -469,6 +469,50 @@
   color: var(--text-faint);
 }
 
+/* Live preview panel inside edit mode */
+.mermaid-live-preview {
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-app);
+}
+
+.mermaid-live-preview-label {
+  padding: 6px 14px 0;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mermaid-viewport--compact {
+  height: 200px;
+  min-height: 120px;
+  border-radius: 0;
+}
+
+/* LaTeX live preview inside edit mode */
+.latex-live-preview {
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-app);
+  padding: 12px 14px;
+  min-height: 40px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.latex-live-preview-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.latex-live-preview .katex-display {
+  margin: 0;
+}
+
 .mermaid-block-actions {
   display: flex;
   justify-content: flex-end;
