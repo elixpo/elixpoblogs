@@ -53,14 +53,33 @@ const lightConfig = {
 };
 
 let mermaidModule = null;
+let mermaidLoadPromise = null;
+let renderQueue = Promise.resolve();
+let lastTheme = null;
 
 async function getMermaid(isDark) {
   if (!mermaidModule) {
-    mermaidModule = (await import('mermaid')).default;
+    if (!mermaidLoadPromise) {
+      mermaidLoadPromise = import('mermaid').then(m => {
+        mermaidModule = m.default;
+        return mermaidModule;
+      });
+    }
+    await mermaidLoadPromise;
   }
-  // Always re-initialize to ensure correct theme (mermaid is a singleton)
-  mermaidModule.initialize(isDark ? darkConfig : lightConfig);
+  // Only re-initialize when theme actually changes
+  const theme = isDark ? 'dark' : 'light';
+  if (lastTheme !== theme) {
+    lastTheme = theme;
+    mermaidModule.initialize(isDark ? darkConfig : lightConfig);
+  }
   return mermaidModule;
+}
+
+// Serialize render calls — mermaid is a singleton and concurrent renders cause conflicts
+function queueRender(fn) {
+  renderQueue = renderQueue.then(fn, fn);
+  return renderQueue;
 }
 
 function MermaidViewer({ diagram, isDark }) {
@@ -79,11 +98,11 @@ function MermaidViewer({ diagram, isDark }) {
     let cancelled = false;
     const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-    (async () => {
+    queueRender(async () => {
+      if (cancelled) return;
       try {
         const mermaid = await getMermaid(isDark);
-        // Container must be visible + in layout for SVG getBBox to work
-        // Use a different ID for the container to avoid collision with mermaid's SVG id
+        if (cancelled) return;
         const tempDiv = document.createElement('div');
         tempDiv.id = 'container-' + id;
         tempDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;opacity:0;pointer-events:none;z-index:-9999;';
@@ -94,7 +113,6 @@ function MermaidViewer({ diagram, isDark }) {
         tempDiv.remove();
 
         if (!cancelled) {
-          // Strip fixed width/height from SVG so it fits the container
           const parser = new DOMParser();
           const doc = parser.parseFromString(svg, 'image/svg+xml');
           const svgEl = doc.querySelector('svg');
@@ -113,10 +131,10 @@ function MermaidViewer({ diagram, isDark }) {
           setError(err.message || 'Invalid diagram syntax');
           setSvgHTML('');
         }
-        // Clean up any leftover temp elements
         try { document.getElementById(id)?.remove(); } catch {}
+        try { document.getElementById('container-' + id)?.remove(); } catch {}
       }
-    })();
+    });
 
     return () => { cancelled = true; };
   }, [diagram, isDark]);

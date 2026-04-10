@@ -642,9 +642,10 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           (async () => {
             try {
               // Pre-process: extract mermaid fenced blocks before BlockNote parses
+              // Use placeholder format without double underscores (markdown interprets __ as bold)
               const mermaidBlocks = [];
               let processed = textData.replace(/```mermaid\n([\s\S]*?)```/g, (_, diagram) => {
-                const placeholder = `__MERMAID_${mermaidBlocks.length}__`;
+                const placeholder = `MERMAIDPLACEHOLDER${mermaidBlocks.length}END`;
                 mermaidBlocks.push(diagram.trim());
                 return placeholder;
               });
@@ -652,51 +653,58 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
               // Pre-process: extract block LaTeX \[...\]
               const blockLatex = [];
               processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, (_, latex) => {
-                const placeholder = `__BLOCKLATEX_${blockLatex.length}__`;
+                const placeholder = `LATEXBLOCKPLACEHOLDER${blockLatex.length}END`;
                 blockLatex.push(latex.trim());
+                return placeholder;
+              });
+
+              // Pre-process: extract inline LaTeX \(...\)
+              // Markdown parsers strip backslash escapes, so extract before parsing
+              const inlineLatex = [];
+              processed = processed.replace(/\\\((.+?)\\\)/g, (_, latex) => {
+                const placeholder = `LATEXINLINEPLACEHOLDER${inlineLatex.length}END`;
+                inlineLatex.push(latex.trim());
                 return placeholder;
               });
 
               let blocks = await editor.tryParseMarkdownToBlocks(processed);
 
-              // Post-process: replace placeholders with custom blocks, and convert inline \(...\)
+              // Post-process: replace placeholders with custom blocks
               blocks = blocks.flatMap(block => {
                 if (!block.content || !Array.isArray(block.content)) {
-                  // Check if a paragraph contains a mermaid/latex placeholder
                   return [block];
                 }
                 const text = block.content.map(c => c.text || '').join('');
 
                 // Mermaid placeholder → mermaidBlock
-                const mermaidMatch = text.match(/^__MERMAID_(\d+)__$/);
+                const mermaidMatch = text.match(/^MERMAIDPLACEHOLDER(\d+)END$/);
                 if (mermaidMatch) {
                   const idx = parseInt(mermaidMatch[1]);
                   return [{ type: 'mermaidBlock', props: { diagram: mermaidBlocks[idx] || '' }, children: [] }];
                 }
 
                 // Block LaTeX placeholder → blockEquation
-                const latexMatch = text.match(/^__BLOCKLATEX_(\d+)__$/);
+                const latexMatch = text.match(/^LATEXBLOCKPLACEHOLDER(\d+)END$/);
                 if (latexMatch) {
                   const idx = parseInt(latexMatch[1]);
                   return [{ type: 'blockEquation', props: { latex: blockLatex[idx] || '' }, children: [] }];
                 }
 
-                // Inline LaTeX \(...\) → inlineEquation
-                if (text.includes('\\(') && text.includes('\\)')) {
+                // Inline LaTeX placeholders → inlineEquation
+                if (/LATEXINLINEPLACEHOLDER\d+END/.test(text)) {
                   const parts = [];
-                  const regex = /\\\((.+?)\\\)/g;
+                  const regex = /LATEXINLINEPLACEHOLDER(\d+)END/g;
                   let lastIdx = 0;
                   let m;
-                  const fullText = block.content.map(c => c.text || '').join('');
-                  while ((m = regex.exec(fullText)) !== null) {
+                  while ((m = regex.exec(text)) !== null) {
                     if (m.index > lastIdx) {
-                      parts.push({ type: 'text', text: fullText.slice(lastIdx, m.index) });
+                      parts.push({ type: 'text', text: text.slice(lastIdx, m.index) });
                     }
-                    parts.push({ type: 'inlineEquation', props: { latex: m[1].trim() } });
+                    parts.push({ type: 'inlineEquation', props: { latex: inlineLatex[parseInt(m[1])] || '' } });
                     lastIdx = m.index + m[0].length;
                   }
-                  if (lastIdx < fullText.length) {
-                    parts.push({ type: 'text', text: fullText.slice(lastIdx) });
+                  if (lastIdx < text.length) {
+                    parts.push({ type: 'text', text: text.slice(lastIdx) });
                   }
                   if (parts.length > 0) {
                     return [{ ...block, content: parts }];

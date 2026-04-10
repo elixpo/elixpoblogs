@@ -772,9 +772,10 @@ export default function WritePage({ slugid }) {
       if (editor) {
         try {
           // Pre-process: extract mermaid fenced blocks
+          // Use placeholder format without double underscores (markdown interprets __ as bold)
           const mermaidBlocks = [];
           let processed = mdContent.replace(/```mermaid\n([\s\S]*?)```/g, (_, diagram) => {
-            const ph = `__MERMAID_${mermaidBlocks.length}__`;
+            const ph = `MERMAIDPLACEHOLDER${mermaidBlocks.length}END`;
             mermaidBlocks.push(diagram.trim());
             return ph;
           });
@@ -782,8 +783,17 @@ export default function WritePage({ slugid }) {
           // Pre-process: extract block LaTeX \[...\]
           const blockLatex = [];
           processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, (_, latex) => {
-            const ph = `__BLOCKLATEX_${blockLatex.length}__`;
+            const ph = `LATEXBLOCKPLACEHOLDER${blockLatex.length}END`;
             blockLatex.push(latex.trim());
+            return ph;
+          });
+
+          // Pre-process: extract inline LaTeX \(...\)
+          // Markdown parsers strip backslash escapes, so \( becomes ( — extract before parsing
+          const inlineLatex = [];
+          processed = processed.replace(/\\\((.+?)\\\)/g, (_, latex) => {
+            const ph = `LATEXINLINEPLACEHOLDER${inlineLatex.length}END`;
+            inlineLatex.push(latex.trim());
             return ph;
           });
 
@@ -795,22 +805,22 @@ export default function WritePage({ slugid }) {
             const txt = block.content.map(c => c.text || '').join('');
 
             // Mermaid placeholder → mermaidBlock
-            const mm = txt.match(/^__MERMAID_(\d+)__$/);
+            const mm = txt.match(/^MERMAIDPLACEHOLDER(\d+)END$/);
             if (mm) return [{ type: 'mermaidBlock', props: { diagram: mermaidBlocks[parseInt(mm[1])] || '' }, children: [] }];
 
             // Block LaTeX placeholder → blockEquation
-            const bl = txt.match(/^__BLOCKLATEX_(\d+)__$/);
+            const bl = txt.match(/^LATEXBLOCKPLACEHOLDER(\d+)END$/);
             if (bl) return [{ type: 'blockEquation', props: { latex: blockLatex[parseInt(bl[1])] || '' }, children: [] }];
 
-            // Inline LaTeX \(...\) → inlineEquation
-            if (txt.includes('\\(') && txt.includes('\\)')) {
+            // Inline LaTeX placeholders → inlineEquation
+            if (/LATEXINLINEPLACEHOLDER\d+END/.test(txt)) {
               const parts = [];
-              const regex = /\\\((.+?)\\\)/g;
+              const regex = /LATEXINLINEPLACEHOLDER(\d+)END/g;
               let lastIdx = 0;
               let m;
               while ((m = regex.exec(txt)) !== null) {
                 if (m.index > lastIdx) parts.push({ type: 'text', text: txt.slice(lastIdx, m.index) });
-                parts.push({ type: 'inlineEquation', props: { latex: m[1].trim() } });
+                parts.push({ type: 'inlineEquation', props: { latex: inlineLatex[parseInt(m[1])] || '' } });
                 lastIdx = m.index + m[0].length;
               }
               if (lastIdx < txt.length) parts.push({ type: 'text', text: txt.slice(lastIdx) });
