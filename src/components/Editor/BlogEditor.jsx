@@ -137,11 +137,11 @@ function getCustomSlashMenuItems(editor) {
       onItemClick: () => editor.insertBlocks([{ type: 'breadcrumbs' }], editor.getTextCursorPosition().block, 'after'),
     },
     {
-      title: 'Tabs',
-      subtext: 'Tabbed content sections',
+      title: 'Sub Page',
+      subtext: 'Nested page within this blog',
       group: 'Custom Blocks',
-      aliases: ['tabs', 'tabbed', 'sections', 'panels'],
-      icon: <Icon d="M4 6h16M4 6v12a2 2 0 002 2h12a2 2 0 002-2V6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />,
+      aliases: ['subpage', 'sub page', 'tabs', 'nested', 'page in page', 'child page'],
+      icon: <Icon d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" d2="M14 2v6h6M16 13H8M16 17H8" />,
       onItemClick: () => editor.insertBlocks([{ type: 'tabsBlock' }], editor.getTextCursorPosition().block, 'after'),
     },
     {
@@ -866,7 +866,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     requestAnimationFrame(patchCodeBlocks);
   }, [onChange, editor, patchCodeBlocks]);
 
-  // Patch code blocks on initial mount + signal ready (double rAF for sanitized blocks)
+  // Patch code blocks on initial mount + observe for new ones (file import, AI, etc)
   useEffect(() => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -874,6 +874,12 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         onReady?.();
       });
     });
+
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const observer = new MutationObserver(() => requestAnimationFrame(patchCodeBlocks));
+    observer.observe(wrapper, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [patchCodeBlocks, onReady]);
 
 

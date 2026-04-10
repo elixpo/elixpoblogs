@@ -771,11 +771,60 @@ export default function WritePage({ slugid }) {
       const editor = editorRef.current?.getEditor?.();
       if (editor) {
         try {
-          const blocks = await editor.tryParseMarkdownToBlocks(mdContent);
+          // Pre-process: extract mermaid fenced blocks
+          const mermaidBlocks = [];
+          let processed = mdContent.replace(/```mermaid\n([\s\S]*?)```/g, (_, diagram) => {
+            const ph = `__MERMAID_${mermaidBlocks.length}__`;
+            mermaidBlocks.push(diagram.trim());
+            return ph;
+          });
+
+          // Pre-process: extract block LaTeX \[...\]
+          const blockLatex = [];
+          processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, (_, latex) => {
+            const ph = `__BLOCKLATEX_${blockLatex.length}__`;
+            blockLatex.push(latex.trim());
+            return ph;
+          });
+
+          let blocks = await editor.tryParseMarkdownToBlocks(processed);
+
+          // Post-process: replace placeholders with custom blocks + inline LaTeX
+          blocks = blocks.flatMap(block => {
+            if (!block.content || !Array.isArray(block.content)) return [block];
+            const txt = block.content.map(c => c.text || '').join('');
+
+            // Mermaid placeholder → mermaidBlock
+            const mm = txt.match(/^__MERMAID_(\d+)__$/);
+            if (mm) return [{ type: 'mermaidBlock', props: { diagram: mermaidBlocks[parseInt(mm[1])] || '' }, children: [] }];
+
+            // Block LaTeX placeholder → blockEquation
+            const bl = txt.match(/^__BLOCKLATEX_(\d+)__$/);
+            if (bl) return [{ type: 'blockEquation', props: { latex: blockLatex[parseInt(bl[1])] || '' }, children: [] }];
+
+            // Inline LaTeX \(...\) → inlineEquation
+            if (txt.includes('\\(') && txt.includes('\\)')) {
+              const parts = [];
+              const regex = /\\\((.+?)\\\)/g;
+              let lastIdx = 0;
+              let m;
+              while ((m = regex.exec(txt)) !== null) {
+                if (m.index > lastIdx) parts.push({ type: 'text', text: txt.slice(lastIdx, m.index) });
+                parts.push({ type: 'inlineEquation', props: { latex: m[1].trim() } });
+                lastIdx = m.index + m[0].length;
+              }
+              if (lastIdx < txt.length) parts.push({ type: 'text', text: txt.slice(lastIdx) });
+              if (parts.length > 0) return [{ ...block, content: parts }];
+            }
+
+            return [block];
+          });
+
           if (blocks?.length > 0) {
             editor.replaceBlocks(editor.document, blocks);
           }
-        } catch {
+        } catch (err) {
+          console.error('Markdown parse failed:', err);
           editor.replaceBlocks(editor.document, [{
             type: 'paragraph',
             content: [{ type: 'text', text: mdContent }],
