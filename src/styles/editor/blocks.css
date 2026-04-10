@@ -394,14 +394,84 @@
   color: #b69aff;
 }
 
-/* Inline equation */
-.blog-editor-wrapper .inline-equation .katex {
-  font-size: 1em;
-}
-
 /* Hide KaTeX MathML accessibility layer — it renders as visible duplicate text */
 .katex-mathml {
   display: none !important;
+}
+
+/* ===== Inline equation chip (like DateChip) ===== */
+
+.inline-equation-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  margin: 0 2px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #9b7bf7;
+  background: rgba(155, 123, 247, 0.06);
+  border: 1px solid rgba(155, 123, 247, 0.15);
+  font-size: 13px;
+}
+
+.inline-equation-chip:hover {
+  background: rgba(155, 123, 247, 0.12);
+  border-color: rgba(155, 123, 247, 0.3);
+  box-shadow: 0 0 0 2px rgba(155, 123, 247, 0.15);
+}
+
+.inline-equation-chip .katex {
+  font-size: 1em;
+  color: #9b7bf7;
+}
+
+/* Inline equation dropdown editor */
+
+.inline-equation-editor {
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  width: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  animation: confirmDialogIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inline-equation-editor-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: none;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-family: 'lixCode', monospace;
+  font-size: 13px;
+  outline: none;
+}
+
+.inline-equation-editor-input::placeholder {
+  color: var(--text-faint);
+}
+
+.inline-equation-editor-preview {
+  padding: 8px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-default);
+  min-height: 24px;
+}
+
+.inline-equation-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 12px;
 }
 
 /* ===== Inline LaTeX input popup ===== */
