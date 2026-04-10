@@ -399,6 +399,77 @@
   font-size: 1em;
 }
 
+/* ===== Inline LaTeX input popup ===== */
+
+.inline-latex-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  animation: confirmOverlayIn 0.15s ease-out;
+}
+
+.inline-latex-popup {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: confirmDialogIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inline-latex-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.inline-latex-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  margin-top: 8px;
+  background: var(--bg-app);
+  border: none;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-family: 'lixCode', monospace;
+  font-size: 14px;
+  outline: none;
+}
+
+.inline-latex-input::placeholder {
+  color: var(--text-faint);
+}
+
+.inline-latex-preview {
+  padding: 10px 16px;
+  text-align: center;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.inline-latex-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px;
+}
+
 /* ===== Mermaid diagram blocks ===== */
 
 .blog-editor-wrapper [data-content-type="mermaidBlock"],

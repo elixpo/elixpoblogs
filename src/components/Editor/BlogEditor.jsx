@@ -97,7 +97,7 @@ function Icon({ d, d2, color }) {
 
 // ── Slash menu items ──
 
-function getCustomSlashMenuItems(editor) {
+function getCustomSlashMenuItems(editor, callbacks = {}) {
   const defaults = getDefaultReactSlashMenuItems(editor).filter((item) => {
     const t = item.title.toLowerCase();
     return t !== 'video' && t !== 'audio' && t !== 'file';
@@ -178,8 +178,9 @@ function getCustomSlashMenuItems(editor) {
       aliases: ['inline math', 'inline latex', 'math inline'],
       icon: <Icon d="M4 4l4 16M12 4l4 16M7 8h10M6 16h10" />,
       onItemClick: () => {
-        const latex = prompt('Enter LaTeX:');
-        if (latex) editor.insertInlineContent([{ type: 'inlineEquation', props: { latex } }]);
+        if (callbacks.onInlineLatex) {
+          callbacks.onInlineLatex();
+        }
       },
     },
     {
@@ -481,6 +482,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const aiBlockCountRef = useRef(0);
   const aiAnchorIdRef = useRef(null);
   const wrapperRef = useRef(null);
+  const [showInlineLatex, setShowInlineLatex] = useState(false);
+  const [inlineLatexValue, setInlineLatexValue] = useState('');
+  const inlineLatexRef = useRef(null);
 
   const sanitizedContent = useMemo(() => sanitizeInitialContent(initialContent), [initialContent]);
 
@@ -1016,7 +1020,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   }, []);
 
   const getItems = useMemo(
-    () => async (query) => filterItems(getCustomSlashMenuItems(editor), query),
+    () => async (query) => filterItems(getCustomSlashMenuItems(editor, {
+      onInlineLatex: () => { setInlineLatexValue(''); setShowInlineLatex(true); },
+    }), query),
     [editor]
   );
 
@@ -2020,6 +2026,68 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           </svg>
           <span>{aiErrorToast}</span>
           <button onClick={() => setAiErrorToast(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
+
+      {/* Inline LaTeX input popup */}
+      {showInlineLatex && (
+        <div className="inline-latex-overlay" onClick={() => setShowInlineLatex(false)}>
+          <div className="inline-latex-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="inline-latex-header">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4l4 16M12 4l4 16M7 8h10M6 16h10"/>
+              </svg>
+              <span>Inline Equation</span>
+            </div>
+            <input
+              ref={inlineLatexRef}
+              type="text"
+              className="inline-latex-input"
+              value={inlineLatexValue}
+              onChange={(e) => setInlineLatexValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && inlineLatexValue.trim()) {
+                  e.preventDefault();
+                  editor.insertInlineContent([{ type: 'inlineEquation', props: { latex: inlineLatexValue.trim() } }]);
+                  setShowInlineLatex(false);
+                  setInlineLatexValue('');
+                }
+                if (e.key === 'Escape') {
+                  setShowInlineLatex(false);
+                  setInlineLatexValue('');
+                }
+              }}
+              placeholder="E = mc^2"
+              autoFocus
+            />
+            {inlineLatexValue.trim() && (
+              <div className="inline-latex-preview" dangerouslySetInnerHTML={{
+                __html: (() => {
+                  try {
+                    const katex = require('katex');
+                    let s = inlineLatexValue.trim();
+                    if (s.startsWith('\\(') && s.endsWith('\\)')) s = s.slice(2, -2).trim();
+                    if (s.startsWith('$') && s.endsWith('$') && s.length > 2) s = s.slice(1, -1).trim();
+                    return katex.renderToString(s, { displayMode: false, throwOnError: false });
+                  } catch { return ''; }
+                })()
+              }} />
+            )}
+            <div className="inline-latex-actions">
+              <button className="mermaid-btn-cancel" onClick={() => { setShowInlineLatex(false); setInlineLatexValue(''); }}>Cancel</button>
+              <button
+                className="mermaid-btn-save"
+                disabled={!inlineLatexValue.trim()}
+                onClick={() => {
+                  if (inlineLatexValue.trim()) {
+                    editor.insertInlineContent([{ type: 'inlineEquation', props: { latex: inlineLatexValue.trim() } }]);
+                    setShowInlineLatex(false);
+                    setInlineLatexValue('');
+                  }
+                }}
+              >Insert</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
