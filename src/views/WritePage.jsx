@@ -509,11 +509,20 @@ export default function WritePage({ slugid }) {
     }
   }, [draftLoading, syncToCloud]);
 
-  // Sync before page unload + warn about unsaved edits
+  // Intercept in-app link clicks to show custom unsaved changes modal
+  const handleNavigation = useCallback((url) => {
+    if (hasUnsavedEdits) {
+      setPendingLeaveUrl(url);
+      setShowLeaveConfirm(true);
+      return false; // blocked
+    }
+    return true; // allowed
+  }, [hasUnsavedEdits]);
+
+  // Sync before page unload + save draft (fallback for hard browser close)
   useEffect(() => {
     function handleBeforeUnload(e) {
       const data = draftDataRef.current;
-      // Always save to localStorage so nothing is lost
       if (data.title || data.editorContent) {
         saveDraft(slugid, data);
         try {
@@ -521,7 +530,6 @@ export default function WritePage({ slugid }) {
           navigator.sendBeacon('/api/blogs/draft', blob);
         } catch {}
       }
-      // Warn user if there are unsaved edits
       if (hasUnsavedEdits) {
         e.preventDefault();
         e.returnValue = '';
@@ -530,6 +538,24 @@ export default function WritePage({ slugid }) {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [slugid, hasUnsavedEdits]);
+
+  // Intercept clicks on <a> tags within the editor page to show custom modal
+  useEffect(() => {
+    function handleClick(e) {
+      if (!hasUnsavedEdits) return;
+      const anchor = e.target.closest('a[href]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      // Only intercept internal navigation links, not external or hash links
+      if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('http')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingLeaveUrl(href);
+      setShowLeaveConfirm(true);
+    }
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, [hasUnsavedEdits]);
 
   useEffect(() => {
     // Try local draft first, then fetch from server
