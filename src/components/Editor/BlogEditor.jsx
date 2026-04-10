@@ -601,14 +601,50 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     return () => observer.disconnect();
   }, [editor]);
 
-  // Handle clipboard paste of images — compress, upload, insert native image block
+  // Handle clipboard paste — markdown auto-render + image upload
   useEffect(() => {
     const editorEl = wrapperRef.current?.querySelector('.bn-editor');
     if (!editorEl) return;
 
+    function looksLikeMarkdown(text) {
+      // Quick heuristic: contains markdown patterns
+      return /^#{1,6}\s|^\s*[-*+]\s|^\s*\d+\.\s|^\s*>\s|```|^\|.+\|/m.test(text)
+        || /\*\*.+\*\*|\[.+\]\(.+\)|!\[/.test(text);
+    }
+
     function handlePaste(e) {
       const items = e.clipboardData?.items;
       if (!items) return;
+
+      // Check for plain text with markdown first
+      const textData = e.clipboardData.getData('text/plain');
+      if (textData && looksLikeMarkdown(textData)) {
+        // Only intercept if there's no HTML (which means it's raw markdown, not rich copy)
+        const htmlData = e.clipboardData.getData('text/html');
+        if (!htmlData) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          (async () => {
+            try {
+              const blocks = await editor.tryParseMarkdownToBlocks(textData);
+              if (blocks?.length > 0) {
+                const cursor = editor.getTextCursorPosition();
+                if (cursor?.block) {
+                  editor.insertBlocks(blocks, cursor.block, 'after');
+                }
+              }
+            } catch {
+              // Fallback: let BlockNote handle it normally
+              editor.insertBlocks([{
+                type: 'paragraph',
+                content: [{ type: 'text', text: textData }],
+              }], editor.getTextCursorPosition()?.block, 'after');
+            }
+          })();
+          return;
+        }
+      }
 
       for (const item of items) {
         if (item.type.startsWith('image/')) {
