@@ -558,11 +558,45 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       editorLinkPreview.hide();
     };
 
+    // Ctrl+Click (or Cmd+Click) to open link in new tab
+    const handleClick = (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const link = e.target.closest('a[href]');
+      if (!link || link.closest('.bn-link-toolbar') || link.closest('.bn-toolbar')) return;
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('http')) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(href, '_blank', 'noopener,noreferrer');
+      }
+    };
+
+    // Ctrl/Cmd held → change link cursor to pointer
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        wrapper.classList.add('ctrl-held');
+      }
+    };
+    const handleKeyUp = () => {
+      wrapper.classList.remove('ctrl-held');
+    };
+    const handleBlur = () => {
+      wrapper.classList.remove('ctrl-held');
+    };
+
     wrapper.addEventListener('mouseover', handleMouseOver);
     wrapper.addEventListener('mouseout', handleMouseOut);
+    wrapper.addEventListener('click', handleClick);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
     return () => {
       wrapper.removeEventListener('mouseover', handleMouseOver);
       wrapper.removeEventListener('mouseout', handleMouseOut);
+      wrapper.removeEventListener('click', handleClick);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
     };
   }, []);
 

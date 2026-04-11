@@ -321,8 +321,12 @@
   border-radius: 8px;
 }
 
-/* Keep only Edit link + Open link (first 2 direct children), hide the rest */
-.blog-editor-wrapper .bn-link-toolbar > *:nth-child(n+3) {
+/* Hide the delete/unlink button (3rd child) */
+.blog-editor-wrapper .bn-link-toolbar > *:nth-child(3) {
+  display: none !important;
+}
+/* Hide any further toolbar buttons that may appear (4th+) */
+.blog-editor-wrapper .bn-link-toolbar > *:nth-child(n+4):not([data-radix-popper-content-wrapper]) {
   display: none !important;
 }
 
