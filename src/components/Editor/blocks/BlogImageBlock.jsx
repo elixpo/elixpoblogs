@@ -82,7 +82,8 @@ function BlogImageRenderer({ block, editor }) {
       setMode('idle');
     } catch (err) {
       console.error('Upload failed:', err);
-      showFailToast('Image upload failed');
+      // Only show toast if user explicitly triggered an upload (not background/auto)
+      if (file.size > 0) showFailToast('Image upload failed');
       setMode('idle');
     }
   }, [editor, block.id]);

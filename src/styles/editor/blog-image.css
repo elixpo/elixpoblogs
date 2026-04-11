@@ -18,9 +18,9 @@
 .blog-img-empty {
   width: 100%;
   min-height: 140px;
-  border: 1.5px dashed rgba(196, 181, 253, 0.25);
+  border: 1.5px dashed var(--border-default);
   border-radius: 12px;
-  background: rgba(196, 181, 253, 0.03);
+  background: var(--bg-surface);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,8 +34,8 @@
 
 .blog-img-empty:focus-visible,
 .blog-img-empty:hover {
-  border-color: rgba(196, 181, 253, 0.35);
-  background: rgba(196, 181, 253, 0.05);
+  border-color: rgba(155, 123, 247, 0.4);
+  background: rgba(155, 123, 247, 0.04);
 }
 
 .blog-img-empty--generating {
