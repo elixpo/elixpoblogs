@@ -32,18 +32,49 @@ import { OrgMentionInline } from './blocks/OrgMentionInline';
 
 // ── Schema ──
 
+// Supported languages for code blocks
+const codeBlockLanguages = {
+  text: { name: 'Text' },
+  javascript: { name: 'JavaScript', aliases: ['js'] },
+  typescript: { name: 'TypeScript', aliases: ['ts'] },
+  python: { name: 'Python', aliases: ['py'] },
+  java: { name: 'Java' },
+  c: { name: 'C' },
+  cpp: { name: 'C++' },
+  csharp: { name: 'C#', aliases: ['cs'] },
+  go: { name: 'Go' },
+  rust: { name: 'Rust', aliases: ['rs'] },
+  ruby: { name: 'Ruby', aliases: ['rb'] },
+  php: { name: 'PHP' },
+  swift: { name: 'Swift' },
+  kotlin: { name: 'Kotlin', aliases: ['kt'] },
+  html: { name: 'HTML' },
+  css: { name: 'CSS' },
+  json: { name: 'JSON' },
+  yaml: { name: 'YAML', aliases: ['yml'] },
+  markdown: { name: 'Markdown', aliases: ['md'] },
+  bash: { name: 'Bash', aliases: ['sh'] },
+  shell: { name: 'Shell' },
+  sql: { name: 'SQL' },
+  graphql: { name: 'GraphQL', aliases: ['gql'] },
+  jsx: { name: 'JSX' },
+  tsx: { name: 'TSX' },
+  vue: { name: 'Vue' },
+  svelte: { name: 'Svelte' },
+  dart: { name: 'Dart' },
+  lua: { name: 'Lua' },
+  r: { name: 'R' },
+  scala: { name: 'Scala' },
+};
+
 // Code block with Shiki syntax highlighting (lazy-loaded)
 const codeBlockWithHighlighting = createCodeBlockSpec({
+  supportedLanguages: codeBlockLanguages,
   createHighlighter: async () => {
     const { createHighlighter } = await import('shiki');
     return createHighlighter({
-      themes: ['vitesse-dark'],
-      langs: [
-        'javascript', 'typescript', 'python', 'java', 'c', 'cpp', 'csharp',
-        'go', 'rust', 'ruby', 'php', 'swift', 'kotlin', 'html', 'css',
-        'json', 'yaml', 'markdown', 'bash', 'shell', 'sql', 'graphql',
-        'jsx', 'tsx', 'vue', 'svelte', 'dart', 'lua', 'r', 'scala',
-      ],
+      themes: ['vitesse-dark', 'vitesse-light'],
+      langs: Object.keys(codeBlockLanguages).filter(k => k !== 'text'),
     });
   },
 });
