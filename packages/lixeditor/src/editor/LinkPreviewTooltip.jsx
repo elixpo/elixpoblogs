@@ -5,10 +5,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 // Client-side cache to avoid refetching the same URL
 const previewCache = new Map();
 
+// Configurable endpoint — consumers can override by calling setLinkPreviewEndpoint()
+let linkPreviewEndpoint = '/api/link-preview';
+export function setLinkPreviewEndpoint(endpoint) { linkPreviewEndpoint = endpoint; }
+
 async function fetchPreview(url) {
   if (previewCache.has(url)) return previewCache.get(url);
   try {
-    const res = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+    const res = await fetch(`${linkPreviewEndpoint}?url=${encodeURIComponent(url)}`);
     if (!res.ok) throw new Error('fetch failed');
     const data = await res.json();
     previewCache.set(url, data);
