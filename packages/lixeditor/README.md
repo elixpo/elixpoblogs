@@ -1,20 +1,20 @@
-# @lixblogs/editor
+# @elixpo/lixeditor
 
 A rich WYSIWYG block editor and renderer built on [BlockNote](https://blocknotejs.org) — with LaTeX equations, Mermaid diagrams, syntax-highlighted code blocks, and more.
 
 ## Install
 
 ```bash
-npm install @lixblogs/editor @blocknote/core @blocknote/react @blocknote/mantine
+npm install @elixpo/lixeditor @blocknote/core @blocknote/react @blocknote/mantine
 ```
 
 ## Quick Start
 
 ```jsx
-import { LixEditor, LixPreview, LixThemeProvider } from '@lixblogs/editor';
+import { LixEditor, LixPreview, LixThemeProvider } from '@elixpo/lixeditor';
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
-import '@lixblogs/editor/styles';
+import '@elixpo/lixeditor/styles';
 
 function App() {
   const [blocks, setBlocks] = useState(null);
@@ -90,7 +90,7 @@ Override CSS variables to customize colors:
 ### Using Individual Blocks
 
 ```jsx
-import { BlockEquation, MermaidBlock, InlineEquation } from '@lixblogs/editor';
+import { BlockEquation, MermaidBlock, InlineEquation } from '@elixpo/lixeditor';
 import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core';
 
 const schema = BlockNoteSchema.create({

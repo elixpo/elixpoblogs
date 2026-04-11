@@ -1,9 +1,9 @@
 /**
- * @lixblogs/editor — A rich WYSIWYG block editor and renderer.
+ * @elixpo/lixeditor — A rich WYSIWYG block editor and renderer.
  *
  * Usage:
- *   import { LixEditor, LixPreview, LixThemeProvider } from '@lixblogs/editor';
- *   import '@lixblogs/editor/styles';
+ *   import { LixEditor, LixPreview, LixThemeProvider } from '@elixpo/lixeditor';
+ *   import '@elixpo/lixeditor/styles';
  *
  *   <LixThemeProvider>
  *     <LixEditor
