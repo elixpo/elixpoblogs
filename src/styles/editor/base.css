@@ -86,7 +86,8 @@
   color: var(--text-primary);
 }
 
-/* Inline code — purple accent, adapts to theme */
+/* Inline code — purple accent, adapts to theme.
+   Excludes code inside code blocks so Shiki syntax highlighting isn't overridden. */
 .blog-editor-wrapper code,
 .blog-preview-content code {
   color: #7c3aed;
@@ -103,6 +104,15 @@
 [data-theme="dark"] .blog-preview-content code {
   color: #c4b5fd;
   background: rgba(196, 181, 253, 0.1);
+}
+
+/* Reset inline code styles inside code blocks — let Shiki/theme handle these */
+.blog-editor-wrapper [data-content-type="codeBlock"] code,
+.blog-preview-content pre code {
+  color: var(--code-text);
+  background: none;
+  padding: 0;
+  border-radius: 0;
 }
 
 /* Code blocks — lixCode font, no line highlights */
