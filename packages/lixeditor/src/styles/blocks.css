@@ -108,3 +108,45 @@
 .mermaid-block--rendered:hover .mermaid-block-hover { opacity: 1; }
 .mermaid-hover-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--lix-bg-surface); border: 1px solid var(--lix-border); border-radius: 6px; color: var(--lix-text-muted); cursor: pointer; }
 .mermaid-hover-delete:hover { color: #f87171; }
+
+/* ===== Image Block ===== */
+.lix-image-block-empty {
+  border: 1px dashed var(--lix-border);
+  border-radius: 12px;
+  padding: 32px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.lix-image-buttons { display: flex; gap: 8px; }
+.lix-image-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  background: var(--lix-bg-surface); border: 1px solid var(--lix-border);
+  color: var(--lix-text-muted); cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.lix-image-btn:hover { background: var(--lix-bg-hover); color: var(--lix-text-primary); }
+
+.lix-image-status { display: flex; align-items: center; gap: 8px; color: var(--lix-text-muted); font-size: 13px; }
+.lix-image-spinner { width: 16px; height: 16px; border: 2px solid var(--lix-accent); border-top-color: transparent; border-radius: 50%; animation: lixSpin 0.6s linear infinite; }
+@keyframes lixSpin { to { transform: rotate(360deg); } }
+
+.lix-image-embed-form { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 400px; }
+.lix-image-embed-input { padding: 8px 12px; border: 1px solid var(--lix-border); border-radius: 8px; background: var(--lix-bg-app); color: var(--lix-text-primary); font-size: 13px; outline: none; }
+.lix-image-embed-input:focus { border-color: var(--lix-accent); }
+.lix-image-embed-error { font-size: 11px; color: #f87171; }
+.lix-image-embed-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.lix-image-block { margin: 8px 0; }
+.lix-image-container { position: relative; border-radius: 10px; overflow: hidden; }
+.lix-image { width: 100%; display: block; border-radius: 10px; }
+.lix-image-hover-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.group:hover .lix-image-hover-actions { opacity: 1; }
+.lix-image-hover-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); border: none; border-radius: 6px; color: white; cursor: pointer; }
+.lix-image-hover-btn:hover { background: rgba(239,68,68,0.7); }
+.lix-image-caption { width: 100%; text-align: center; font-size: 13px; color: var(--lix-text-faint); background: transparent; border: none; outline: none; padding: 6px 0; margin-top: 4px; }
