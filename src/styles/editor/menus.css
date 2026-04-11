@@ -101,6 +101,15 @@
   overflow: hidden;
 }
 
+/* When a link is selected, the link toolbar appears — hide AI + link + color from formatting toolbar */
+.blog-editor-wrapper:has(.bn-link-toolbar) .bn-toolbar:not(.bn-link-toolbar) [data-test="createLink"],
+.blog-editor-wrapper:has(.bn-link-toolbar) .bn-toolbar:not(.bn-link-toolbar) .ai-star-btn,
+.blog-editor-wrapper:has(.bn-link-toolbar) .bn-toolbar:not(.bn-link-toolbar) .ai-toolbar-sep,
+.blog-editor-wrapper:has(.bn-link-toolbar) .bn-toolbar:not(.bn-link-toolbar) .toolbar-color-btn,
+.blog-editor-wrapper:has(.bn-link-toolbar) .bn-toolbar:not(.bn-link-toolbar) .toolbar-color-sep {
+  display: none !important;
+}
+
 .blog-editor-wrapper .bn-toolbar button {
   color: var(--text-muted);
 }
