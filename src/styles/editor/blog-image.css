@@ -16,6 +16,7 @@
 
 /* Empty state container */
 .blog-img-empty {
+  position: relative;
   width: 100%;
   min-height: 140px;
   border: 1.5px dashed var(--border-default);
@@ -96,6 +97,35 @@
   font-size: 11px;
   color: var(--text-faint);
   margin: 0;
+}
+
+/* Dismiss / delete button on empty placeholder */
+.blog-img-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.blog-img-empty:hover .blog-img-dismiss {
+  opacity: 1;
+}
+
+.blog-img-dismiss:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.3);
 }
 
 /* Inline input row (embed URL / AI prompt) */

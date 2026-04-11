@@ -635,24 +635,38 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       if (imgMatch) {
         const [fullMatch, alt, imgUrl] = imgMatch;
         const from = $from.pos - fullMatch.length;
-        // Delete the markdown text
         const tr = state.tr.delete(from, $from.pos);
         view.dispatch(tr);
-        // Insert an image block
         const cursorBlock = editor.getTextCursorPosition().block;
         editor.insertBlocks(
           [{ type: 'image', props: { url: imgUrl, caption: alt || '' } }],
-          cursorBlock,
-          'after'
+          cursorBlock, 'after'
         );
-        // Remove the empty paragraph left behind if it's empty
         requestAnimationFrame(() => {
           try {
             const block = editor.getTextCursorPosition().block;
-            if (block && block.type === 'paragraph') {
-              const text = (block.content || []).map(c => c.text || '').join('');
-              if (!text.trim()) editor.removeBlocks([block.id]);
-            }
+            if (block?.type === 'paragraph' && !(block.content || []).some(c => c.text?.trim())) editor.removeBlocks([block.id]);
+          } catch {}
+        });
+        return;
+      }
+
+      // Bare image URL on its own line — auto-embed as image block
+      const bareImgMatch = textBefore.match(/^(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg|bmp|avif))$/i);
+      if (bareImgMatch) {
+        const [fullMatch, imgUrl] = bareImgMatch;
+        const from = $from.pos - fullMatch.length;
+        const tr = state.tr.delete(from, $from.pos);
+        view.dispatch(tr);
+        const cursorBlock = editor.getTextCursorPosition().block;
+        editor.insertBlocks(
+          [{ type: 'image', props: { url: imgUrl, caption: '' } }],
+          cursorBlock, 'after'
+        );
+        requestAnimationFrame(() => {
+          try {
+            const block = editor.getTextCursorPosition().block;
+            if (block?.type === 'paragraph' && !(block.content || []).some(c => c.text?.trim())) editor.removeBlocks([block.id]);
           } catch {}
         });
         return;
