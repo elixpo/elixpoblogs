@@ -178,7 +178,7 @@ const LixEditor = forwardRef(function LixEditor({
   // Notify parent when ready
   useEffect(() => { if (onReady) onReady(); }, []);
 
-  // Auto-convert [text](url) to links
+  // Auto-convert ![alt](url) to image block and [text](url) to link as you type
   useEffect(() => {
     if (!f.markdownLinks || !editor) return;
     const tiptap = editor._tiptapEditor;
@@ -188,6 +188,30 @@ const LixEditor = forwardRef(function LixEditor({
       const { state, view } = tiptap;
       const { $from } = state.selection;
       const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
+
+      // Image syntax: ![alt](url)
+      const imgMatch = textBefore.match(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)$/);
+      if (imgMatch) {
+        const [fullMatch, alt, imgUrl] = imgMatch;
+        const from = $from.pos - fullMatch.length;
+        view.dispatch(state.tr.delete(from, $from.pos));
+        const cursorBlock = editor.getTextCursorPosition().block;
+        editor.insertBlocks(
+          [{ type: 'image', props: { url: imgUrl, caption: alt || '' } }],
+          cursorBlock, 'after'
+        );
+        requestAnimationFrame(() => {
+          try {
+            const block = editor.getTextCursorPosition().block;
+            if (block?.type === 'paragraph' && !(block.content || []).some(c => c.text?.trim())) {
+              editor.removeBlocks([block.id]);
+            }
+          } catch {}
+        });
+        return;
+      }
+
+      // Link syntax: [text](url)
       const match = textBefore.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
       if (!match) return;
       const [fullMatch, linkText, url] = match;

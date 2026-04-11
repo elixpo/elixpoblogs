@@ -619,7 +619,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     },
   });
 
-  // Auto-convert [text](url) to a link as you type
+  // Auto-convert ![alt](url) to image block and [text](url) to link as you type
   useEffect(() => {
     if (!editor) return;
     const tiptap = editor._tiptapEditor;
@@ -629,16 +629,45 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       const { state, view } = tiptap;
       const { $from } = state.selection;
       const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
+
+      // Check for image syntax: ![alt](url)
+      const imgMatch = textBefore.match(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)$/);
+      if (imgMatch) {
+        const [fullMatch, alt, imgUrl] = imgMatch;
+        const from = $from.pos - fullMatch.length;
+        // Delete the markdown text
+        const tr = state.tr.delete(from, $from.pos);
+        view.dispatch(tr);
+        // Insert an image block
+        const cursorBlock = editor.getTextCursorPosition().block;
+        editor.insertBlocks(
+          [{ type: 'image', props: { url: imgUrl, caption: alt || '' } }],
+          cursorBlock,
+          'after'
+        );
+        // Remove the empty paragraph left behind if it's empty
+        requestAnimationFrame(() => {
+          try {
+            const block = editor.getTextCursorPosition().block;
+            if (block && block.type === 'paragraph') {
+              const text = (block.content || []).map(c => c.text || '').join('');
+              if (!text.trim()) editor.removeBlocks([block.id]);
+            }
+          } catch {}
+        });
+        return;
+      }
+
+      // Check for link syntax: [text](url)
       const match = textBefore.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
       if (!match) return;
 
       const [fullMatch, linkText, url] = match;
       const from = $from.pos - fullMatch.length;
-      const to = $from.pos;
 
       const linkMark = state.schema.marks.link.create({ href: url });
       const tr = state.tr
-        .delete(from, to)
+        .delete(from, $from.pos)
         .insertText(linkText, from)
         .addMark(from, from + linkText.length, linkMark);
       view.dispatch(tr);
