@@ -283,18 +283,9 @@
   background: none !important;
 }
 
-.blog-preview-content code {
-  font-family: 'lixCode', monospace;
-  font-size: 0.85em;
-  color: var(--text-secondary);
-}
-
 .blog-preview-content p code,
 .blog-preview-content li code {
-  background: var(--border-default);
   padding: 0.15em 0.4em;
-  border-radius: 4px;
-  font-size: 0.85em;
 }
 
 /* Preview code block language label */
