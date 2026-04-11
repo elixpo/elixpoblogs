@@ -2,7 +2,7 @@
 
 import { createReactBlockSpec } from '@blocknote/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useLixTheme } from '../hooks/useLixTheme';
+import { useLixTheme as useTheme } from '../hooks/useLixTheme';
 
 const darkConfig = {
   startOnLoad: false,
@@ -313,7 +313,7 @@ export const MermaidBlock = createReactBlockSpec(
   },
   {
     render: ({ block, editor }) => {
-      const { isDark } = useLixTheme();
+      const { isDark } = useTheme();
       const [editing, setEditing] = useState(!block.props.diagram);
       const [value, setValue] = useState(block.props.diagram || '');
       const [livePreview, setLivePreview] = useState(block.props.diagram || '');
