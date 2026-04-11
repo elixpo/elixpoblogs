@@ -522,7 +522,28 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
       });
     });
 
-    return () => { /* generation ref handles staleness */ };
+    // ── Link preview on hover ──
+    const externalLinks = root.querySelectorAll('a[href^="http"]:not(.mention-chip):not(.preview-toc-link):not(.link-preview-card)');
+    const linkEnterHandlers = [];
+    const linkLeaveHandlers = [];
+    externalLinks.forEach((link) => {
+      const href = link.getAttribute('href');
+      if (!href) return;
+      const onEnter = () => linkPreview.show(link, href);
+      const onLeave = () => {
+        linkPreview.cancel();
+        setTimeout(() => linkPreview.hide(), 300);
+      };
+      link.addEventListener('mouseenter', onEnter);
+      link.addEventListener('mouseleave', onLeave);
+      linkEnterHandlers.push({ el: link, handler: onEnter });
+      linkLeaveHandlers.push({ el: link, handler: onLeave });
+    });
+
+    return () => {
+      linkEnterHandlers.forEach(({ el, handler }) => el.removeEventListener('mouseenter', handler));
+      linkLeaveHandlers.forEach(({ el, handler }) => el.removeEventListener('mouseleave', handler));
+    };
   }, [renderedHTML, isDark]);
 
   return (
@@ -639,6 +660,15 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
           <p className="text-[var(--text-faint)] italic">Start writing to see a preview...</p>
         )}
       </div>
+
+      {/* Link preview tooltip */}
+      {linkPreview.preview && (
+        <LinkPreviewTooltip
+          anchorEl={linkPreview.preview.anchorEl}
+          url={linkPreview.preview.url}
+          onClose={linkPreview.hide}
+        />
+      )}
     </div>
   );
 }
