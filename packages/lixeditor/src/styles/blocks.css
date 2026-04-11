@@ -1,0 +1,110 @@
+/* ===== LixEditor Block Styles ===== */
+
+/* Code blocks */
+.lix-editor-wrapper [data-content-type="codeBlock"] {
+  background: var(--lix-code-bg);
+  border: 1px solid var(--lix-border);
+  border-radius: 10px;
+  font-family: var(--lix-font-code);
+  padding: 4px 0;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.lix-editor-wrapper [data-content-type="codeBlock"] code {
+  color: var(--lix-code-text);
+  font-size: 0.84em;
+  font-family: inherit;
+  background: none;
+  padding: 0;
+  line-height: 1.7;
+}
+
+.lix-editor-wrapper [data-content-type="codeBlock"] [contenteditable] {
+  padding: 8px 16px !important;
+}
+
+/* Kill spellcheck in code blocks */
+.lix-editor-wrapper [data-content-type="codeBlock"] [contenteditable] * {
+  text-decoration: none !important;
+}
+
+/* Language selector */
+.lix-editor-wrapper [data-content-type="codeBlock"] select {
+  background: var(--lix-code-lang-bg);
+  color: var(--lix-code-lang-text);
+  border: 1px solid var(--lix-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+  margin: 4px 8px;
+}
+
+/* No selection outline on custom blocks */
+.lix-editor-wrapper [data-content-type="codeBlock"],
+.lix-editor-wrapper [data-content-type="blockEquation"],
+.lix-editor-wrapper [data-content-type="mermaidBlock"] {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Block equation rendered state */
+.lix-equation-block { width: 100%; margin: 8px 0; }
+.lix-equation-block--rendered { border: 1px solid var(--lix-border); border-radius: 12px; background: var(--lix-bg-surface); padding: 20px 24px; text-align: center; overflow-x: auto; cursor: pointer; transition: border-color 0.15s; }
+.lix-equation-block--rendered:hover { border-color: var(--lix-border-hover); }
+.lix-equation-block--rendered .katex { font-size: 1.2em; }
+.lix-equation-block--empty { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 32px 16px; border: 1px dashed var(--lix-border); border-radius: 12px; color: var(--lix-text-muted); font-size: 13px; cursor: pointer; }
+.lix-equation-block--editing { border: 1px solid var(--lix-border); border-radius: 12px; background: var(--lix-bg-surface); overflow: hidden; }
+.lix-equation-header { display: flex; align-items: center; gap: 6px; padding: 10px 14px 0; font-size: 11px; font-weight: 500; color: var(--lix-text-muted); }
+.lix-equation-textarea { width: 100%; box-sizing: border-box; background: var(--lix-bg-app); border: none; border-top: 1px solid var(--lix-border); margin-top: 8px; padding: 12px 14px; color: var(--lix-text-primary); font-family: var(--lix-font-code); font-size: 13px; resize: vertical; outline: none; min-height: 100px; }
+.lix-equation-preview { border-top: 1px solid var(--lix-border); background: var(--lix-bg-app); padding: 12px 14px; text-align: center; }
+.lix-equation-preview-label { font-size: 10px; font-weight: 500; color: var(--lix-text-faint); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.lix-equation-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 14px; border-top: 1px solid var(--lix-border); }
+.lix-btn-cancel { padding: 4px 12px; font-size: 12px; color: var(--lix-text-muted); background: none; border: none; cursor: pointer; }
+.lix-btn-save { padding: 4px 12px; font-size: 12px; color: white; background: var(--lix-accent); border: none; border-radius: 6px; font-weight: 500; cursor: pointer; }
+.lix-btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Inline equation chip */
+.lix-inline-equation-chip { display: inline-flex; align-items: center; padding: 1px 6px; margin: 0 2px; border-radius: 5px; cursor: pointer; color: var(--lix-accent); background: var(--lix-accent-subtle); border: 1px solid rgba(155, 123, 247, 0.15); font-size: 13px; }
+.lix-inline-equation-input { padding: 4px 8px; font-family: var(--lix-font-code); font-size: 13px; border: 1px solid var(--lix-accent); border-radius: 4px; outline: none; background: var(--lix-bg-app); color: var(--lix-text-primary); width: 180px; }
+
+/* Date chip calendar */
+.lix-date-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 5px; font-size: 13px; font-weight: 500; color: var(--lix-accent); background: var(--lix-accent-subtle); border: 1px solid rgba(155, 123, 247, 0.15); margin: 0 2px; cursor: pointer; }
+.lix-calendar { position: fixed; z-index: 100; width: 240px; border-radius: 12px; overflow: hidden; background: var(--lix-bg-app); border: 1px solid var(--lix-border); box-shadow: var(--lix-shadow-lg); }
+.lix-calendar-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--lix-divider); }
+.lix-calendar-nav { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: var(--lix-text-muted); border-radius: 4px; }
+.lix-calendar-nav:hover { background: var(--lix-bg-hover); }
+.lix-calendar-month { font-size: 12px; font-weight: 600; color: var(--lix-text-primary); }
+.lix-calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); padding: 4px 8px; font-size: 10px; color: var(--lix-text-faint); text-align: center; }
+.lix-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 4px 8px; gap: 2px; }
+.lix-calendar-day { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: none; background: none; cursor: pointer; border-radius: 6px; color: var(--lix-text-primary); }
+.lix-calendar-day:hover { background: var(--lix-bg-hover); }
+.lix-calendar-day--selected { background: var(--lix-accent) !important; color: white !important; }
+.lix-calendar-day--today { font-weight: 700; color: var(--lix-accent); }
+.lix-calendar-footer { display: flex; justify-content: space-between; padding: 6px 12px; border-top: 1px solid var(--lix-divider); }
+.lix-calendar-footer-btn { font-size: 10px; font-weight: 500; background: none; border: none; cursor: pointer; color: var(--lix-text-faint); }
+.lix-calendar-footer-btn--accent { color: var(--lix-accent); }
+
+/* Mermaid block (shared classes from original) */
+.mermaid-block { border: 1px solid var(--lix-border); border-radius: 12px; background: var(--lix-bg-surface); margin: 8px 0; overflow: hidden; width: 100%; }
+.mermaid-block--empty { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 32px 16px; border-style: dashed; color: var(--lix-text-muted); font-size: 13px; cursor: pointer; }
+.mermaid-block--editing { padding: 0; }
+.mermaid-block-header { display: flex; align-items: center; gap: 6px; padding: 10px 14px 0; font-size: 11px; font-weight: 500; color: var(--lix-text-muted); }
+.mermaid-block-textarea { width: 100%; box-sizing: border-box; background: var(--lix-bg-app); border: none; border-top: 1px solid var(--lix-border); margin-top: 8px; padding: 12px 14px; color: var(--lix-text-primary); font-family: var(--lix-font-code); font-size: 13px; resize: vertical; outline: none; min-height: 160px; }
+.mermaid-block-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 14px; border-top: 1px solid var(--lix-border); }
+.mermaid-btn-cancel { padding: 4px 12px; font-size: 12px; color: var(--lix-text-muted); background: none; border: none; cursor: pointer; }
+.mermaid-btn-save { padding: 4px 12px; font-size: 12px; color: white; background: var(--lix-accent); border: none; border-radius: 6px; font-weight: 500; cursor: pointer; }
+.mermaid-btn-save:disabled { opacity: 0.4; }
+.mermaid-viewport { position: relative; width: 100%; height: 320px; overflow: hidden; cursor: grab; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+.mermaid-viewport--compact { height: 200px; min-height: 120px; border-radius: 0; }
+.mermaid-block-svg { display: flex; justify-content: center; align-items: center; transition: transform 0.05s linear; padding: 24px; }
+.mermaid-block--rendered { position: relative; padding: 0; cursor: default; min-height: 280px; }
+.mermaid-zoom-controls { position: absolute; bottom: 10px; right: 10px; display: flex; align-items: center; gap: 4px; background: var(--lix-bg-surface); border: 1px solid var(--lix-border); border-radius: 8px; padding: 4px 6px; z-index: 5; }
+.mermaid-zoom-btn { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; background: none; border: none; border-radius: 5px; color: var(--lix-text-muted); cursor: pointer; }
+.mermaid-zoom-label { font-size: 11px; color: var(--lix-text-faint); min-width: 36px; text-align: center; }
+.mermaid-block-hover { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.mermaid-block--rendered:hover .mermaid-block-hover { opacity: 1; }
+.mermaid-hover-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--lix-bg-surface); border: 1px solid var(--lix-border); border-radius: 6px; color: var(--lix-text-muted); cursor: pointer; }
+.mermaid-hover-delete:hover { color: #f87171; }
