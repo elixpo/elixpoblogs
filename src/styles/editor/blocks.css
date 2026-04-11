@@ -575,6 +575,30 @@
   width: 100%;
 }
 
+/* Block equation rendered state — matches preview .preview-block-equation */
+.editor-block-equation {
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  padding: 20px 24px;
+  margin: 8px 0;
+  text-align: center;
+  overflow-x: auto;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.editor-block-equation:hover {
+  border-color: var(--border-hover);
+}
+
+.editor-block-equation .katex {
+  font-size: 1.2em;
+  color: var(--text-primary);
+}
+
 .mermaid-block {
   border: 1px solid var(--border-default);
   border-radius: 12px;
