@@ -250,21 +250,12 @@
   background: var(--bg-surface);
 }
 
-.subpage-block-inner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  width: 100%;
-  box-sizing: border-box;
-  transition: background 0.15s;
-}
-
+.subpage-block-inner,
 .subpage-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 14px;
+  padding: 16px 20px;
   width: 100%;
   box-sizing: border-box;
   cursor: pointer;

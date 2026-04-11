@@ -154,15 +154,21 @@
 .blog-preview-content a.preview-toc-link,
 .blog-preview-content a.link-preview-card,
 .blog-preview-content a.subpage-item {
-  color: inherit;
-  border-bottom: none;
-  background: none;
-  text-decoration: none;
+  color: inherit !important;
+  border-bottom: none !important;
+  background: none !important;
+  text-decoration: none !important;
+  padding-bottom: 10px !important;
 }
 
 .blog-preview-content a.subpage-item:hover {
-  color: inherit;
-  background: var(--bg-hover);
+  color: inherit !important;
+  background: var(--bg-hover) !important;
+}
+
+/* Subpage block in preview — proper spacing */
+.blog-preview-content .subpage-block {
+  margin: 1.5em 0;
 }
 
 .blog-preview-content strong {
