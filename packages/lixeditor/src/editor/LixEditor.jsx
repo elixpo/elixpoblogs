@@ -14,7 +14,7 @@ import { InlineEquation } from '../blocks/InlineEquation';
 import { DateInline } from '../blocks/DateInline';
 
 // Optional blocks — imported but can be disabled via config
-import { ImageBlock } from '../blocks/ImageBlock';
+import { BlogImageBlock as ImageBlock } from '../blocks/ImageBlock';
 import { ButtonBlock } from '../blocks/ButtonBlock';
 import { PDFEmbedBlock } from '../blocks/PDFEmbedBlock';
 
