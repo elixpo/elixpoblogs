@@ -555,8 +555,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     const handleMouseOut = (e) => {
       const link = e.target.closest('a[href]');
       if (!link) return;
-      editorLinkPreview.cancel();
-      setTimeout(() => editorLinkPreview.hide(), 300);
+      editorLinkPreview.hide();
     };
 
     wrapper.addEventListener('mouseover', handleMouseOver);
@@ -2215,6 +2214,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           anchorEl={editorLinkPreview.preview.anchorEl}
           url={editorLinkPreview.preview.url}
           onClose={editorLinkPreview.hide}
+          onKeepAlive={editorLinkPreview.keepAlive}
         />
       )}
     </div>

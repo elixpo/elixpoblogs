@@ -20,12 +20,11 @@ async function fetchPreview(url) {
   }
 }
 
-export default function LinkPreviewTooltip({ anchorEl, url, onClose }) {
+export default function LinkPreviewTooltip({ anchorEl, url, onClose, onKeepAlive }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const tooltipRef = useRef(null);
-  const hoverRef = useRef(false);
 
   useEffect(() => {
     if (!url) return;
@@ -42,40 +41,12 @@ export default function LinkPreviewTooltip({ anchorEl, url, onClose }) {
     const rect = anchorEl.getBoundingClientRect();
     const tooltipWidth = 320;
     let left = rect.left + rect.width / 2 - tooltipWidth / 2;
-    // Clamp to viewport
     left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
     setPos({
       top: rect.bottom + window.scrollY + 8,
       left: left + window.scrollX,
     });
   }, [anchorEl]);
-
-  const handleMouseEnter = useCallback(() => {
-    hoverRef.current = true;
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    hoverRef.current = false;
-    setTimeout(() => {
-      if (!hoverRef.current) onClose();
-    }, 100);
-  }, [onClose]);
-
-  // Allow anchor hover to keep tooltip open
-  useEffect(() => {
-    if (!anchorEl) return;
-    const enter = () => { hoverRef.current = true; };
-    const leave = () => {
-      hoverRef.current = false;
-      setTimeout(() => { if (!hoverRef.current) onClose(); }, 200);
-    };
-    anchorEl.addEventListener('mouseenter', enter);
-    anchorEl.addEventListener('mouseleave', leave);
-    return () => {
-      anchorEl.removeEventListener('mouseenter', enter);
-      anchorEl.removeEventListener('mouseleave', leave);
-    };
-  }, [anchorEl, onClose]);
 
   if (!url) return null;
 
@@ -84,8 +55,8 @@ export default function LinkPreviewTooltip({ anchorEl, url, onClose }) {
       ref={tooltipRef}
       className="link-preview-tooltip"
       style={{ top: pos.top, left: pos.left }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={onKeepAlive}
+      onMouseLeave={onClose}
     >
       {loading ? (
         <div className="link-preview-loading">
@@ -119,28 +90,41 @@ export default function LinkPreviewTooltip({ anchorEl, url, onClose }) {
 // Hook to manage link preview state for any container
 export function useLinkPreview() {
   const [preview, setPreview] = useState(null);
-  const timerRef = useRef(null);
+  const showTimerRef = useRef(null);
+  const hideTimerRef = useRef(null);
 
   const show = useCallback((anchorEl, url) => {
-    clearTimeout(timerRef.current);
+    clearTimeout(hideTimerRef.current);
+    clearTimeout(showTimerRef.current);
     // Delay to avoid flashing on quick mouse passes
-    timerRef.current = setTimeout(() => {
+    showTimerRef.current = setTimeout(() => {
       setPreview({ anchorEl, url });
     }, 400);
   }, []);
 
   const hide = useCallback(() => {
-    clearTimeout(timerRef.current);
-    setPreview(null);
+    clearTimeout(showTimerRef.current);
+    clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => {
+      setPreview(null);
+    }, 250);
   }, []);
 
   const cancel = useCallback(() => {
-    clearTimeout(timerRef.current);
+    clearTimeout(showTimerRef.current);
+  }, []);
+
+  // Allow keeping tooltip open when mouse enters the tooltip itself
+  const keepAlive = useCallback(() => {
+    clearTimeout(hideTimerRef.current);
   }, []);
 
   useEffect(() => {
-    return () => clearTimeout(timerRef.current);
+    return () => {
+      clearTimeout(showTimerRef.current);
+      clearTimeout(hideTimerRef.current);
+    };
   }, []);
 
-  return { preview, show, hide, cancel };
+  return { preview, show, hide, cancel, keepAlive };
 }
