@@ -113,6 +113,11 @@ function renderBlocksToHTML(blocks) {
       if (c.type === 'orgMention' && c.props?.slug) {
         return `<a href="/@${c.props.slug}" class="mention-chip">@${c.props.name || c.props.slug}</a>`;
       }
+      // Links wrap child content — recurse into c.content for the link text
+      if (c.type === 'link' && c.href) {
+        const linkText = c.content ? inlineToHTML(c.content) : (c.text || c.href).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<a href="${c.href}">${linkText || c.href}</a>`;
+      }
       let text = (c.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       if (!text) return '';
       const s = c.styles || {};
@@ -121,7 +126,6 @@ function renderBlocksToHTML(blocks) {
       if (s.strike) text = `<del>${text}</del>`;
       if (s.code) text = `<code>${text}</code>`;
       if (s.underline) text = `<u>${text}</u>`;
-      if (c.type === 'link' && c.href) text = `<a href="${c.href}">${text}</a>`;
       if (s.textColor) text = `<span style="color:${s.textColor}">${text}</span>`;
       if (s.backgroundColor) text = `<span style="background:${s.backgroundColor};border-radius:3px;padding:0 2px">${text}</span>`;
       return text;
