@@ -35,17 +35,20 @@ export default function LinkPreviewTooltip({ anchorEl, url, onClose, onKeepAlive
     });
   }, [url]);
 
-  // Position tooltip below the anchor
+  // Position tooltip directly below the anchor using fixed positioning
   useEffect(() => {
     if (!anchorEl) return;
     const rect = anchorEl.getBoundingClientRect();
     const tooltipWidth = 320;
     let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+    // Clamp to viewport
     left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
-    setPos({
-      top: rect.bottom + window.scrollY + 8,
-      left: left + window.scrollX,
-    });
+    let top = rect.bottom + 6;
+    // If tooltip would overflow bottom, show above the link
+    if (top + 200 > window.innerHeight) {
+      top = rect.top - 8; // will be adjusted by transform in CSS
+    }
+    setPos({ top, left });
   }, [anchorEl]);
 
   if (!url) return null;

@@ -314,13 +314,16 @@
   color: #9b7bf7 !important;
 }
 
-/* Link tooltip — only show Edit link + open/unlink, hide extra formatting buttons */
+/* Link tooltip — only show Edit link, open, and unlink buttons */
 .blog-editor-wrapper .bn-link-toolbar {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 8px;
 }
 
-.blog-editor-wrapper .bn-link-toolbar .bn-toolbar {
-  display: none;
+/* The link toolbar root has class "bn-toolbar bn-link-toolbar".
+   It renders exactly 3 children: EditLink, OpenLink, DeleteLink.
+   Any extra buttons (4th+) come from the formatting toolbar merging in — hide them. */
+.blog-editor-wrapper .bn-link-toolbar > *:nth-child(n+4) {
+  display: none !important;
 }

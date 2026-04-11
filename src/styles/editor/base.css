@@ -294,6 +294,7 @@
   text-decoration: none !important;
   border-bottom: 1px solid rgba(123, 168, 240, 0.3);
   padding-bottom: 1px;
+  cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
@@ -307,7 +308,7 @@
 /* ===== Link Preview Tooltip ===== */
 
 .link-preview-tooltip {
-  position: absolute;
+  position: fixed;
   z-index: 1000;
   width: 320px;
   border-radius: 12px;
