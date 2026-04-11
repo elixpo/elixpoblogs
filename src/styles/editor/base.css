@@ -296,7 +296,8 @@
   text-decoration: none !important;
   border-bottom: 1px solid rgba(123, 168, 240, 0.3);
   padding-bottom: 1px;
-  cursor: pointer;
+  cursor: text;
+  pointer-events: auto;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
