@@ -64,7 +64,7 @@ function FloatingTOC({ headings }) {
             <li key={h.id} ref={el => { itemRefs.current[h.id] = el; }}>
               <a
                 href={`#${h.id}`}
-                className="preview-floating-toc-link"
+                className={`preview-floating-toc-link${h.isSubpage ? ' toc-subpage-link' : ''}`}
                 style={{
                   paddingLeft: (h.level - 1) * 12,
                   color: h.id === activeId ? 'var(--text-primary)' : undefined,
@@ -75,6 +75,12 @@ function FloatingTOC({ headings }) {
                   document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }}
               >
+                {h.isSubpage && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline', marginRight: 4, verticalAlign: '-1px' }}>
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                )}
                 {h.text}
               </a>
             </li>
@@ -132,7 +138,7 @@ function renderBlocksToHTML(blocks) {
     }).join('');
   }
 
-  // Collect ALL headings recursively for TOC
+  // Collect ALL headings + subpages recursively for TOC
   const headings = [];
   function collectHeadings(blockList) {
     for (const block of blockList) {
@@ -142,6 +148,16 @@ function renderBlocksToHTML(blocks) {
           const id = `h-${text.trim().toLowerCase().replace(/[^\w]+/g, '-').slice(0, 40)}`;
           headings.push({ id, text: text.trim(), level: block.props?.level || 1 });
         }
+      }
+      if (block.type === 'tabsBlock') {
+        let subTabs = [];
+        try { subTabs = JSON.parse(block.props?.tabs || '[]'); } catch {}
+        subTabs.forEach(t => {
+          if (t.title) {
+            const id = `subpage-${(t.subpageId || t.title).slice(0, 20)}`;
+            headings.push({ id, text: t.title, level: 2, isSubpage: true, subpageId: t.subpageId });
+          }
+        });
       }
       if (block.children?.length) collectHeadings(block.children);
     }
@@ -187,7 +203,8 @@ function renderBlocksToHTML(blocks) {
         if (subTabs.length === 0) return childrenHTML;
         const tabItems = subTabs.map(t => {
           const href = t.subpageId ? `/${t.subpageId}` : '#';
-          return `<a href="${href}" class="subpage-item" target="_blank" rel="noopener"><div class="subpage-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div><span class="subpage-title">${t.title}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="subpage-arrow"><polyline points="9 18 15 12 9 6"/></svg></a>`;
+          const id = `subpage-${(t.subpageId || t.title).slice(0, 20)}`;
+          return `<a id="${id}" href="${href}" class="subpage-item" target="_blank" rel="noopener"><div class="subpage-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div><span class="subpage-title">${t.title}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="subpage-arrow"><polyline points="9 18 15 12 9 6"/></svg></a>`;
         }).join('');
         return `<div class="subpage-block">${tabItems}</div>${childrenHTML}`;
       }
