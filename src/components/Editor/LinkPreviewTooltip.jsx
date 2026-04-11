@@ -34,15 +34,18 @@ export default function LinkPreviewTooltip({ anchorEl, url, onClose, onKeepAlive
     });
   }, [url]);
 
-  // Position tooltip below the anchor — computed once on mount, stored in ref to avoid re-render loops
+  // Position computed once on mount via ref — always below, clamped to viewport
   const posRef = useRef(null);
   if (!posRef.current && anchorEl) {
     const rect = anchorEl.getBoundingClientRect();
     const tooltipWidth = 320;
     let left = rect.left + rect.width / 2 - tooltipWidth / 2;
     left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
-    // Always show below — simpler and avoids the hover loop issue
-    posRef.current = { top: rect.bottom + 6, left };
+    let top = rect.bottom + 6;
+    // Clamp so the tooltip doesn't overflow below the viewport
+    const maxTop = window.innerHeight - 320;
+    if (top > maxTop) top = maxTop;
+    posRef.current = { top, left };
   }
 
   if (!url || !posRef.current) return null;
