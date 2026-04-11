@@ -181,6 +181,16 @@ function renderBlocksToHTML(blocks) {
           return `<div class="preview-mermaid-block" data-diagram="${encodeURIComponent(block.props.diagram)}"></div>${childrenHTML}`;
         }
         return childrenHTML;
+      case 'tabsBlock': {
+        let subTabs = [];
+        try { subTabs = JSON.parse(block.props?.tabs || '[]'); } catch {}
+        if (subTabs.length === 0) return childrenHTML;
+        const tabItems = subTabs.map(t => {
+          const href = t.subpageId ? `/${t.subpageId}` : '#';
+          return `<a href="${href}" class="subpage-item" target="_blank" rel="noopener"><div class="subpage-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div><span class="subpage-title">${t.title}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="subpage-arrow"><polyline points="9 18 15 12 9 6"/></svg></a>`;
+        }).join('');
+        return `<div class="subpage-block">${tabItems}</div>${childrenHTML}`;
+      }
       case 'divider':
         return `<hr class="preview-divider" />${childrenHTML}`;
       case 'codeBlock': {

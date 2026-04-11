@@ -149,12 +149,20 @@
   background: rgba(123, 168, 240, 0.06);
 }
 
-/* Mention chips and TOC links have their own styling */
+/* Mention chips, TOC links, subpage items have their own styling */
 .blog-preview-content a.mention-chip,
 .blog-preview-content a.preview-toc-link,
-.blog-preview-content a.link-preview-card {
+.blog-preview-content a.link-preview-card,
+.blog-preview-content a.subpage-item {
+  color: inherit;
   border-bottom: none;
   background: none;
+  text-decoration: none;
+}
+
+.blog-preview-content a.subpage-item:hover {
+  color: inherit;
+  background: var(--bg-hover);
 }
 
 .blog-preview-content strong {
