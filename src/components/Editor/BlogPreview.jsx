@@ -328,13 +328,16 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
     console.log('[BlogPreview] DOM query:', { blockEqs: eqEls.length, inlineEqs: inlineEls.length, mermaidEls: root.querySelectorAll('.preview-mermaid-block[data-diagram]').length });
     if (eqEls.length || inlineEls.length) {
       import('katex').then((mod) => {
+        console.log('[BlogPreview] KaTeX loaded, cancelled:', cancelled);
         if (cancelled) return;
         const katex = mod.default || mod;
         eqEls.forEach((el) => {
           try {
             const latex = stripDelimiters(decodeURIComponent(el.dataset.latex));
+            console.log('[BlogPreview] Rendering block eq:', latex.slice(0, 50));
             el.innerHTML = katex.renderToString(latex, { displayMode: true, throwOnError: false });
           } catch (err) {
+            console.error('[BlogPreview] KaTeX block error:', err);
             el.innerHTML = `<span style="color:#f87171">${err.message}</span>`;
           }
         });
@@ -346,13 +349,14 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
             el.innerHTML = `<span style="color:#f87171">${err.message}</span>`;
           }
         });
-      }).catch((err) => console.error('KaTeX load failed:', err));
+      }).catch((err) => console.error('[BlogPreview] KaTeX load failed:', err));
     }
 
     // ── Mermaid diagrams (matches editor MermaidBlock config) ──
     const mermaidEls = root.querySelectorAll('.preview-mermaid-block[data-diagram]');
     if (mermaidEls.length) {
       import('mermaid').then((mod) => {
+        console.log('[BlogPreview] Mermaid loaded, cancelled:', cancelled);
         if (cancelled) return;
         const mermaid = mod.default || mod;
         mermaid.initialize({
@@ -437,7 +441,9 @@ export default function BlogPreview({ title, subtitle, coverPreview, coverZoom, 
               tempDiv.style.cssText = 'position:fixed;top:0;left:0;width:100vw;opacity:0;pointer-events:none;z-index:-9999;';
               document.body.appendChild(tempDiv);
 
+              console.log('[BlogPreview] Rendering mermaid:', id, diagram.slice(0, 60));
               const { svg } = await mermaid.render(id, diagram, tempDiv);
+              console.log('[BlogPreview] Mermaid rendered OK:', id);
               tempDiv.remove();
 
               if (!cancelled) {
