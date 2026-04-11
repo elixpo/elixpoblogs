@@ -15,6 +15,16 @@ export async function POST(request) {
     const { getDB } = await import('../../../lib/cloudflare');
     const db = getDB();
 
+    // Ensure subpages table exists (auto-create if missing)
+    await db.prepare(`CREATE TABLE IF NOT EXISTS subpages (
+      id TEXT PRIMARY KEY,
+      blog_id TEXT NOT NULL,
+      title TEXT NOT NULL DEFAULT 'Untitled',
+      content TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )`).run();
+
     // Verify blog ownership
     const blog = await db.prepare('SELECT author_id FROM blogs WHERE id = ?').bind(blogId).first();
     if (!blog) return NextResponse.json({ error: 'Blog not found' }, { status: 404 });
