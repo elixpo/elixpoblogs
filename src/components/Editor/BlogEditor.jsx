@@ -1016,10 +1016,18 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     return () => editorEl.removeEventListener('paste', handlePaste);
   }, [editor, blogId]);
 
-  // Disable spellcheck on code blocks + inject copy buttons + language labels
+  // Disable spellcheck on code blocks + inline code + inject copy buttons + language labels
   const patchCodeBlocks = useCallback(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
+
+    // Inline code elements — disable spellcheck
+    wrapper.querySelectorAll('.bn-inline-content code').forEach((code) => {
+      code.setAttribute('spellcheck', 'false');
+      code.setAttribute('autocorrect', 'off');
+      code.setAttribute('autocapitalize', 'off');
+    });
+
     wrapper.querySelectorAll('[data-content-type="codeBlock"]').forEach((block) => {
       block.setAttribute('spellcheck', 'false');
       const editable = block.querySelector('[contenteditable]');

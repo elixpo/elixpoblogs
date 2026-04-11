@@ -100,6 +100,7 @@
   hyphens: none;
   text-decoration: none !important;
   -webkit-text-decoration: none !important;
+  -webkit-text-decorations-in-effect: none !important;
 }
 
 [data-theme="dark"] .blog-editor-wrapper code,
