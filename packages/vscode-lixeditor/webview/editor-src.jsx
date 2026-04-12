@@ -5,6 +5,7 @@ import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuI
 import { BlockNoteView } from '@blocknote/mantine';
 import { BlogImageBlock } from '../../lixeditor/src/blocks/ImageBlock';
 import { DateInline } from '../../lixeditor/src/blocks/DateInline';
+import LinkPreviewTooltip, { useLinkPreview } from '../../lixeditor/src/editor/LinkPreviewTooltip';
 import './styles.css';
 
 // VS Code API
