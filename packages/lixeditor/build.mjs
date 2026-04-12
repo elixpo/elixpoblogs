@@ -26,6 +26,7 @@ await build({
   format: 'esm',
   outfile: 'dist/index.js',
   jsx: 'automatic',
+  loader: { '.js': 'jsx', '.jsx': 'jsx' },
   target: 'es2020',
   platform: 'browser',
   external: [
@@ -52,6 +53,7 @@ await build({
   format: 'cjs',
   outfile: 'dist/index.cjs',
   jsx: 'automatic',
+  loader: { '.js': 'jsx', '.jsx': 'jsx' },
   target: 'es2020',
   platform: 'browser',
   external: [
