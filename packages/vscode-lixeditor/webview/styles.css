@@ -1,0 +1,131 @@
+/* Import BlockNote styles */
+@import "@blocknote/core/fonts/inter.css";
+@import "@blocknote/mantine/style.css";
+
+/* VS Code integration styles */
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: 'Source Serif 4', Georgia, serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Remove orange focus border from BlockNote */
+.bn-container {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.bn-container:focus,
+.bn-container:focus-visible,
+.bn-container *:focus,
+.bn-container *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.bn-editor {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--vscode-editor-foreground);
+  padding: 0 !important;
+}
+
+.bn-editor:focus {
+  outline: none !important;
+}
+
+/* Headings */
+.bn-default-styles h1 { font-size: 28px !important; font-weight: 700 !important; font-family: 'Source Serif 4', Georgia, serif; }
+.bn-default-styles h2 { font-size: 22px !important; font-weight: 650 !important; font-family: 'Source Serif 4', Georgia, serif; }
+.bn-default-styles h3 { font-size: 18px !important; font-weight: 600 !important; font-family: 'Source Serif 4', Georgia, serif; }
+
+/* Code blocks */
+[data-content-type="codeBlock"] {
+  background: var(--vscode-textCodeBlock-background, rgba(0,0,0,0.1)) !important;
+  border: 1px solid var(--vscode-editorWidget-border, rgba(255,255,255,0.1)) !important;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+[data-content-type="codeBlock"] code {
+  font-family: var(--vscode-editor-fontFamily, 'SF Mono', monospace) !important;
+  font-size: var(--vscode-editor-fontSize, 13px) !important;
+}
+
+/* Inline code */
+code {
+  background: var(--vscode-textCodeBlock-background, rgba(0,0,0,0.1));
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--vscode-editor-fontFamily, 'SF Mono', monospace);
+  font-size: 0.9em;
+}
+
+/* Reset code inside code blocks */
+[data-content-type="codeBlock"] code {
+  background: none;
+  padding: 0;
+}
+
+/* Tables */
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid var(--vscode-editorWidget-border, rgba(255,255,255,0.1)); padding: 6px 10px; text-align: left; }
+th { background: var(--vscode-editorWidget-background, rgba(0,0,0,0.1)); font-weight: 600; }
+
+/* Links */
+a { color: var(--vscode-textLink-foreground, #7ba8f0); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Selection */
+::selection { background: var(--vscode-editor-selectionBackground); }
+
+/* Toolbar */
+.bn-toolbar {
+  background: var(--vscode-editorWidget-background, #1e1e1e) !important;
+  border: 1px solid var(--vscode-editorWidget-border, #333) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+}
+
+.bn-toolbar button {
+  color: var(--vscode-foreground, #ccc);
+}
+
+.bn-toolbar button:hover {
+  background: var(--vscode-list-hoverBackground, rgba(255,255,255,0.1));
+}
+
+/* Side menu */
+.bn-side-menu {
+  background: rgba(155, 123, 247, 0.06);
+  border: 1px solid rgba(155, 123, 247, 0.15);
+  border-radius: 6px;
+}
+
+/* Slash menu */
+.bn-suggestion-menu {
+  background: var(--vscode-editorWidget-background, #1e1e1e) !important;
+  border: 1px solid var(--vscode-editorWidget-border, #333) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--vscode-scrollbarSlider-background); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--vscode-scrollbarSlider-hoverBackground); }
+
+/* Placeholder */
+.bn-inline-content[data-placeholder]::before {
+  color: var(--vscode-input-placeholderForeground, #666) !important;
+  font-style: normal;
+}

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, createCodeBlockSpec } from '@blocknote/core';
 import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems, TableHandlesController } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
-// CSS imports handled by build — excluded from bundle
+import './styles.css';
 
 // VS Code API
 const vscode = acquireVsCodeApi();

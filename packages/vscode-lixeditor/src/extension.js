@@ -30,19 +30,19 @@ class LixEditorProvider {
       ],
     };
 
-    // Get URIs for webview resources
-    const webviewDir = vscode.Uri.file(path.join(this.context.extensionPath, 'webview'));
     const editorJsUri = webviewPanel.webview.asWebviewUri(
       vscode.Uri.file(path.join(this.context.extensionPath, 'webview', 'editor.js'))
     );
-    const editorCssUri = webviewPanel.webview.asWebviewUri(
-      vscode.Uri.file(path.join(this.context.extensionPath, 'webview', 'editor.css'))
-    );
 
-    // Set HTML content
-    webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, editorJsUri, editorCssUri);
+    // Read CSS and inline it to avoid CSP issues
+    let cssContent = '';
+    try {
+      cssContent = fs.readFileSync(path.join(this.context.extensionPath, 'webview', 'editor.css'), 'utf8');
+    } catch {}
 
-    // Send initial document content to the webview
+    webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview, editorJsUri, cssContent);
+
+    // Send initial content
     const initialContent = document.getText();
     let blocks = [];
     try {
@@ -51,15 +51,12 @@ class LixEditorProvider {
       blocks = [];
     }
 
-    // Wait for webview to signal ready, then send content
     const messageHandler = webviewPanel.webview.onDidReceiveMessage((message) => {
       switch (message.type) {
         case 'ready':
           webviewPanel.webview.postMessage({ type: 'load', blocks });
           break;
-
         case 'update':
-          // Content changed in the editor — write back to the document
           const edit = new vscode.WorkspaceEdit();
           edit.replace(
             document.uri,
@@ -68,20 +65,15 @@ class LixEditorProvider {
           );
           vscode.workspace.applyEdit(edit);
           break;
-
-        case 'info':
-          vscode.window.showInformationMessage(message.text);
-          break;
       }
     });
 
-    // When the document changes externally, update the webview
     const changeHandler = vscode.workspace.onDidChangeTextDocument((e) => {
       if (e.document.uri.toString() === document.uri.toString() && e.contentChanges.length > 0) {
         try {
           const newBlocks = JSON.parse(e.document.getText());
           webviewPanel.webview.postMessage({ type: 'load', blocks: newBlocks });
-        } catch { /* invalid JSON, ignore */ }
+        } catch {}
       }
     });
 
@@ -91,7 +83,7 @@ class LixEditorProvider {
     });
   }
 
-  getHtmlForWebview(webview, editorJsUri, editorCssUri) {
+  getHtmlForWebview(webview, editorJsUri, cssContent) {
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
@@ -99,10 +91,10 @@ class LixEditorProvider {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} https: data:; connect-src https:;">
-  <link rel="stylesheet" href="${editorCssUri}">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com data:; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} https: data:; connect-src https:;">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,650;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <style>${cssContent}</style>
   <title>LixEditor</title>
 </head>
 <body>
@@ -123,18 +115,8 @@ function getNonce() {
 }
 
 function activate(context) {
-  console.log('LixEditor extension activating...');
-  vscode.window.showInformationMessage('LixEditor extension activated!');
-
-  try {
-    context.subscriptions.push(LixEditorProvider.register(context));
-    console.log('LixEditor custom editor provider registered');
-  } catch (err) {
-    console.error('LixEditor registration failed:', err);
-    vscode.window.showErrorMessage('LixEditor failed to register: ' + err.message);
-  }
-
-  // Register "New Document" command
+  vscode.window.showInformationMessage('LixEditor activated');
+  context.subscriptions.push(LixEditorProvider.register(context));
   context.subscriptions.push(
     vscode.commands.registerCommand('lixeditor.newDocument', async () => {
       const uri = vscode.Uri.parse('untitled:New Document.lixeditor');
