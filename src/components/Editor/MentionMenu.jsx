@@ -85,16 +85,22 @@ export default function MentionMenu({ editor, query, onClose }) {
             mentionNode = { type: 'blogMention', props: { title: item.title, slugid: item.slugid } };
           }
 
-          // Rebuild content: everything before the @ node, the text before @ in that node, mention, space, rest
+          // Rebuild content: everything before the @ node, the text before @ in that node, mention, space, text after @query, rest
+          const atNodeText = contentArr[atNodeIdx].text;
+          const atNodeStyles = contentArr[atNodeIdx].styles || {};
+          const textBefore = atNodeText.slice(0, atPosInNode);
+          // Only remove the @query portion — preserve any text after it
+          const queryLen = (query || '').length;
+          const textAfter = atNodeText.slice(atPosInNode + 1 + queryLen);
+
           const newContent = [];
           // Keep all nodes before the @ node
           for (let i = 0; i < atNodeIdx; i++) newContent.push(contentArr[i]);
           // Text before @ in the same node
-          const textBefore = contentArr[atNodeIdx].text.slice(0, atPosInNode);
-          if (textBefore) newContent.push({ type: 'text', text: textBefore, styles: contentArr[atNodeIdx].styles || {} });
+          if (textBefore) newContent.push({ type: 'text', text: textBefore, styles: atNodeStyles });
           // Insert mention + space
           newContent.push(mentionNode);
-          newContent.push({ type: 'text', text: ' ', styles: {} });
+          newContent.push({ type: 'text', text: ' ' + textAfter, styles: textAfter ? atNodeStyles : {} });
           // Preserve any content nodes after the @ node (e.g. subsequent mentions or text)
           for (let i = atNodeIdx + 1; i < contentArr.length; i++) newContent.push(contentArr[i]);
 
