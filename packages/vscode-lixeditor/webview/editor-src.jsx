@@ -4,6 +4,7 @@ import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, createCo
 import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems, TableHandlesController } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import { BlogImageBlock } from '../../lixeditor/src/blocks/ImageBlock';
+import { DateInline } from '../../lixeditor/src/blocks/DateInline';
 import './styles.css';
 
 // VS Code API
@@ -34,25 +35,105 @@ const codeBlock = createCodeBlockSpec({
 
 const schema = BlockNoteSchema.create({
   blockSpecs: { ...defaultBlockSpecs, codeBlock, image: BlogImageBlock({}) },
-  inlineContentSpecs: { ...defaultInlineContentSpecs },
+  inlineContentSpecs: { ...defaultInlineContentSpecs, dateInline: DateInline },
 });
 
+// ── Header Bar ──
+function HeaderBar({ title, onTitleChange, onSave, saving, saved }) {
+  const [editing, setEditing] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) inputRef.current.focus();
+  }, [editing]);
+
+  return (
+    <>
+      <div className="lix-header">
+        <div className="lix-header-left">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9b7bf7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          {editing ? (
+            <input
+              ref={inputRef}
+              defaultValue={title}
+              onBlur={(e) => { onTitleChange(e.target.value); setEditing(false); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { onTitleChange(e.target.value); setEditing(false); } if (e.key === 'Escape') setEditing(false); }}
+              className="lix-header-title-input"
+            />
+          ) : (
+            <span className="lix-header-title" onClick={() => setEditing(true)}>
+              {title || 'Untitled Document'}
+            </span>
+          )}
+          <span className="lix-header-status">
+            {saving ? 'Saving...' : saved ? 'Saved' : ''}
+          </span>
+        </div>
+        <div className="lix-header-right">
+          <button className="lix-header-btn" onClick={onSave} title="Save now">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          </button>
+          <button className="lix-header-btn" onClick={() => setShowHelp(!showHelp)} title="Keyboard shortcuts">
+            ?
+          </button>
+        </div>
+      </div>
+      {showHelp && (
+        <>
+          <div className="lix-help-backdrop" onClick={() => setShowHelp(false)} />
+          <div className="lix-help-modal">
+            <div className="lix-help-header">
+              <span>Keyboard Shortcuts</span>
+              <button onClick={() => setShowHelp(false)} className="lix-help-close">&times;</button>
+            </div>
+            <div className="lix-help-list">
+              {[
+                ['/', 'Slash commands'],
+                ['Ctrl+B', 'Bold'],
+                ['Ctrl+I', 'Italic'],
+                ['Ctrl+U', 'Underline'],
+                ['Ctrl+Shift+S', 'Strikethrough'],
+                ['Ctrl+E', 'Inline code'],
+                ['Ctrl+K', 'Create link'],
+                ['Ctrl+D', 'Insert date'],
+                ['Tab', 'Indent / Nest'],
+                ['Shift+Tab', 'Unindent'],
+                ['---', 'Horizontal rule'],
+                ['```lang', 'Code block'],
+                ['[text](url)', 'Link'],
+                ['![alt](url)', 'Image embed'],
+              ].map(([key, desc]) => (
+                <div key={key} className="lix-help-row">
+                  <kbd className="lix-help-key">{key}</kbd>
+                  <span className="lix-help-desc">{desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+// ── Main App ──
 function LixEditorApp() {
   const [initialContent, setInitialContent] = useState(undefined);
   const [loaded, setLoaded] = useState(false);
   const [isDark, setIsDark] = useState(document.body.classList.contains('vscode-dark'));
+  const [title, setTitle] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const saveTimerRef = useRef(null);
+  const editorRef = useRef(null);
 
-  // Detect VS Code theme
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.body.classList.contains('vscode-dark'));
-    });
+    const observer = new MutationObserver(() => setIsDark(document.body.classList.contains('vscode-dark')));
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
   }, []);
 
-  // Listen for messages from extension
   useEffect(() => {
     const handler = (event) => {
       const message = event.data;
@@ -63,17 +144,28 @@ function LixEditorApp() {
       }
     };
     window.addEventListener('message', handler);
-    // Signal ready
     vscode.postMessage({ type: 'ready' });
     return () => window.removeEventListener('message', handler);
   }, []);
 
   const handleChange = useCallback((editor) => {
+    editorRef.current = editor;
     clearTimeout(saveTimerRef.current);
+    setSaved(false);
     saveTimerRef.current = setTimeout(() => {
       const blocks = editor.document;
       vscode.postMessage({ type: 'update', blocks });
+      setSaving(true);
+      setTimeout(() => { setSaving(false); setSaved(true); }, 300);
     }, 800);
+  }, []);
+
+  const handleSaveNow = useCallback(() => {
+    if (editorRef.current) {
+      vscode.postMessage({ type: 'update', blocks: editorRef.current.document });
+      setSaving(true);
+      setTimeout(() => { setSaving(false); setSaved(true); }, 300);
+    }
   }, []);
 
   if (!loaded) {
@@ -87,9 +179,15 @@ function LixEditorApp() {
     );
   }
 
-  return <EditorView initialContent={initialContent} isDark={isDark} onChange={handleChange} />;
+  return (
+    <div>
+      <HeaderBar title={title} onTitleChange={setTitle} onSave={handleSaveNow} saving={saving} saved={saved} />
+      <EditorView initialContent={initialContent} isDark={isDark} onChange={handleChange} />
+    </div>
+  );
 }
 
+// ── Editor ──
 function EditorView({ initialContent, isDark, onChange }) {
   const editor = useCreateBlockNote({
     schema,
@@ -97,7 +195,7 @@ function EditorView({ initialContent, isDark, onChange }) {
     domAttributes: { editor: { class: 'lix-vscode-editor' } },
   });
 
-  // Auto-convert [text](url) to link and ![alt](url) to image
+  // Auto-convert [text](url) to link, ![alt](url) to image, URL+space to link
   useEffect(() => {
     if (!editor) return;
     const tiptap = editor._tiptapEditor;
@@ -108,7 +206,6 @@ function EditorView({ initialContent, isDark, onChange }) {
       const { $from } = state.selection;
       const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
 
-      // Image: ![alt](url)
       const imgMatch = textBefore.match(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)$/);
       if (imgMatch) {
         const [fullMatch, alt, imgUrl] = imgMatch;
@@ -116,16 +213,10 @@ function EditorView({ initialContent, isDark, onChange }) {
         view.dispatch(state.tr.delete(from, $from.pos));
         const cursorBlock = editor.getTextCursorPosition().block;
         editor.insertBlocks([{ type: 'image', props: { url: imgUrl, caption: alt || '' } }], cursorBlock, 'after');
-        requestAnimationFrame(() => {
-          try {
-            const block = editor.getTextCursorPosition().block;
-            if (block?.type === 'paragraph' && !(block.content || []).some(c => c.text?.trim())) editor.removeBlocks([block.id]);
-          } catch {}
-        });
+        requestAnimationFrame(() => { try { const block = editor.getTextCursorPosition().block; if (block?.type === 'paragraph' && !(block.content || []).some(c => c.text?.trim())) editor.removeBlocks([block.id]); } catch {} });
         return;
       }
 
-      // Link: [text](url)
       const linkMatch = textBefore.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
       if (linkMatch) {
         const [fullMatch, linkText, url] = linkMatch;
@@ -135,15 +226,12 @@ function EditorView({ initialContent, isDark, onChange }) {
         return;
       }
 
-      // Bare URL + space → auto-link
       const urlMatch = textBefore.match(/(https?:\/\/[^\s]+)\s$/);
       if (urlMatch) {
         const [fullMatch, url] = urlMatch;
         const from = $from.pos - fullMatch.length;
         const to = $from.pos - 1;
-        const linkMark = state.schema.marks.link.create({ href: url });
-        view.dispatch(state.tr.addMark(from, to, linkMark));
-        return;
+        view.dispatch(state.tr.addMark(from, to, state.schema.marks.link.create({ href: url })));
       }
     };
 
@@ -151,9 +239,25 @@ function EditorView({ initialContent, isDark, onChange }) {
     return () => tiptap.off('update', handleInput);
   }, [editor]);
 
-  const handleEditorChange = useCallback(() => {
-    onChange(editor);
-  }, [editor, onChange]);
+  // Ctrl+D → insert date
+  useEffect(() => {
+    if (!editor) return;
+    const tiptap = editor._tiptapEditor;
+    const dom = tiptap?.view?.dom;
+    if (!dom) return;
+
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        editor.insertInlineContent([{ type: 'dateInline', props: { date: new Date().toISOString().split('T')[0] } }]);
+      }
+    };
+
+    dom.addEventListener('keydown', handleKeyDown);
+    return () => { try { dom.removeEventListener('keydown', handleKeyDown); } catch {} };
+  }, [editor]);
+
+  const handleEditorChange = useCallback(() => { onChange(editor); }, [editor, onChange]);
 
   const getItems = useCallback(async (query) => {
     return getDefaultReactSlashMenuItems(editor)
@@ -162,13 +266,8 @@ function EditorView({ initialContent, isDark, onChange }) {
   }, [editor]);
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px', minHeight: '100vh' }}>
-      <BlockNoteView
-        editor={editor}
-        onChange={handleEditorChange}
-        theme={isDark ? 'dark' : 'light'}
-        slashMenu={false}
-      >
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '8px 16px 100px', minHeight: 'calc(100vh - 44px)' }}>
+      <BlockNoteView editor={editor} onChange={handleEditorChange} theme={isDark ? 'dark' : 'light'} slashMenu={false}>
         <SuggestionMenuController triggerCharacter="/" getItems={getItems} />
         <TableHandlesController />
       </BlockNoteView>
@@ -176,6 +275,5 @@ function EditorView({ initialContent, isDark, onChange }) {
   );
 }
 
-// Mount
 const root = createRoot(document.getElementById('root'));
 root.render(<LixEditorApp />);
