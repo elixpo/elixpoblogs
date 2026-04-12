@@ -47,6 +47,7 @@ function MentionChip({ username, displayName, avatarUrl }) {
         onMouseLeave={handleMouseLeave}
         onClick={(e) => { e.stopPropagation(); }}
         style={{ textDecoration: 'none' }}
+        spellCheck={false}
       >
         {avatarUrl ? (
           <img src={avatarUrl} alt="" className="mention-chip-avatar" />

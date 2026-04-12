@@ -1266,12 +1266,17 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       try {
         const cursor = editor.getTextCursorPosition();
         const blockType = cursor?.block?.type;
-        if (!blockType || !noToolbarTypes.has(blockType)) return;
+        const shouldHide = blockType && noToolbarTypes.has(blockType);
         // BlockNote renders the formatting toolbar as a .bn-toolbar inside a tippy/floating container
         document.querySelectorAll('.bn-toolbar').forEach(el => {
           const container = el.closest('[data-tippy-root], [style*="position"]');
-          if (container) container.style.display = 'none';
-          else el.style.display = 'none';
+          const target = container || el;
+          if (shouldHide) {
+            target.style.display = 'none';
+          } else {
+            // Restore toolbar visibility — let Tippy/BlockNote manage it from here
+            target.style.removeProperty('display');
+          }
         });
       } catch {}
     }
