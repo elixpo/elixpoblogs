@@ -313,15 +313,15 @@ do_release() {
 
     echo ""
     echo "==> [2/3] Publishing @elixpo/lixeditor to npm..."
-    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken='$_NPM_TOKEN'" \
-      && echo "    ✓ npm publish complete" \
-      || echo "    ✗ npm publish failed"
+    set +e
+    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken='$_NPM_TOKEN'"
+    if [ $? -eq 0 ]; then echo "    ✓ npm publish complete"; else echo "    ✗ npm publish failed"; fi
 
     echo ""
     echo "==> [3/3] Publishing @elixpo/lixeditor to GitHub Packages..."
-    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://npm.pkg.github.com/ --//npm.pkg.github.com/:_authToken='$_GH_TOKEN'" \
-      && echo "    ✓ GitHub Packages publish complete" \
-      || echo "    ✗ GitHub Packages publish failed (continuing...)"
+    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://npm.pkg.github.com/ --//npm.pkg.github.com/:_authToken='$_GH_TOKEN'"
+    if [ $? -eq 0 ]; then echo "    ✓ GitHub Packages publish complete"; else echo "    ✗ GitHub Packages publish failed (continuing...)"; fi
+    set -e
 
     echo ""
     echo "==> Editor release done"
