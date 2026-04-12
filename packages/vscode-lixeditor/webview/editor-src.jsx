@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, createCodeBlockSpec } from '@blocknote/core';
 import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems, TableHandlesController } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
+import { BlogImageBlock } from '../../lixeditor/src/blocks/ImageBlock';
 import './styles.css';
 
 // VS Code API
@@ -32,7 +33,7 @@ const codeBlock = createCodeBlockSpec({
 });
 
 const schema = BlockNoteSchema.create({
-  blockSpecs: { ...defaultBlockSpecs, codeBlock },
+  blockSpecs: { ...defaultBlockSpecs, codeBlock, image: BlogImageBlock({}) },
   inlineContentSpecs: { ...defaultInlineContentSpecs },
 });
 
