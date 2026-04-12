@@ -15,7 +15,7 @@ set -euo pipefail
 #
 # Release Commands:
 #   release [targets]   Full release with version bump + changelog + publish
-#                       Targets: engine, vscode, web, all (default: all)
+#                       Targets: editor, web, all (default: all)
 #
 # Options (for release):
 #   --patch     Patch version bump (default)
@@ -268,8 +268,7 @@ do_release() {
   local BUMP="patch"
   local DRY_RUN=false
   local SKIP_CHANGELOG=false
-  local RELEASE_ENGINE=false
-  local RELEASE_VSCODE=false
+  local RELEASE_EDITOR=false
   local RELEASE_WEB=false
   local TARGETS=()
 
@@ -281,8 +280,7 @@ do_release() {
       --major)  BUMP="major" ;;
       --dry-run) DRY_RUN=true ;;
       --skip-changelog) SKIP_CHANGELOG=true ;;
-      engine) TARGETS+=("engine") ;;
-      vscode) TARGETS+=("vscode") ;;
+      editor) TARGETS+=("editor") ;;
       web)    TARGETS+=("web") ;;
       all)    TARGETS+=("all") ;;
     esac
@@ -295,17 +293,15 @@ do_release() {
 
   for t in "${TARGETS[@]}"; do
     case "$t" in
-      engine) RELEASE_ENGINE=true ;;
-      vscode) RELEASE_VSCODE=true ;;
+      editor) RELEASE_EDITOR=true ;;
       web)    RELEASE_WEB=true ;;
-      all)    RELEASE_ENGINE=true; RELEASE_VSCODE=true; RELEASE_WEB=true ;;
+      all)    RELEASE_EDITOR=true; RELEASE_WEB=true ;;
     esac
   done
 
   # ── Load tokens from .env ──
   load_env
   local _NPM_TOKEN="${NPM_TOKEN:?NPM_TOKEN not set in .env}"
-  local _VSCE_PAT="${VSCE_PAT:?VSCE_PAT not set in .env}"
   local _GH_TOKEN="${GITHUB_ACCESS_TOKEN:?GITHUB_ACCESS_TOKEN not set in .env}"
 
   echo "==> Tokens loaded from .env"
@@ -313,18 +309,15 @@ do_release() {
   # ── Version Bump ──
   echo "==> Bumping versions ($BUMP)..."
 
-  if $RELEASE_ENGINE; then
-    dry_run "sudo npm version $BUMP --no-git-tag-version -w packages/lixsketch"
-  fi
-  if $RELEASE_VSCODE; then
-    dry_run "sudo npm version $BUMP --no-git-tag-version -w packages/vscode"
+  if $RELEASE_EDITOR; then
+    dry_run "sudo npm version $BUMP --no-git-tag-version -w packages/lixeditor"
   fi
   if $RELEASE_WEB; then
     dry_run "sudo npm version $BUMP --no-git-tag-version"
   fi
 
-  if $RELEASE_ENGINE; then
-    NEW_VERSION=$(node -p "require('./packages/lixsketch/package.json').version" 2>/dev/null || echo "0.0.0")
+  if $RELEASE_EDITOR; then
+    NEW_VERSION=$(node -p "require('./packages/lixeditor/package.json').version" 2>/dev/null || echo "0.0.0")
   else
     NEW_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0")
   fi
@@ -335,20 +328,14 @@ do_release() {
   generate_changelog
 
   # ── Build & Publish ──
-  if $RELEASE_ENGINE; then
-    echo "==> Publishing @elixpo/lixsketch to npm..."
-    dry_run "cd '$SCRIPT_DIR/packages/lixsketch' && sudo NPM_TOKEN='$_NPM_TOKEN' npm publish --access public --registry https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken='$_NPM_TOKEN'"
-    echo "==> Publishing @elixpo/lixsketch to GitHub Packages..."
-    dry_run "cd '$SCRIPT_DIR/packages/lixsketch' && sudo npm publish --access public --registry https://npm.pkg.github.com/ --//npm.pkg.github.com/:_authToken='$_GH_TOKEN'"
-    echo "==> Engine published (npm + GitHub Packages)"
-  fi
-
-  if $RELEASE_VSCODE; then
-    echo "==> Building VS Code extension..."
-    dry_run "cd '$SCRIPT_DIR/packages/vscode' && sudo npm run build"
-    echo "==> Packaging & publishing VS Code extension..."
-    dry_run "cd '$SCRIPT_DIR/packages/vscode' && sudo npx @vscode/vsce package --no-dependencies && sudo VSCE_PAT='$_VSCE_PAT' npx @vscode/vsce publish --no-dependencies --pat '$_VSCE_PAT'"
-    echo "==> VS Code extension published"
+  if $RELEASE_EDITOR; then
+    echo "==> Building @elixpo/lixeditor..."
+    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && npm run build"
+    echo "==> Publishing @elixpo/lixeditor to npm..."
+    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo NPM_TOKEN='$_NPM_TOKEN' npm publish --access public --registry https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken='$_NPM_TOKEN'"
+    echo "==> Publishing @elixpo/lixeditor to GitHub Packages..."
+    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://npm.pkg.github.com/ --//npm.pkg.github.com/:_authToken='$_GH_TOKEN'"
+    echo "==> Editor published (npm + GitHub Packages)"
   fi
 
   if $RELEASE_WEB; then
@@ -373,8 +360,7 @@ do_release() {
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "  Release v${NEW_VERSION} complete!"
   echo ""
-  $RELEASE_ENGINE && echo "  - @elixpo/lixsketch published to npm"
-  $RELEASE_VSCODE && echo "  - LixSketch VS Code extension published"
+  $RELEASE_EDITOR && echo "  - @elixpo/lixeditor published to npm + GitHub"
   $RELEASE_WEB    && echo "  - Website deployed to Cloudflare Pages"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
@@ -393,7 +379,7 @@ usage() {
   echo ""
   echo "Release Commands:"
   echo "  release [targets]   Full release with version bump + changelog + publish"
-  echo "                      Targets: engine, vscode, web, all (default: all)"
+  echo "                      Targets: engine, editor, vscode, web, all (default: all)"
   echo ""
   echo "Release Options:"
   echo "  --patch             Patch version bump (default)"
@@ -410,7 +396,8 @@ usage() {
   echo "Examples:"
   echo "  ./deploy.sh deploy                     # Quick website deploy"
   echo "  ./deploy.sh release all --minor        # Release everything"
-  echo "  ./deploy.sh release engine --patch     # Publish npm package only"
+  echo "  ./deploy.sh release engine --patch     # Publish lixsketch to npm"
+  echo "  ./deploy.sh release editor --patch     # Publish lixeditor to npm + GitHub"
   echo "  ./deploy.sh release vscode             # Publish VS Code extension"
   echo "  ./deploy.sh release all --dry-run      # Preview full release"
 }
