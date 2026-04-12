@@ -29,8 +29,7 @@ set -euo pipefail
 #
 # Auth tokens are read automatically from .env:
 #   NPM_TOKEN            → npm publish
-#   VSCE_PAT             → VS Code extension publish
-#   GITHUB_ACCESS_TOKEN  → gh release create
+#   GITHUB_ACCESS_TOKEN  → gh release create + GitHub Packages
 #
 # Examples:
 #   ./deploy.sh deploy                    # Quick website deploy
