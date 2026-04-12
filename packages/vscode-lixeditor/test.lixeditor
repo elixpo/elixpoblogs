@@ -260,6 +260,46 @@
       "textColor": "default",
       "textAlignment": "left"
     },
+    "content": [
+      {
+        "type": "dateInline",
+        "props": {
+          "date": "2026-04-12"
+        }
+      },
+      {
+        "type": "text",
+        "text": " fefef",
+        "styles": {}
+      }
+    ],
+    "children": []
+  },
+  {
+    "id": "eb92b7fb-70c7-47e6-9a0f-f920dcc3d7c8",
+    "type": "paragraph",
+    "props": {
+      "backgroundColor": "default",
+      "textColor": "default",
+      "textAlignment": "left"
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": " ",
+        "styles": {}
+      }
+    ],
+    "children": []
+  },
+  {
+    "id": "3970a1e1-84d6-42a6-b7ca-23b1d15ffc63",
+    "type": "paragraph",
+    "props": {
+      "backgroundColor": "default",
+      "textColor": "default",
+      "textAlignment": "left"
+    },
     "content": [],
     "children": []
   }
