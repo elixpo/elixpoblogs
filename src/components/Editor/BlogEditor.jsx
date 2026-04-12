@@ -1436,13 +1436,24 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
         const block = cursor.block;
         if (!block.content || !Array.isArray(block.content)) { setShowMentionMenu(false); return; }
 
-        const fullText = block.content.map((c) => c.text || '').join('');
-        const lastAt = fullText.lastIndexOf('@');
+        // Build text from only text nodes — skip already-resolved mention/inline nodes
+        let fullText = '';
+        let lastAtPos = -1;
+        for (const c of block.content) {
+          if (c.type === 'text' && c.text) {
+            const atIdx = c.text.lastIndexOf('@');
+            if (atIdx !== -1) lastAtPos = fullText.length + atIdx;
+            fullText += c.text;
+          } else {
+            // Non-text node (mention, equation, date, etc.) — use placeholder
+            fullText += '\ufffc';
+          }
+        }
 
-        if (lastAt === -1) { setShowMentionMenu(false); return; }
+        if (lastAtPos === -1) { setShowMentionMenu(false); return; }
 
-        const afterAt = fullText.slice(lastAt + 1);
-        if (afterAt.includes(' ') || afterAt.length > 30) { setShowMentionMenu(false); return; }
+        const afterAt = fullText.slice(lastAtPos + 1);
+        if (afterAt.includes(' ') || afterAt.includes('\ufffc') || afterAt.length > 30) { setShowMentionMenu(false); return; }
 
         const domSel = window.getSelection();
         if (domSel && domSel.rangeCount > 0) {
@@ -1459,7 +1470,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
         setMentionQuery(afterAt);
         setShowMentionMenu(true);
-        mentionStartRef.current = lastAt;
+        mentionStartRef.current = lastAtPos;
       } catch { setShowMentionMenu(false); }
     }
 
