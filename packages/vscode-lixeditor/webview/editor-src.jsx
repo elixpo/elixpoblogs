@@ -96,6 +96,60 @@ function EditorView({ initialContent, isDark, onChange }) {
     domAttributes: { editor: { class: 'lix-vscode-editor' } },
   });
 
+  // Auto-convert [text](url) to link and ![alt](url) to image
+  useEffect(() => {
+    if (!editor) return;
+    const tiptap = editor._tiptapEditor;
+    if (!tiptap) return;
+
+    const handleInput = () => {
+      const { state, view } = tiptap;
+      const { $from } = state.selection;
+      const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
+
+      // Image: ![alt](url)
+      const imgMatch = textBefore.match(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)$/);
+      if (imgMatch) {
+        const [fullMatch, alt, imgUrl] = imgMatch;
+        const from = $from.pos - fullMatch.length;
+        view.dispatch(state.tr.delete(from, $from.pos));
+        const cursorBlock = editor.getTextCursorPosition().block;
+        editor.insertBlocks([{ type: 'image', props: { url: imgUrl, caption: alt || '' } }], cursorBlock, 'after');
+        requestAnimationFrame(() => {
+          try {
+            const block = editor.getTextCursorPosition().block;
+            if (block?.type === 'paragraph' && !(block.content || []).some(c => c.text?.trim())) editor.removeBlocks([block.id]);
+          } catch {}
+        });
+        return;
+      }
+
+      // Link: [text](url)
+      const linkMatch = textBefore.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+      if (linkMatch) {
+        const [fullMatch, linkText, url] = linkMatch;
+        const from = $from.pos - fullMatch.length;
+        const linkMark = state.schema.marks.link.create({ href: url });
+        view.dispatch(state.tr.delete(from, $from.pos).insertText(linkText, from).addMark(from, from + linkText.length, linkMark));
+        return;
+      }
+
+      // Bare URL + space → auto-link
+      const urlMatch = textBefore.match(/(https?:\/\/[^\s]+)\s$/);
+      if (urlMatch) {
+        const [fullMatch, url] = urlMatch;
+        const from = $from.pos - fullMatch.length;
+        const to = $from.pos - 1;
+        const linkMark = state.schema.marks.link.create({ href: url });
+        view.dispatch(state.tr.addMark(from, to, linkMark));
+        return;
+      }
+    };
+
+    tiptap.on('update', handleInput);
+    return () => tiptap.off('update', handleInput);
+  }, [editor]);
+
   const handleEditorChange = useCallback(() => {
     onChange(editor);
   }, [editor, onChange]);
