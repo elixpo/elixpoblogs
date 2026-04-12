@@ -309,27 +309,47 @@ do_release() {
   # ── Changelog ──
   generate_changelog
 
-  # ── Build & Publish ──
-  if $RELEASE_EDITOR; then
+  # ── Build (needed for both npm and github) ──
+  if $RELEASE_NPM || $RELEASE_GITHUB; then
     echo ""
-    echo "==> [1/3] Building @elixpo/lixeditor..."
+    echo "==> Building @elixpo/lixeditor..."
     dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && npm run build"
     echo "    ✓ Build complete"
+  fi
 
+  # ── Publish to npm ──
+  if $RELEASE_NPM; then
     echo ""
-    echo "==> [2/3] Publishing @elixpo/lixeditor to npm..."
+    echo "==> Publishing @elixpo/lixeditor to npm..."
     set +e
     dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken='$_NPM_TOKEN'"
     if [ $? -eq 0 ]; then echo "    ✓ npm publish complete"; else echo "    ✗ npm publish failed"; fi
-
-    echo ""
-    echo "==> [3/3] Publishing @elixpo/lixeditor to GitHub Packages..."
-    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://npm.pkg.github.com/ --//npm.pkg.github.com/:_authToken='$_GH_TOKEN'"
-    if [ $? -eq 0 ]; then echo "    ✓ GitHub Packages publish complete"; else echo "    ✗ GitHub Packages publish failed (continuing...)"; fi
     set -e
+  fi
 
+  # ── Publish to GitHub Packages ──
+  if $RELEASE_GITHUB; then
     echo ""
-    echo "==> Editor release done"
+    echo "==> Publishing @elixpo/lixeditor to GitHub Packages..."
+    set +e
+    # Write a temp .npmrc for GitHub Packages auth
+    local EDITOR_DIR="$SCRIPT_DIR/packages/lixeditor"
+    local NPMRC_BAK=""
+    if [ -f "$EDITOR_DIR/.npmrc" ]; then
+      NPMRC_BAK=$(cat "$EDITOR_DIR/.npmrc")
+    fi
+    printf "@elixpo:registry=https://npm.pkg.github.com/\n//npm.pkg.github.com/:_authToken=%s\n" "$_GH_TOKEN" > "$EDITOR_DIR/.npmrc"
+
+    dry_run "cd '$EDITOR_DIR' && sudo npm publish --access public"
+    if [ $? -eq 0 ]; then echo "    ✓ GitHub Packages publish complete"; else echo "    ✗ GitHub Packages publish failed"; fi
+
+    # Restore or remove .npmrc
+    if [ -n "$NPMRC_BAK" ]; then
+      echo "$NPMRC_BAK" > "$EDITOR_DIR/.npmrc"
+    else
+      rm -f "$EDITOR_DIR/.npmrc"
+    fi
+    set -e
   fi
 
   if $RELEASE_WEB; then
