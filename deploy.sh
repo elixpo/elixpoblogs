@@ -226,9 +226,9 @@ generate_changelog() {
   local DATE
   DATE=$(date +%Y-%m-%d)
 
-  FEATS=$(git log "$RANGE" --oneline --format='%s' 2>/dev/null | grep -E '^feat' | sed 's/^feat(\([^)]*\)): /- **\1**: /' | sed 's/^feat: /- /' || true)
-  FIXES=$(git log "$RANGE" --oneline --format='%s' 2>/dev/null | grep -E '^fix' | sed 's/^fix(\([^)]*\)): /- **\1**: /' | sed 's/^fix: /- /' || true)
-  OTHER=$(git log "$RANGE" --oneline --format='%s' 2>/dev/null | grep -vE '^(feat|fix|docs|chore|ci|style|refactor|test)' || true)
+  FEATS=$(git log "$RANGE" --oneline --format='%s' 2>/dev/null | { grep -E '^feat' || true; } | sed 's/^feat(\([^)]*\)): /- **\1**: /' | sed 's/^feat: /- /')
+  FIXES=$(git log "$RANGE" --oneline --format='%s' 2>/dev/null | { grep -E '^fix' || true; } | sed 's/^fix(\([^)]*\)): /- **\1**: /' | sed 's/^fix: /- /')
+  OTHER=$(git log "$RANGE" --oneline --format='%s' 2>/dev/null | { grep -vE '^(feat|fix|docs|chore|ci|style|refactor|test)' || true; })
 
   {
     echo ""
