@@ -1,5 +1,30 @@
 # Changelog
 
+## v2.5.3 (2026-04-12)
+
+47663da feat: update release command usage to clarify targets for npm and GitHub publishing
+059ca44 feat: update release output to specify npm and GitHub Packages publishing
+c962434 feat: enhance release process to support separate npm and GitHub Packages publishing
+26a6430 feat: update release process to support npm and GitHub version bumps for lixeditor
+40138dc feat: update version to 4.9.1 and skip GitHub release in deployment script
+6df7772 release: v2.5.2
+c705189 Merge pull request #1 from elixpo/feat/package
+d5aeb07 release: v2.5.1
+3bbb800 feat: enhance release process with detailed build and publish steps for lixeditor
+d09bb85 feat: simplify changelog generation to list recent commits
+91e229e updated version patch number
+a16a7bf updated the release versions
+980ef26 updated the deploy.sh to sync github and npm
+fd36ceb updated the chore of the deploy to update npm too
+3f02499 fix: update GITHUB_ACCESS_TOKEN description in deploy script
+bf06094 feat: update release targets in deploy script to include editor
+bafa9ed dummy alterations
+8a1a20c feat: add loader configuration for JSX files in ESM and CJS builds
+780bdc2 created the  build file and installted esbuild package
+83411b7 updated version number patch for the package
+
+# Changelog
+
 ## v2.5.2 (2026-04-12)
 
 c705189 Merge pull request #1 from elixpo/feat/package
