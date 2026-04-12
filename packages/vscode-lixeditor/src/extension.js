@@ -65,6 +65,30 @@ class LixEditorProvider {
           );
           vscode.workspace.applyEdit(edit);
           break;
+        case 'save':
+          const saveEdit = new vscode.WorkspaceEdit();
+          saveEdit.replace(
+            document.uri,
+            new vscode.Range(0, 0, document.lineCount, 0),
+            JSON.stringify(message.blocks, null, 2)
+          );
+          vscode.workspace.applyEdit(saveEdit).then(() => {
+            document.save();
+          });
+          break;
+        case 'import':
+          vscode.window.showOpenDialog({
+            canSelectMany: false,
+            filters: { 'LixEditor Files': ['lixeditor', 'json'], 'Markdown': ['md'] },
+          }).then(uris => {
+            if (uris && uris[0]) {
+              vscode.workspace.fs.readFile(uris[0]).then(data => {
+                const text = Buffer.from(data).toString('utf8');
+                webviewPanel.webview.postMessage({ type: 'import', content: text });
+              });
+            }
+          });
+          break;
       }
     });
 
