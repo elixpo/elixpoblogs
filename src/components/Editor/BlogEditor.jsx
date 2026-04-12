@@ -606,6 +606,68 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     };
   }, []);
 
+  // Intercept BlockNote's "Edit link" button — replace with our custom link editor
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const handleClick = (e) => {
+      // Check if the click is on BlockNote's edit link button
+      const editBtn = e.target.closest('.bn-link-toolbar .bn-button');
+      if (!editBtn) return;
+      // Only intercept the first button (Edit link), not the open button
+      const toolbar = editBtn.closest('.bn-link-toolbar');
+      if (!toolbar) return;
+      const buttons = toolbar.querySelectorAll('.bn-button');
+      if (buttons[0] !== editBtn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Find the link element in the editor
+      const tiptap = editor?._tiptapEditor;
+      if (!tiptap) return;
+      const { state } = tiptap;
+      const { from, to } = state.selection;
+
+      // Find link mark at cursor
+      const $pos = state.doc.resolve(from);
+      const marks = $pos.marks();
+      const linkMark = marks.find(m => m.type.name === 'link');
+      if (!linkMark) return;
+
+      // Get the full range of the link mark
+      let linkFrom = from, linkTo = to;
+      state.doc.nodesBetween(Math.max(0, from - 200), Math.min(state.doc.content.size, to + 200), (node, pos) => {
+        if (node.isText && node.marks.some(m => m.type.name === 'link' && m.attrs.href === linkMark.attrs.href)) {
+          if (pos < linkFrom) linkFrom = pos;
+          if (pos + node.nodeSize > linkTo) linkTo = pos + node.nodeSize;
+        }
+      });
+
+      const anchorText = state.doc.textBetween(linkFrom, linkTo);
+      const url = linkMark.attrs.href;
+
+      // Position below the link element
+      const linkEl = wrapper.querySelector('.bn-link-toolbar')?.parentElement?.querySelector('a[href]')
+        || document.querySelector(`a[href="${url}"]`);
+      const rect = linkEl?.getBoundingClientRect() || editBtn.getBoundingClientRect();
+
+      setLinkEditor({
+        anchorText,
+        url,
+        from: linkFrom,
+        to: linkTo,
+        top: rect.bottom + 6,
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - 340)),
+      });
+    };
+
+    // Use capture to intercept before BlockNote's handler
+    wrapper.addEventListener('click', handleClick, true);
+    return () => wrapper.removeEventListener('click', handleClick, true);
+  }, [editor]);
+
   const sanitizedContent = useMemo(() => sanitizeInitialContent(initialContent), [initialContent]);
 
   const editor = useCreateBlockNote({
@@ -2381,6 +2443,106 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
           url={editorLinkPreview.preview.url}
           onClose={editorLinkPreview.hide}
         />
+      )}
+
+      {/* Custom link editor — [anchor text](url) */}
+      {linkEditor && (
+        <>
+          <div className="fixed inset-0 z-[98]" onClick={() => setLinkEditor(null)} />
+          <div
+            className="link-editor-popup"
+            style={{ top: linkEditor.top, left: linkEditor.left }}
+          >
+            <div className="link-editor-header">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9b7bf7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+              </svg>
+              <span>Edit Link</span>
+            </div>
+            <div className="link-editor-fields">
+              <div className="link-editor-field">
+                <label className="link-editor-label">Text</label>
+                <input
+                  type="text"
+                  value={linkEditor.anchorText}
+                  onChange={(e) => setLinkEditor(prev => ({ ...prev, anchorText: e.target.value }))}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      // Save the link
+                      const tiptap = editor._tiptapEditor;
+                      if (tiptap) {
+                        const { state, view } = tiptap;
+                        const linkMark = state.schema.marks.link.create({ href: linkEditor.url });
+                        const tr = state.tr
+                          .delete(linkEditor.from, linkEditor.to)
+                          .insertText(linkEditor.anchorText || linkEditor.url, linkEditor.from)
+                          .addMark(linkEditor.from, linkEditor.from + (linkEditor.anchorText || linkEditor.url).length, linkMark);
+                        view.dispatch(tr);
+                      }
+                      setLinkEditor(null);
+                    }
+                    if (e.key === 'Escape') setLinkEditor(null);
+                  }}
+                  placeholder="Link text..."
+                  className="link-editor-input"
+                  autoFocus
+                />
+              </div>
+              <div className="link-editor-field">
+                <label className="link-editor-label">URL</label>
+                <input
+                  type="text"
+                  value={linkEditor.url}
+                  onChange={(e) => setLinkEditor(prev => ({ ...prev, url: e.target.value }))}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const tiptap = editor._tiptapEditor;
+                      if (tiptap) {
+                        const { state, view } = tiptap;
+                        const linkMark = state.schema.marks.link.create({ href: linkEditor.url });
+                        const tr = state.tr
+                          .delete(linkEditor.from, linkEditor.to)
+                          .insertText(linkEditor.anchorText || linkEditor.url, linkEditor.from)
+                          .addMark(linkEditor.from, linkEditor.from + (linkEditor.anchorText || linkEditor.url).length, linkMark);
+                        view.dispatch(tr);
+                      }
+                      setLinkEditor(null);
+                    }
+                    if (e.key === 'Escape') setLinkEditor(null);
+                  }}
+                  placeholder="https://..."
+                  className="link-editor-input"
+                />
+              </div>
+            </div>
+            <div className="link-editor-actions">
+              <button className="link-editor-cancel" onClick={() => setLinkEditor(null)}>Cancel</button>
+              <button
+                className="link-editor-save"
+                disabled={!linkEditor.url.trim()}
+                onClick={() => {
+                  const tiptap = editor._tiptapEditor;
+                  if (tiptap) {
+                    const { state, view } = tiptap;
+                    const linkMark = state.schema.marks.link.create({ href: linkEditor.url });
+                    const text = linkEditor.anchorText || linkEditor.url;
+                    const tr = state.tr
+                      .delete(linkEditor.from, linkEditor.to)
+                      .insertText(text, linkEditor.from)
+                      .addMark(linkEditor.from, linkEditor.from + text.length, linkMark);
+                    view.dispatch(tr);
+                  }
+                  setLinkEditor(null);
+                }}
+              >Save</button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
