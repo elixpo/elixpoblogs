@@ -282,11 +282,66 @@ a:hover { text-decoration: underline; }
   color: var(--vscode-descriptionForeground, #aaa);
 }
 
-/* ===== Date Chip (VS Code theme) ===== */
-.preview-date-chip,
-[class*="date-chip"] {
+/* ===== Date Chip — fix sizing for VS Code ===== */
+.lix-vscode-editor span[style*="rgba(155"] {
+  font-size: 13px !important;
+  padding: 1px 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  border-radius: 4px !important;
+  vertical-align: baseline !important;
+  line-height: 1.4 !important;
+}
+
+.lix-vscode-editor span[style*="rgba(155"] svg {
+  width: 12px !important;
+  height: 12px !important;
+  flex-shrink: 0;
+}
+
+/* ===== Code Block Language Selector ===== */
+[data-content-type="codeBlock"] select {
+  background: var(--vscode-dropdown-background, #2d2d2d) !important;
+  color: var(--vscode-dropdown-foreground, #ccc) !important;
+  border: 1px solid var(--vscode-dropdown-border, #444) !important;
+  border-radius: 4px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  font-family: var(--vscode-editor-fontFamily, monospace) !important;
+  cursor: pointer;
+  outline: none;
+  margin: 4px 8px;
+  appearance: auto;
+}
+
+[data-content-type="codeBlock"] select:focus {
+  border-color: #9b7bf7 !important;
+}
+
+[data-content-type="codeBlock"] select option {
+  background: var(--vscode-dropdown-background, #2d2d2d);
+  color: var(--vscode-dropdown-foreground, #ccc);
+  padding: 4px 8px;
+}
+
+/* ===== Image block overrides for VS Code ===== */
+.blog-img-empty {
+  background: var(--vscode-editorWidget-background, rgba(0,0,0,0.1)) !important;
+  border-color: var(--vscode-editorWidget-border, rgba(255,255,255,0.1)) !important;
+}
+
+.blog-img-action {
+  background: var(--vscode-button-secondaryBackground, rgba(255,255,255,0.06)) !important;
+  border-color: var(--vscode-editorWidget-border, rgba(255,255,255,0.1)) !important;
+  color: var(--vscode-foreground, #ccc) !important;
+}
+
+.blog-img-action:hover {
+  background: rgba(155, 123, 247, 0.12) !important;
   color: #9b7bf7 !important;
 }
 
-/* Date chip override for VS Code */
-.lix-vscode-editor .inline-flex { display: inline-flex; }
+.blog-img-hint {
+  color: var(--vscode-descriptionForeground, #888) !important;
+}
