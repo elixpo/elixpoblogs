@@ -341,9 +341,7 @@ do_release() {
   dry_run "sudo git tag 'v${NEW_VERSION}'"
   dry_run "sudo git push \"\$(auth_remote)\" main --tags"
 
-  # ── GitHub Release ──
-  echo "==> Creating GitHub release..."
-  dry_run "sudo GH_TOKEN='$_GH_TOKEN' GITHUB_TOKEN='$_GH_TOKEN' gh release create 'v${NEW_VERSION}' --generate-notes --title 'v${NEW_VERSION}'"
+  # ── GitHub Release (skipped — using GitHub Packages instead) ──
 
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

@@ -1,5 +1,30 @@
 # Changelog
 
+## v2.5.2 (2026-04-12)
+
+c705189 Merge pull request #1 from elixpo/feat/package
+d5aeb07 release: v2.5.1
+3bbb800 feat: enhance release process with detailed build and publish steps for lixeditor
+d09bb85 feat: simplify changelog generation to list recent commits
+91e229e updated version patch number
+a16a7bf updated the release versions
+980ef26 updated the deploy.sh to sync github and npm
+fd36ceb updated the chore of the deploy to update npm too
+3f02499 fix: update GITHUB_ACCESS_TOKEN description in deploy script
+bf06094 feat: update release targets in deploy script to include editor
+bafa9ed dummy alterations
+8a1a20c feat: add loader configuration for JSX files in ESM and CJS builds
+780bdc2 created the  build file and installted esbuild package
+83411b7 updated version number patch for the package
+dd7d8f7 feat: enhance logout functionality and draft saving mechanism in AuthContext and WritePage
+68c039b feat: implement custom link editor popup in BlogEditor
+ee0eeb6 feat: add state management for link editor in BlogEditor
+dcba07f feat: improve event listener handling for Ctrl+K shortcut in BlogEditor
+93eaeb4 feat: enhance link handling in BlogEditor with auto-conversion and Ctrl+K shortcut
+16a9219 feat: enhance create link button styling and popover design in BlogEditor
+
+# Changelog
+
 ## v2.5.1 (2026-04-12)
 
 3bbb800 feat: enhance release process with detailed build and publish steps for lixeditor
