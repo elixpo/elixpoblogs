@@ -602,68 +602,6 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     };
   }, []);
 
-  // Intercept BlockNote's "Edit link" button — replace with our custom link editor
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-
-    const handleClick = (e) => {
-      // Check if the click is on BlockNote's edit link button
-      const editBtn = e.target.closest('.bn-link-toolbar .bn-button');
-      if (!editBtn) return;
-      // Only intercept the first button (Edit link), not the open button
-      const toolbar = editBtn.closest('.bn-link-toolbar');
-      if (!toolbar) return;
-      const buttons = toolbar.querySelectorAll('.bn-button');
-      if (buttons[0] !== editBtn) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Find the link element in the editor
-      const tiptap = editor?._tiptapEditor;
-      if (!tiptap) return;
-      const { state } = tiptap;
-      const { from, to } = state.selection;
-
-      // Find link mark at cursor
-      const $pos = state.doc.resolve(from);
-      const marks = $pos.marks();
-      const linkMark = marks.find(m => m.type.name === 'link');
-      if (!linkMark) return;
-
-      // Get the full range of the link mark
-      let linkFrom = from, linkTo = to;
-      state.doc.nodesBetween(Math.max(0, from - 200), Math.min(state.doc.content.size, to + 200), (node, pos) => {
-        if (node.isText && node.marks.some(m => m.type.name === 'link' && m.attrs.href === linkMark.attrs.href)) {
-          if (pos < linkFrom) linkFrom = pos;
-          if (pos + node.nodeSize > linkTo) linkTo = pos + node.nodeSize;
-        }
-      });
-
-      const anchorText = state.doc.textBetween(linkFrom, linkTo);
-      const url = linkMark.attrs.href;
-
-      // Position below the link element
-      const linkEl = wrapper.querySelector('.bn-link-toolbar')?.parentElement?.querySelector('a[href]')
-        || document.querySelector(`a[href="${url}"]`);
-      const rect = linkEl?.getBoundingClientRect() || editBtn.getBoundingClientRect();
-
-      setLinkEditor({
-        anchorText,
-        url,
-        from: linkFrom,
-        to: linkTo,
-        top: rect.bottom + 6,
-        left: Math.max(8, Math.min(rect.left, window.innerWidth - 340)),
-      });
-    };
-
-    // Use capture to intercept before BlockNote's handler
-    wrapper.addEventListener('click', handleClick, true);
-    return () => wrapper.removeEventListener('click', handleClick, true);
-  }, [editor]);
-
   const sanitizedContent = useMemo(() => sanitizeInitialContent(initialContent), [initialContent]);
 
   const editor = useCreateBlockNote({
@@ -677,6 +615,59 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
       default: "Press 'Space' for AI, type '/' for commands",
     },
   });
+
+  // Intercept BlockNote's "Edit link" button — replace with our custom link editor
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper || !editor) return;
+
+    const handleClick = (e) => {
+      const editBtn = e.target.closest('.bn-link-toolbar .bn-button');
+      if (!editBtn) return;
+      const toolbar = editBtn.closest('.bn-link-toolbar');
+      if (!toolbar) return;
+      const buttons = toolbar.querySelectorAll('.bn-button');
+      if (buttons[0] !== editBtn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const tiptap = editor?._tiptapEditor;
+      if (!tiptap) return;
+      const { state } = tiptap;
+      const { from, to } = state.selection;
+
+      const $pos = state.doc.resolve(from);
+      const marks = $pos.marks();
+      const linkMark = marks.find(m => m.type.name === 'link');
+      if (!linkMark) return;
+
+      let linkFrom = from, linkTo = to;
+      state.doc.nodesBetween(Math.max(0, from - 200), Math.min(state.doc.content.size, to + 200), (node, pos) => {
+        if (node.isText && node.marks.some(m => m.type.name === 'link' && m.attrs.href === linkMark.attrs.href)) {
+          if (pos < linkFrom) linkFrom = pos;
+          if (pos + node.nodeSize > linkTo) linkTo = pos + node.nodeSize;
+        }
+      });
+
+      const anchorText = state.doc.textBetween(linkFrom, linkTo);
+      const url = linkMark.attrs.href;
+
+      const linkEl = wrapper.querySelector('.bn-link-toolbar')?.parentElement?.querySelector('a[href]')
+        || document.querySelector(`a[href="${url}"]`);
+      const rect = linkEl?.getBoundingClientRect() || editBtn.getBoundingClientRect();
+
+      setLinkEditor({
+        anchorText, url,
+        from: linkFrom, to: linkTo,
+        top: rect.bottom + 6,
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - 340)),
+      });
+    };
+
+    wrapper.addEventListener('click', handleClick, true);
+    return () => wrapper.removeEventListener('click', handleClick, true);
+  }, [editor]);
 
   // Auto-convert ![alt](url) to image block and [text](url) to link as you type
   useEffect(() => {
