@@ -286,8 +286,14 @@ do_release() {
 
   # ── Load tokens from .env ──
   load_env
-  local _NPM_TOKEN="${NPM_TOKEN:?NPM_TOKEN not set in .env}"
-  local _GH_TOKEN="${GITHUB_ACCESS_TOKEN:?GITHUB_ACCESS_TOKEN not set in .env}"
+  local _NPM_TOKEN="${NPM_TOKEN:-}"
+  local _GH_TOKEN="${GITHUB_ACCESS_TOKEN:-}"
+  local _VSCE_PAT="${VSCE_PAT:-}"
+
+  # Validate tokens based on targets
+  if $RELEASE_NPM && [ -z "$_NPM_TOKEN" ]; then echo "Error: NPM_TOKEN not set in .env"; exit 1; fi
+  if $RELEASE_GITHUB && [ -z "$_GH_TOKEN" ]; then echo "Error: GITHUB_ACCESS_TOKEN not set in .env"; exit 1; fi
+  if $RELEASE_VSCODE && [ -z "$_VSCE_PAT" ]; then echo "Error: VSCE_PAT not set in .env"; exit 1; fi
 
   echo "==> Tokens loaded from .env"
 
