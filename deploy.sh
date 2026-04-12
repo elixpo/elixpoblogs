@@ -51,9 +51,10 @@ load_env() {
     echo "Error: .env not found at $ENV_FILE"
     exit 1
   fi
-  set -a
-  source "$ENV_FILE"
-  set +a
+  while IFS= read -r line || [ -n "$line" ]; do
+    [[ -z "$line" || "$line" =~ ^# ]] && continue
+    export "$line" 2>/dev/null || true
+  done < "$ENV_FILE"
 }
 
 get_binding_ids() {
@@ -309,7 +310,7 @@ do_release() {
   echo "==> Bumping versions ($BUMP)..."
 
   if $RELEASE_EDITOR; then
-    dry_run "sudo npm version $BUMP --no-git-tag-version -w packages/lixeditor"
+    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm version $BUMP --no-git-tag-version && cd '$SCRIPT_DIR'"
   fi
   if $RELEASE_WEB; then
     dry_run "sudo npm version $BUMP --no-git-tag-version"
