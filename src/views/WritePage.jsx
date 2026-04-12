@@ -616,6 +616,8 @@ export default function WritePage({ slugid }) {
           navigator.sendBeacon('/api/blogs/draft', blob);
         } catch {}
       }
+      // Also flush any buffered subpage drafts on unload
+      try { syncSubpageDrafts(); } catch {}
       if (hasUnsavedEdits) {
         e.preventDefault();
         e.returnValue = '';
@@ -623,7 +625,7 @@ export default function WritePage({ slugid }) {
     }
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [slugid, hasUnsavedEdits]);
+  }, [slugid, hasUnsavedEdits, syncSubpageDrafts]);
 
   // Intercept clicks on <a> tags within the editor page to show custom modal
   useEffect(() => {
