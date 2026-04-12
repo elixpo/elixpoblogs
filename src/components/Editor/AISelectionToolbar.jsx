@@ -240,18 +240,21 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
       toolbar.appendChild(btn);
     }
 
-    // Try once on mount, then observe DOM for toolbar appearing
+    // Toolbar is a tippy popup created on text selection — inject buttons when it appears.
+    // Use selectionchange (fires when toolbar would appear) instead of MutationObserver+subtree
+    // which fires on every keystroke and causes high CPU/memory usage.
     tryInject();
-    const observer = new MutationObserver(() => {
-      if (!injectedRef.current) tryInject();
-    });
-    const wrapper = document.querySelector('.blog-editor-wrapper');
-    if (wrapper) observer.observe(wrapper, { childList: true, subtree: true });
-    // Also try on first selection (toolbar appears on text select)
-    const onSelect = () => { tryInject(); if (injectedRef.current) document.removeEventListener('selectionchange', onSelect); };
+    let rafId = null;
+    const onSelect = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        tryInject();
+      });
+    };
     document.addEventListener('selectionchange', onSelect);
 
-    return () => { observer.disconnect(); document.removeEventListener('selectionchange', onSelect); };
+    return () => { document.removeEventListener('selectionchange', onSelect); if (rafId) cancelAnimationFrame(rafId); };
   }, [editor]);
 
   // Focus prompt input when entering prompting mode
