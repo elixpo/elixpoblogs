@@ -296,19 +296,25 @@ function EditorView({ initialContent, isDark, onChange }) {
 
     const handleMouseOver = (e) => {
       const link = e.target.closest('a[href]');
-      if (!link || link.closest('.bn-toolbar')) return;
+      if (!link || link.closest('.bn-toolbar') || link.closest('.bn-link-toolbar')) return;
+      // Don't show preview if link toolbar is visible
+      if (document.querySelector('.bn-link-toolbar')) return;
       const href = link.getAttribute('href');
       if (href && href.startsWith('http')) linkPreviewRef.current.show(link, href);
     };
     const handleMouseOut = (e) => {
       if (e.target.closest('a[href]')) linkPreviewRef.current.cancel();
     };
+    // Hide preview when clicking (which triggers the link toolbar)
+    const handleClick = () => { linkPreviewRef.current.cancel(); };
+    wrapper.addEventListener('click', handleClick);
 
     wrapper.addEventListener('mouseover', handleMouseOver);
     wrapper.addEventListener('mouseout', handleMouseOut);
     return () => {
       wrapper.removeEventListener('mouseover', handleMouseOver);
       wrapper.removeEventListener('mouseout', handleMouseOut);
+      wrapper.removeEventListener('click', handleClick);
     };
   }, []);
 
