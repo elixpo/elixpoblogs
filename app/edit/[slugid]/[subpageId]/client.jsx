@@ -58,7 +58,16 @@ export default function SubpageClient({ params }) {
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [hasUnsavedEdits, setHasUnsavedEdits] = useState(false);
+  const hadUserGestureRef = useRef(false);
   const titleInputRef = useRef(null);
+
+  // Track user gesture so beforeunload dialog only fires after interaction
+  useEffect(() => {
+    const mark = () => { hadUserGestureRef.current = true; };
+    window.addEventListener('keydown', mark, { once: true });
+    window.addEventListener('pointerdown', mark, { once: true });
+    return () => { window.removeEventListener('keydown', mark); window.removeEventListener('pointerdown', mark); };
+  }, []);
 
   // Ref to always hold latest draft data (avoids stale closures in intervals/beforeunload)
   const draftDataRef = useRef({ title, editorContent });
@@ -238,7 +247,7 @@ export default function SubpageClient({ params }) {
           }).catch(() => {});
         } catch {}
       }
-      if (hasUnsavedEdits) {
+      if (hasUnsavedEdits && hadUserGestureRef.current) {
         e.preventDefault();
         e.returnValue = '';
       }

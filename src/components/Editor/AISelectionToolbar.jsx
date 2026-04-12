@@ -32,7 +32,7 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
   useEffect(() => {
     if (!editor) return;
 
-    const interval = setInterval(() => {
+    function tryInject() {
       const toolbar = document.querySelector('.blog-editor-wrapper .bn-toolbar');
       if (!toolbar) {
         injectedRef.current = false;
@@ -238,9 +238,20 @@ export default function AISelectionToolbar({ editor, onTitleChange, blogId }) {
       toolbar.appendChild(highlightBtn);
       toolbar.appendChild(sep);
       toolbar.appendChild(btn);
-    }, 200);
+    }
 
-    return () => clearInterval(interval);
+    // Try once on mount, then observe DOM for toolbar appearing
+    tryInject();
+    const observer = new MutationObserver(() => {
+      if (!injectedRef.current) tryInject();
+    });
+    const wrapper = document.querySelector('.blog-editor-wrapper');
+    if (wrapper) observer.observe(wrapper, { childList: true, subtree: true });
+    // Also try on first selection (toolbar appears on text select)
+    const onSelect = () => { tryInject(); if (injectedRef.current) document.removeEventListener('selectionchange', onSelect); };
+    document.addEventListener('selectionchange', onSelect);
+
+    return () => { observer.disconnect(); document.removeEventListener('selectionchange', onSelect); };
   }, [editor]);
 
   // Focus prompt input when entering prompting mode

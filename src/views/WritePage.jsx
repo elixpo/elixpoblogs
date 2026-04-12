@@ -428,6 +428,7 @@ export default function WritePage({ slugid }) {
   const [lastKnownUpdatedAt, setLastKnownUpdatedAt] = useState(null);
   const [userOrgs, setUserOrgs] = useState([]);
   const [hasUnsavedEdits, setHasUnsavedEdits] = useState(false);
+  const hadUserGestureRef = useRef(false);
   const isPublished = blogVersion?.isPublished;
   const [coverZoom, setCoverZoom] = useState(1);
   const [coverPos, setCoverPos] = useState({ x: 50, y: 50 });
@@ -479,6 +480,14 @@ export default function WritePage({ slugid }) {
       })
       .catch(() => {});
   }, [slugid, hasCollaborators]);
+
+  // Track user gesture so beforeunload dialog only fires after interaction
+  useEffect(() => {
+    const mark = () => { hadUserGestureRef.current = true; };
+    window.addEventListener('keydown', mark, { once: true });
+    window.addEventListener('pointerdown', mark, { once: true });
+    return () => { window.removeEventListener('keydown', mark); window.removeEventListener('pointerdown', mark); };
+  }, []);
 
   // Refs to always hold latest draft data (avoids stale closures in intervals/beforeunload)
   const draftDataRef = useRef({ title, subtitle, tags, publishAs, coverPreview, editorContent, pageEmoji });
@@ -618,7 +627,7 @@ export default function WritePage({ slugid }) {
       }
       // Also flush any buffered subpage drafts on unload
       try { syncSubpageDrafts(); } catch {}
-      if (hasUnsavedEdits) {
+      if (hasUnsavedEdits && hadUserGestureRef.current) {
         e.preventDefault();
         e.returnValue = '';
       }

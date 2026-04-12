@@ -958,8 +958,12 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     }
 
     injectTableDeleteButtons();
+    // Only watch for new blocks being added (childList on the editor root),
+    // NOT subtree which fires on every keystroke inside any block
+    const editorRoot = wrapper.querySelector('.bn-editor');
+    if (!editorRoot) return;
     const observer = new MutationObserver(injectTableDeleteButtons);
-    observer.observe(wrapper, { childList: true, subtree: true });
+    observer.observe(editorRoot, { childList: true });
     return () => observer.disconnect();
   }, [editor]);
 
@@ -1262,31 +1266,35 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const noToolbarTypes = useMemo(() => new Set(['codeBlock', 'blockEquation', 'mermaidBlock', 'image', 'tabsBlock', 'aiBlock', 'pdfEmbed', 'tableOfContents', 'buttonBlock', 'breadcrumbs']), []);
 
   useEffect(() => {
+    let rafId = null;
     function hideToolbarForCustomBlocks() {
-      try {
-        const cursor = editor.getTextCursorPosition();
-        const blockType = cursor?.block?.type;
-        const shouldHide = blockType && noToolbarTypes.has(blockType);
-        // BlockNote renders the formatting toolbar as a .bn-toolbar inside a tippy/floating container
-        document.querySelectorAll('.bn-toolbar').forEach(el => {
-          const container = el.closest('[data-tippy-root], [style*="position"]');
-          const target = container || el;
-          if (shouldHide) {
-            target.style.display = 'none';
-          } else {
-            // Restore toolbar visibility — let Tippy/BlockNote manage it from here
-            target.style.removeProperty('display');
-          }
-        });
-      } catch {}
+      // Debounce via rAF — selectionchange fires very frequently during typing
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        try {
+          const cursor = editor.getTextCursorPosition();
+          const blockType = cursor?.block?.type;
+          const shouldHide = blockType && noToolbarTypes.has(blockType);
+          document.querySelectorAll('.bn-toolbar').forEach(el => {
+            const container = el.closest('[data-tippy-root], [style*="position"]');
+            const target = container || el;
+            if (shouldHide) {
+              target.style.display = 'none';
+            } else {
+              target.style.removeProperty('display');
+            }
+          });
+        } catch {}
+      });
     }
 
     document.addEventListener('selectionchange', hideToolbarForCustomBlocks);
-    // Also run on click (selection might not change but focus does)
     document.addEventListener('click', hideToolbarForCustomBlocks, true);
     return () => {
       document.removeEventListener('selectionchange', hideToolbarForCustomBlocks);
       document.removeEventListener('click', hideToolbarForCustomBlocks, true);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [editor, noToolbarTypes]);
 
@@ -1473,10 +1481,8 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     }
 
     editorEl.addEventListener('input', checkMention);
-    editorEl.addEventListener('keyup', checkMention);
     return () => {
       editorEl.removeEventListener('input', checkMention);
-      editorEl.removeEventListener('keyup', checkMention);
     };
   }, [editor]);
 
