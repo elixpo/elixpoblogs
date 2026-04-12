@@ -306,13 +306,25 @@ do_release() {
 
   # ── Build & Publish ──
   if $RELEASE_EDITOR; then
-    echo "==> Building @elixpo/lixeditor..."
+    echo ""
+    echo "==> [1/3] Building @elixpo/lixeditor..."
     dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && npm run build"
-    echo "==> Publishing @elixpo/lixeditor to npm..."
-    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo NPM_TOKEN='$_NPM_TOKEN' npm publish --access public --registry https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken='$_NPM_TOKEN'"
-    echo "==> Publishing @elixpo/lixeditor to GitHub Packages..."
-    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://npm.pkg.github.com/ --//npm.pkg.github.com/:_authToken='$_GH_TOKEN'"
-    echo "==> Editor published (npm + GitHub Packages)"
+    echo "    ✓ Build complete"
+
+    echo ""
+    echo "==> [2/3] Publishing @elixpo/lixeditor to npm..."
+    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://registry.npmjs.org/ --//registry.npmjs.org/:_authToken='$_NPM_TOKEN'" \
+      && echo "    ✓ npm publish complete" \
+      || echo "    ✗ npm publish failed"
+
+    echo ""
+    echo "==> [3/3] Publishing @elixpo/lixeditor to GitHub Packages..."
+    dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm publish --access public --registry https://npm.pkg.github.com/ --//npm.pkg.github.com/:_authToken='$_GH_TOKEN'" \
+      && echo "    ✓ GitHub Packages publish complete" \
+      || echo "    ✗ GitHub Packages publish failed (continuing...)"
+
+    echo ""
+    echo "==> Editor release done"
   fi
 
   if $RELEASE_WEB; then
