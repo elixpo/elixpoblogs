@@ -291,14 +291,14 @@ do_release() {
   # ── Version Bump ──
   echo "==> Bumping versions ($BUMP)..."
 
-  if $RELEASE_EDITOR; then
+  if $RELEASE_NPM || $RELEASE_GITHUB; then
     dry_run "cd '$SCRIPT_DIR/packages/lixeditor' && sudo npm version $BUMP --no-git-tag-version && cd '$SCRIPT_DIR'"
   fi
   if $RELEASE_WEB; then
     dry_run "sudo npm version $BUMP --no-git-tag-version"
   fi
 
-  if $RELEASE_EDITOR; then
+  if $RELEASE_NPM || $RELEASE_GITHUB; then
     NEW_VERSION=$(node -p "require('./packages/lixeditor/package.json').version" 2>/dev/null || echo "0.0.0")
   else
     NEW_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0")
