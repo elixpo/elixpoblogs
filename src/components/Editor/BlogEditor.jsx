@@ -236,14 +236,9 @@ function getCustomSlashMenuItems(editor, callbacks = {}) {
       icon: <Icon d="M3 3h7v7H3zM14 3h7v7h-7zM8.5 14h7v7h-7z" d2="M6.5 10v4M17.5 10v4" />,
       onItemClick: () => editor.insertBlocks([{ type: 'mermaidBlock' }], editor.getTextCursorPosition().block, 'after'),
     },
-    {
-      title: 'PDF Embed',
-      subtext: 'Embed a PDF document from URL',
-      group: 'Custom Blocks',
-      aliases: ['pdf', 'document', 'embed pdf', 'file'],
-      icon: <Icon d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" d2="M14 2v6h6" />,
-      onItemClick: () => editor.insertBlocks([{ type: 'pdfEmbed' }], editor.getTextCursorPosition().block, 'after'),
-    },
+    // PDF embed removed: only static-image attachments are allowed in blog
+    // content. The pdfEmbed block spec stays mounted for backward compat
+    // with already-saved blogs but is no longer insertable from the menu.
     {
       title: 'AI Block',
       subtext: 'Generate content with AI',
