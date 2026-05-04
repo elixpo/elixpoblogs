@@ -39,6 +39,55 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
 
   // Handle messages from the canvas iframe
   useEffect(() => {
+    async function handleUploadImageRequest(msg) {
+      const post = (payload) => {
+        const w = iframeRef.current?.contentWindow;
+        if (!w) return;
+        w.postMessage({ type: 'lixsketch:upload-image-result', ...payload }, EMBED_ORIGIN);
+      };
+
+      try {
+        if (!msg.dataUrl || !msg.dataUrl.startsWith('data:')) {
+          post({ requestId: msg.requestId, error: 'Invalid data URL' });
+          return;
+        }
+        // dataUrl → Blob → File
+        const m = msg.dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (!m) {
+          post({ requestId: msg.requestId, error: 'Unsupported encoding' });
+          return;
+        }
+        const mime = m[1] || 'image/png';
+        const bin = atob(m[2]);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const ext = (mime.split('/')[1] || 'png').split('+')[0];
+        const file = new File([bytes], `${msg.filename || 'canvas_image'}.${ext}`, { type: mime });
+
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('blogId', slugid);
+        fd.append('type', 'image');
+
+        const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          post({ requestId: msg.requestId, error: data.error || `HTTP ${res.status}` });
+          return;
+        }
+        const data = await res.json();
+        post({
+          requestId: msg.requestId,
+          url: data.url,
+          publicId: data.publicId,
+          sizeBytes: data.sizeBytes,
+        });
+      } catch (err) {
+        const w = iframeRef.current?.contentWindow;
+        if (w) w.postMessage({ type: 'lixsketch:upload-image-result', requestId: msg.requestId, error: err.message }, EMBED_ORIGIN);
+      }
+    }
+
     function onMessage(e) {
       if (EMBED_ORIGIN !== '*' && e.origin !== EMBED_ORIGIN) return;
       const msg = e.data;
@@ -79,6 +128,11 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
             }
           })
           .catch(() => setSyncStatus('error'));
+        return;
+      }
+
+      if (msg.type === 'lixsketch:upload-image') {
+        handleUploadImageRequest(msg).catch(() => {});
         return;
       }
 
