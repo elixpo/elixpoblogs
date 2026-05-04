@@ -1,5 +1,6 @@
 'use client';
 
+import { isAllowedImage } from '../../utils/allowedImageTypes';
 import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, createCodeBlockSpec } from '@blocknote/core';
 import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems, TableHandlesController } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
@@ -1140,6 +1141,13 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
 
           const file = item.getAsFile();
           if (!file) return;
+
+          // Reject anything outside the static-image allowlist (animated
+          // GIF, HEIC, TIFF, etc.) before kicking off compression/upload.
+          if (!isAllowedImage(file)) {
+            console.warn('[Paste] Rejected image type:', file.type);
+            return;
+          }
 
           const cursor = editor.getTextCursorPosition();
           if (!cursor?.block) return;
