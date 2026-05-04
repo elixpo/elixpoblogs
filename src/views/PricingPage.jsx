@@ -20,9 +20,6 @@ export default function PricingPage() {
             <Link href="/" className="cta-button cta-primary">
               Back to feed
             </Link>
-            <Link href="/about" className="pricing-link">
-              Get in touch
-            </Link>
           </div>
         </div>
       </div>
