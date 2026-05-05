@@ -53,6 +53,9 @@ export const TabsBlock = createReactBlockSpec(
       }, []);
 
       const getBlogId = () => {
+        if (typeof window !== 'undefined' && window.__lixblogs_currentBlogId) {
+          return window.__lixblogs_currentBlogId;
+        }
         const m = window.location.pathname.match(/\/edit\/([^/]+)/);
         return m?.[1] || '';
       };
@@ -92,7 +95,9 @@ export const TabsBlock = createReactBlockSpec(
       const openSubpage = useCallback((tab) => {
         if (!tab.subpageId) return;
         const blogId = getBlogId();
-        window.open(`/edit/${blogId}/${tab.subpageId}`, '_blank');
+        if (!blogId) return;
+        // Single-click → same-tab navigation. Matches the canvas-card flow.
+        window.location.href = `/edit/${blogId}/${tab.subpageId}`;
       }, []);
 
       const handleBlockKeyDown = (e) => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { createReactBlockSpec } from '@blocknote/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { confirmSubpageDelete } from '../../../utils/subpageDelete';
 
 // A dedicated card for canvas sub-pages. Visually heavier than the regular
@@ -22,12 +22,18 @@ export const CanvasBlock = createReactBlockSpec(
     render: ({ block, editor }) => {
       const { subpageId, title, blogId: storedBlogId } = block.props;
       const [resolvedTitle, setResolvedTitle] = useState(title || 'Untitled Canvas');
+      const [editingTitle, setEditingTitle] = useState(false);
+      const titleInputRef = useRef(null);
 
       // Resolve the parent blog id. Prefer the value baked into the block's
-      // props at insertion time (works on /new-blog where the URL doesn't
-      // include the slugid), fall back to the URL pattern.
+      // props, then the live editor's blogId (BlogEditor publishes it on
+      // window so we can navigate even when the URL hasn't switched yet —
+      // e.g. /new-blog before the first draft autosave), then the URL.
       const resolveBlogId = () => {
         if (storedBlogId) return storedBlogId;
+        if (typeof window !== 'undefined' && window.__lixblogs_currentBlogId) {
+          return window.__lixblogs_currentBlogId;
+        }
         const m = window.location.pathname.match(/\/edit\/([^/]+)/);
         return m?.[1] || '';
       };
@@ -61,15 +67,43 @@ export const CanvasBlock = createReactBlockSpec(
       const open = useCallback(() => {
         if (!subpageId) return;
         const blogId = resolveBlogId();
-        if (!blogId) {
-          window.alert('Save the blog first so the canvas knows where it lives.');
-          return;
-        }
+        if (!blogId) return; // best-effort; the editor's blogId will normally be there
         window.location.href = `/edit/${blogId}/${subpageId}`;
-      // resolveBlogId is recreated each render but reads from props/URL only,
-      // so subpageId / storedBlogId are the real deps.
+      // resolveBlogId is recreated each render but reads from props / global
+      // / URL only, so the underlying inputs are the real deps.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [subpageId, storedBlogId]);
+
+      // Inline title editing on the card itself. Persists to /api/subpages
+      // and updates the block's prop so the change survives reloads.
+      const startEditTitle = useCallback((e) => {
+        e?.stopPropagation?.();
+        setEditingTitle(true);
+      }, []);
+
+      const commitTitle = useCallback(async (raw) => {
+        const next = (raw ?? '').trim() || 'Untitled Canvas';
+        setEditingTitle(false);
+        if (next === resolvedTitle) return;
+        setResolvedTitle(next);
+        try { editor.updateBlock(block, { props: { title: next } }); } catch {}
+        if (subpageId) {
+          try {
+            await fetch('/api/subpages', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: subpageId, title: next }),
+            });
+          } catch {}
+        }
+      }, [resolvedTitle, editor, block, subpageId]);
+
+      useEffect(() => {
+        if (editingTitle && titleInputRef.current) {
+          titleInputRef.current.focus();
+          titleInputRef.current.select();
+        }
+      }, [editingTitle]);
 
       const remove = useCallback(async (e) => {
         e?.stopPropagation?.();
@@ -111,7 +145,30 @@ export const CanvasBlock = createReactBlockSpec(
           </div>
           <div className="canvas-block-body">
             <div className="canvas-block-title-row">
-              <span className="canvas-block-title">{resolvedTitle}</span>
+              {editingTitle ? (
+                <input
+                  ref={titleInputRef}
+                  className="canvas-block-title-input"
+                  defaultValue={resolvedTitle}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') { e.preventDefault(); commitTitle(e.target.value); }
+                    else if (e.key === 'Escape') { e.preventDefault(); setEditingTitle(false); }
+                  }}
+                  onBlur={(e) => commitTitle(e.target.value)}
+                  spellCheck={false}
+                />
+              ) : (
+                <span
+                  className="canvas-block-title"
+                  onClick={startEditTitle}
+                  title="Click to rename"
+                >
+                  {resolvedTitle}
+                </span>
+              )}
               <span className="canvas-block-badge">Canvas</span>
             </div>
             <span className="canvas-block-hint">Click to open the sketch canvas</span>

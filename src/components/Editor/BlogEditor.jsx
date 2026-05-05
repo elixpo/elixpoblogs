@@ -597,6 +597,21 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const aiBlockCountRef = useRef(0);
   const aiAnchorIdRef = useRef(null);
   const wrapperRef = useRef(null);
+
+  // Expose the editor's blogId on window so any block render (e.g. CanvasBlock,
+  // TabsBlock) can navigate to /edit/<blogId>/<subpageId> regardless of which
+  // URL the editor is mounted at — /new-blog keeps the URL as /new-blog until
+  // a draft is saved, but the editor already knows its blogId via prop.
+  useEffect(() => {
+    if (!blogId) return;
+    if (typeof window !== 'undefined') window.__lixblogs_currentBlogId = blogId;
+    return () => {
+      if (typeof window !== 'undefined' && window.__lixblogs_currentBlogId === blogId) {
+        delete window.__lixblogs_currentBlogId;
+      }
+    };
+  }, [blogId]);
+
   const [showInlineLatex, setShowInlineLatex] = useState(false);
   const [inlineLatexValue, setInlineLatexValue] = useState('');
   const inlineLatexRef = useRef(null);
