@@ -13,25 +13,26 @@ export default {
       // Custom theme tokens the canvas components reference (mirrors
       // sketch.elixpo's @theme block). Tweak these to retheme the canvas
       // toward the blog's palette without forking the components.
-      // Canvas chrome tokens — mapped to blogs.elixpo's LIGHT palette so
-      // the embedded canvas matches the rest of the app instead of looking
-      // like a dark window cut into a light page. Edit these to retheme.
+      // Canvas chrome tokens — kept on the dark sketch palette so the
+      // toolbar / shape sidebars / modals retain contrast against the
+      // working canvas surface (also dark). The host's header above the
+      // canvas is the only piece that tracks the blog's light theme.
       colors: {
-        surface: '#ffffff',
-        'surface-hover': '#eeeff2',
-        'surface-active': '#e2e3e8',
-        'surface-dark': '#f4f4f6',
-        'surface-card': '#f7f7f9',
-        accent: '#9b7bf7',
-        'accent-dim': '#c2b3f5',
-        'accent-blue': '#7757e8',
-        'accent-blue-hover': '#6647d4',
-        'text-primary': '#111118',
-        'text-secondary': '#2d2d3a',
-        'text-muted': '#5c5c72',
-        'text-dim': '#8585a0',
-        'border-light': '#dcdce4',
-        'border-accent': '#9b7bf7',
+        surface: '#232329',
+        'surface-hover': '#343448',
+        'surface-active': '#444480',
+        'surface-dark': '#1a1a20',
+        'surface-card': '#1e1e28',
+        accent: '#c873e4',
+        'accent-dim': '#444480',
+        'accent-blue': '#9b7bf7',
+        'accent-blue-hover': '#b69aff',
+        'text-primary': '#fff',
+        'text-secondary': '#e8e8ee',
+        'text-muted': '#a0a0b0',
+        'text-dim': '#787888',
+        'border-light': '#3a3a50',
+        'border-accent': '#5555a0',
       },
       fontFamily: {
         sans: ['lixFont', 'sans-serif'],

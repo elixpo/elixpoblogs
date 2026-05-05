@@ -163,20 +163,20 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
       </header>
 
       {/* Canvas — mounted directly via the package (no iframe).
-          The CSS-variable overrides below retheme the canvas root, SVG
-          background, and toolbar to the blog's light palette without
-          forking the package's components. */}
+          The canvas surface itself stays dark so shapes (which render in
+          the engine's default light strokes) keep contrast. Only the
+          surrounding host chrome (header above) tracks the blog theme. */}
       <div
         className="relative flex-1 min-h-0"
         style={{
-          '--lixsketch-bg': 'var(--bg-app)',
-          '--lixsketch-fg': 'var(--text-primary)',
-          '--lixsketch-fg-muted': 'var(--text-muted)',
-          '--lixsketch-toolbar-bg': 'var(--bg-elevated)',
-          '--lixsketch-border': 'var(--border-default)',
-          '--lixsketch-hover': 'var(--bg-hover)',
+          '--lixsketch-bg': '#13171C',
+          '--lixsketch-fg': '#e6e8ec',
+          '--lixsketch-fg-muted': 'rgba(230, 232, 236, 0.7)',
+          '--lixsketch-toolbar-bg': 'rgba(20, 22, 28, 0.95)',
+          '--lixsketch-border': 'rgba(255, 255, 255, 0.08)',
+          '--lixsketch-hover': 'rgba(255, 255, 255, 0.06)',
           '--lixsketch-accent': '#9b7bf7',
-          '--lixsketch-accent-bg': 'rgba(155,123,247,0.12)',
+          '--lixsketch-accent-bg': 'rgba(155, 123, 247, 0.18)',
         }}
       >
         <LixSketchCanvas
