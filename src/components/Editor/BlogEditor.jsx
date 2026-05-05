@@ -219,7 +219,13 @@ function getCustomSlashMenuItems(editor, callbacks = {}) {
         const cursorBlock = editor.getTextCursorPosition()?.block;
         if (!cursorBlock) return;
         const inserted = editor.insertBlocks(
-          [{ type: 'canvasBlock', props: { subpageId: '', title: 'Untitled Canvas' } }],
+          [{
+            type: 'canvasBlock',
+            // Bake blogId into the block so the card can navigate to
+            // /edit/<blogId>/<subpageId> regardless of which URL the
+            // editor itself is mounted at (e.g. /new-blog).
+            props: { subpageId: '', title: 'Untitled Canvas', blogId: parentBlogId },
+          }],
           cursorBlock,
           'after'
         );

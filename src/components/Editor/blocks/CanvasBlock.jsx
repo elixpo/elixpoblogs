@@ -14,20 +14,29 @@ export const CanvasBlock = createReactBlockSpec(
     propSchema: {
       subpageId: { default: '' },
       title: { default: 'Untitled Canvas' },
+      blogId: { default: '' },
     },
     content: 'none',
   },
   {
     render: ({ block, editor }) => {
-      const { subpageId, title } = block.props;
+      const { subpageId, title, blogId: storedBlogId } = block.props;
       const [resolvedTitle, setResolvedTitle] = useState(title || 'Untitled Canvas');
+
+      // Resolve the parent blog id. Prefer the value baked into the block's
+      // props at insertion time (works on /new-blog where the URL doesn't
+      // include the slugid), fall back to the URL pattern.
+      const resolveBlogId = () => {
+        if (storedBlogId) return storedBlogId;
+        const m = window.location.pathname.match(/\/edit\/([^/]+)/);
+        return m?.[1] || '';
+      };
 
       // Sync title from the server in case the canvas was renamed in the
       // sketch app — same pattern as TabsBlock.
       useEffect(() => {
         if (!subpageId) return;
-        const m = window.location.pathname.match(/\/edit\/([^/]+)/);
-        const blogId = m?.[1];
+        const blogId = resolveBlogId();
         if (!blogId) return;
         let cancelled = false;
         fetch(`/api/subpages?blogId=${blogId}`)
@@ -51,11 +60,16 @@ export const CanvasBlock = createReactBlockSpec(
 
       const open = useCallback(() => {
         if (!subpageId) return;
-        const m = window.location.pathname.match(/\/edit\/([^/]+)/);
-        const blogId = m?.[1];
-        if (!blogId) return;
+        const blogId = resolveBlogId();
+        if (!blogId) {
+          window.alert('Save the blog first so the canvas knows where it lives.');
+          return;
+        }
         window.location.href = `/edit/${blogId}/${subpageId}`;
-      }, [subpageId]);
+      // resolveBlogId is recreated each render but reads from props/URL only,
+      // so subpageId / storedBlogId are the real deps.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [subpageId, storedBlogId]);
 
       const remove = useCallback(async (e) => {
         e?.stopPropagation?.();
