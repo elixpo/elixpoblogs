@@ -17,9 +17,25 @@ export async function POST(request) {
     const { getDB } = await import('../../../lib/cloudflare');
     const db = getDB();
 
-    // Verify blog ownership
-    const blog = await db.prepare('SELECT author_id FROM blogs WHERE id = ?').bind(blogId).first();
-    if (!blog) return NextResponse.json({ error: 'Blog not found' }, { status: 404 });
+    // Verify blog ownership. If the parent blog doesn't exist yet — typical
+    // when the author is still on /new-blog and hasn't triggered a draft
+    // autosave — create a stub row owned by the current user. The next
+    // regular draft save will fill in the body. This keeps the editor's
+    // local-first feel: creating a sub-page never errors out asking the
+    // user to "save the blog first".
+    let blog = await db.prepare('SELECT author_id FROM blogs WHERE id = ?').bind(blogId).first();
+    if (!blog) {
+      const now = Math.floor(Date.now() / 1000);
+      try {
+        await db.prepare(`
+          INSERT INTO blogs (id, slug, title, content, author_id, status, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)
+        `).bind(blogId, blogId, '', '[]', session.userId, now, now).run();
+        blog = { author_id: session.userId };
+      } catch (e) {
+        return NextResponse.json({ error: 'Could not create parent blog stub: ' + e.message }, { status: 500 });
+      }
+    }
     if (blog.author_id !== session.userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     // Cap canvas sub-pages at 2 per blog
