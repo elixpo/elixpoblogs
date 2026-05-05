@@ -20,6 +20,7 @@ import { BlockEquation } from './blocks/BlockEquation';
 import { ButtonBlock } from './blocks/ButtonBlock';
 import { Breadcrumbs } from './blocks/Breadcrumbs';
 import { TabsBlock } from './blocks/TabsBlock';
+import { CanvasBlock } from './blocks/CanvasBlock';
 import { AIBlock } from './blocks/AIBlock';
 import { BlogImageBlock } from './blocks/BlogImageBlock';
 import { MermaidBlock } from './blocks/MermaidBlock';
@@ -91,6 +92,7 @@ const schema = BlockNoteSchema.create({
     buttonBlock: ButtonBlock({}),
     breadcrumbs: Breadcrumbs({}),
     tabsBlock: TabsBlock({}),
+    canvasBlock: CanvasBlock({}),
     aiBlock: AIBlock({}),
     mermaidBlock: MermaidBlock({}),
     pdfEmbed: PDFEmbedBlock({}),
@@ -219,8 +221,8 @@ function getCustomSlashMenuItems(editor, callbacks = {}) {
           const data = await res.json();
           editor.insertBlocks([
             {
-              type: 'tabsBlock',
-              props: { tabs: JSON.stringify([{ title: 'Untitled Canvas', subpageId: data.id, kind: 'canvas' }]) },
+              type: 'canvasBlock',
+              props: { subpageId: data.id, title: 'Untitled Canvas' },
             },
           ], editor.getTextCursorPosition().block, 'after');
         } catch (e) {
@@ -346,7 +348,7 @@ const KNOWN_BLOCK_TYPES = new Set([
   'paragraph', 'heading', 'bulletListItem', 'numberedListItem', 'image',
   'table', 'codeBlock', 'checkListItem', 'file', 'video', 'audio', 'divider',
   'tableOfContents', 'blockEquation', 'buttonBlock', 'breadcrumbs',
-  'tabsBlock', 'aiBlock', 'mermaidBlock', 'pdfEmbed',
+  'tabsBlock', 'canvasBlock', 'aiBlock', 'mermaidBlock', 'pdfEmbed',
 ]);
 
 function sanitizeInitialContent(blocks) {
@@ -849,7 +851,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
     if (!editorEl) return;
 
     // Content-none block types that should be deletable with Backspace
-    const customBlockTypes = new Set(['mermaidBlock', 'blockEquation', 'aiBlock', 'tabsBlock', 'buttonBlock', 'breadcrumbs', 'tableOfContents', 'pdfEmbed']);
+    const customBlockTypes = new Set(['mermaidBlock', 'blockEquation', 'aiBlock', 'tabsBlock', 'canvasBlock', 'buttonBlock', 'breadcrumbs', 'tableOfContents', 'pdfEmbed']);
 
     function isBlockEmpty(block) {
       if (!block) return false;
@@ -1299,7 +1301,7 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   }, []);
 
   // Hide BlockNote's formatting toolbar when a custom block (code, equation, mermaid, etc.) is focused
-  const noToolbarTypes = useMemo(() => new Set(['codeBlock', 'blockEquation', 'mermaidBlock', 'image', 'tabsBlock', 'aiBlock', 'pdfEmbed', 'tableOfContents', 'buttonBlock', 'breadcrumbs']), []);
+  const noToolbarTypes = useMemo(() => new Set(['codeBlock', 'blockEquation', 'mermaidBlock', 'image', 'tabsBlock', 'canvasBlock', 'aiBlock', 'pdfEmbed', 'tableOfContents', 'buttonBlock', 'breadcrumbs']), []);
 
   useEffect(() => {
     let rafId = null;
