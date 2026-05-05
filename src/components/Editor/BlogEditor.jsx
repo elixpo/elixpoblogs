@@ -203,31 +203,58 @@ function getCustomSlashMenuItems(editor, callbacks = {}) {
       group: 'Custom Blocks',
       aliases: ['canvas', 'sketch', 'draw', 'whiteboard', 'lixsketch', 'diagram canvas'],
       icon: <Icon d="M3 3h18v18H3zM3 9h18M9 21V9" color="#9b7bf7" />,
-      onItemClick: async () => {
+      onItemClick: () => {
+        // Prefer the blogId from the editor's React props (passed through
+        // callbacks); fall back to URL parsing for safety.
         const blogIdMatch = window.location.pathname.match(/\/edit\/([^/]+)/);
-        const parentBlogId = blogIdMatch?.[1];
-        if (!parentBlogId) return;
-        try {
-          const res = await fetch('/api/subpages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ blogId: parentBlogId, title: 'Untitled Canvas', kind: 'canvas' }),
-          });
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            window.alert(err.error || 'Could not create canvas sub-page');
-            return;
-          }
-          const data = await res.json();
-          editor.insertBlocks([
-            {
-              type: 'canvasBlock',
-              props: { subpageId: data.id, title: 'Untitled Canvas' },
-            },
-          ], editor.getTextCursorPosition().block, 'after');
-        } catch (e) {
-          window.alert('Could not create canvas sub-page');
+        const parentBlogId = callbacks.blogId || blogIdMatch?.[1];
+        if (!parentBlogId) {
+          window.alert('Save the blog first — canvases live inside saved blogs.');
+          return;
         }
+
+        // Insert the placeholder synchronously so it lands at the slash-
+        // trigger position before BlockNote tears that selection down. The
+        // API call hydrates the real subpageId / title afterwards.
+        const cursorBlock = editor.getTextCursorPosition()?.block;
+        if (!cursorBlock) return;
+        const inserted = editor.insertBlocks(
+          [{ type: 'canvasBlock', props: { subpageId: '', title: 'Untitled Canvas' } }],
+          cursorBlock,
+          'after'
+        );
+        const placeholderId = inserted?.[0]?.id;
+
+        (async () => {
+          try {
+            const res = await fetch('/api/subpages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ blogId: parentBlogId, title: 'Untitled Canvas', kind: 'canvas' }),
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              window.alert(err.error || 'Could not create canvas sub-page');
+              if (placeholderId) {
+                try { editor.removeBlocks([placeholderId]); } catch {}
+              }
+              return;
+            }
+            const data = await res.json();
+            if (placeholderId) {
+              try {
+                editor.updateBlock(placeholderId, {
+                  props: { subpageId: data.id, title: data.title || 'Untitled Canvas' },
+                });
+              } catch {}
+            }
+          } catch {
+            window.alert('Could not create canvas sub-page');
+            if (placeholderId) {
+              try { editor.removeBlocks([placeholderId]); } catch {}
+            }
+          }
+        })();
       },
     },
     {
@@ -1461,8 +1488,9 @@ const BlogEditor = forwardRef(function BlogEditor({ onChange, initialContent, on
   const getItems = useMemo(
     () => async (query) => filterItems(getCustomSlashMenuItems(editor, {
       onInlineLatex: () => { setInlineLatexValue(''); setShowInlineLatex(true); },
+      blogId,
     }), query),
-    [editor]
+    [editor, blogId]
   );
 
   // Space trigger for AI menu on empty blocks
