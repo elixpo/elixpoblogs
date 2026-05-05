@@ -2,152 +2,75 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import '@elixpo/lixsketch/react/styles';
 
-// Configurable so we can point at a local sketch.elixpo dev server during
-// development. Falls back to production. The matching origin is also used
-// to gate postMessage events.
-const EMBED_BASE = process.env.NEXT_PUBLIC_LIXSKETCH_EMBED_URL || 'https://sketch.elixpo.com';
-let EMBED_ORIGIN = '*';
-try { EMBED_ORIGIN = new URL(EMBED_BASE).origin; } catch {}
+// LixSketchCanvas pulls in the engine + react chrome. Lazy-loaded so the
+// regular blog editor doesn't pay the bundle cost.
+const LixSketchCanvas = dynamic(
+  () => import('@elixpo/lixsketch/react').then((m) => m.LixSketchCanvas),
+  { ssr: false, loading: () => null }
+);
 
 export default function CanvasSubpage({ slugid, subpageId, initialTitle, initialContent, initialMetadata }) {
   const router = useRouter();
-  const iframeRef = useRef(null);
-  const titleRef = useRef(initialTitle || 'Untitled Canvas');
-  const lastSentJsonRef = useRef('');
-  const lastSavedAtRef = useRef(null);
-
   const [title, setTitle] = useState(initialTitle || 'Untitled Canvas');
   const [editingTitle, setEditingTitle] = useState(false);
   const [syncStatus, setSyncStatus] = useState('idle'); // idle | dirty | syncing | synced | error
-  const [iframeReady, setIframeReady] = useState(false);
+  const lastSavedJsonRef = useRef('');
 
-  useEffect(() => { titleRef.current = title; }, [title]);
-
-  const sendInit = useCallback(() => {
-    const iframe = iframeRef.current;
-    if (!iframe?.contentWindow) return;
-    iframe.contentWindow.postMessage({
-      type: 'lixsketch:init',
-      subpageId,
-      content: initialContent || null,
-      metadata: initialMetadata || null,
-      theme: 'dark',
-    }, EMBED_ORIGIN);
-  }, [subpageId, initialContent, initialMetadata]);
-
-  // Handle messages from the canvas iframe
-  useEffect(() => {
-    async function handleUploadImageRequest(msg) {
-      const post = (payload) => {
-        const w = iframeRef.current?.contentWindow;
-        if (!w) return;
-        w.postMessage({ type: 'lixsketch:upload-image-result', ...payload }, EMBED_ORIGIN);
-      };
-
-      try {
-        if (!msg.dataUrl || !msg.dataUrl.startsWith('data:')) {
-          post({ requestId: msg.requestId, error: 'Invalid data URL' });
-          return;
-        }
-        // dataUrl → Blob → File
-        const m = msg.dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-        if (!m) {
-          post({ requestId: msg.requestId, error: 'Unsupported encoding' });
-          return;
-        }
-        const mime = m[1] || 'image/png';
-        const bin = atob(m[2]);
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        const ext = (mime.split('/')[1] || 'png').split('+')[0];
-        const file = new File([bytes], `${msg.filename || 'canvas_image'}.${ext}`, { type: mime });
-
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('blogId', slugid);
-        fd.append('type', 'image');
-
-        const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          post({ requestId: msg.requestId, error: data.error || `HTTP ${res.status}` });
-          return;
-        }
-        const data = await res.json();
-        post({
-          requestId: msg.requestId,
-          url: data.url,
-          publicId: data.publicId,
-          sizeBytes: data.sizeBytes,
-        });
-      } catch (err) {
-        const w = iframeRef.current?.contentWindow;
-        if (w) w.postMessage({ type: 'lixsketch:upload-image-result', requestId: msg.requestId, error: err.message }, EMBED_ORIGIN);
+  // Persist scene + metadata to /api/subpages on every debounced engine change.
+  const handleSceneChange = useCallback(async (scene, metadata) => {
+    const json = JSON.stringify(scene);
+    if (json === lastSavedJsonRef.current) return;
+    lastSavedJsonRef.current = json;
+    setSyncStatus('syncing');
+    try {
+      const res = await fetch('/api/subpages', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: subpageId, content: scene, metadata }),
+      });
+      if (res.ok) {
+        setSyncStatus('synced');
+        setTimeout(() => setSyncStatus((s) => (s === 'synced' ? 'idle' : s)), 4000);
+      } else {
+        setSyncStatus('error');
       }
+    } catch {
+      setSyncStatus('error');
     }
+  }, [subpageId]);
 
-    function onMessage(e) {
-      if (EMBED_ORIGIN !== '*' && e.origin !== EMBED_ORIGIN) return;
-      const msg = e.data;
-      if (!msg || typeof msg !== 'object') return;
+  // Engine images upload through the parent blog's media route so they
+  // count against the same per-blog budget as inline blog images.
+  const handleUploadImage = useCallback(async (dataUrl) => {
+    const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!m) return { error: 'Unsupported encoding' };
+    const mime = m[1];
+    const bin = atob(m[2]);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const ext = (mime.split('/')[1] || 'png').split('+')[0];
+    const file = new File([bytes], `canvas_${Date.now()}.${ext}`, { type: mime });
 
-      if (msg.type === 'lixsketch:ready') {
-        setIframeReady(true);
-        sendInit();
-        return;
-      }
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('blogId', slugid);
+    fd.append('type', 'image');
 
-      if (msg.type === 'lixsketch:dirty') {
-        setSyncStatus('dirty');
-        return;
-      }
-
-      if (msg.type === 'lixsketch:save') {
-        const json = JSON.stringify(msg.content || {});
-        if (json === lastSentJsonRef.current) return;
-        lastSentJsonRef.current = json;
-        setSyncStatus('syncing');
-        fetch('/api/subpages', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: subpageId,
-            content: msg.content,
-            metadata: msg.metadata || null,
-          }),
-        })
-          .then((r) => {
-            if (r.ok) {
-              setSyncStatus('synced');
-              lastSavedAtRef.current = Date.now();
-              setTimeout(() => setSyncStatus((s) => (s === 'synced' ? 'idle' : s)), 4000);
-            } else {
-              setSyncStatus('error');
-            }
-          })
-          .catch(() => setSyncStatus('error'));
-        return;
-      }
-
-      if (msg.type === 'lixsketch:upload-image') {
-        handleUploadImageRequest(msg).catch(() => {});
-        return;
-      }
-
-      if (msg.type === 'lixsketch:exit') {
-        // Ask the iframe for one last save, then navigate back.
-        const iframe = iframeRef.current;
-        if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage({ type: 'lixsketch:request-save' }, EMBED_ORIGIN);
-        }
-        setTimeout(() => router.push(`/edit/${slugid}`), 250);
-      }
+    const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return { error: data.error || `HTTP ${res.status}` };
     }
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, [router, sendInit, slugid, subpageId]);
+    return await res.json();
+  }, [slugid]);
+
+  const handleExit = useCallback(() => {
+    router.push(`/edit/${slugid}`);
+  }, [router, slugid]);
 
   const saveTitle = useCallback(async (newTitle) => {
     const t = (newTitle || '').trim() || 'Untitled Canvas';
@@ -171,7 +94,6 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
   }[syncStatus];
 
   const statusDot = {
-    dirty: 'bg-yellow-400',
     syncing: 'bg-yellow-400 animate-pulse',
     synced: 'bg-green-400',
     error: 'bg-red-400',
@@ -179,7 +101,7 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black text-white">
-      {/* Slim header — matches the rest of the editor's chrome */}
+      {/* Slim header */}
       <header className="flex items-center justify-between h-12 px-4 border-b border-[var(--border-default)] bg-[var(--bg-app)]/90 backdrop-blur-md">
         <div className="flex items-center gap-3 min-w-0">
           <Link
@@ -216,7 +138,14 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
                 {title}
               </span>
             )}
-            <span className="ml-2 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-md font-semibold" style={{ color: '#9b7bf7', backgroundColor: 'rgba(155,123,247,0.12)', border: '1px solid rgba(155,123,247,0.3)' }}>
+            <span
+              className="ml-2 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-md font-semibold"
+              style={{
+                color: '#9b7bf7',
+                backgroundColor: 'rgba(155,123,247,0.12)',
+                border: '1px solid rgba(155,123,247,0.3)',
+              }}
+            >
               Canvas
             </span>
           </div>
@@ -227,23 +156,13 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
         </div>
       </header>
 
-      {/* The canvas iframe owns the full remaining viewport. */}
-      <div className="relative flex-1">
-        {!iframeReady && (
-          <div className="absolute inset-0 flex items-center justify-center text-[var(--text-muted)] text-sm gap-2">
-            <div className="w-4 h-4 border-2 border-[#9b7bf7] border-t-transparent rounded-full animate-spin" />
-            Loading canvas…
-          </div>
-        )}
-        <iframe
-          ref={iframeRef}
-          src={`${EMBED_BASE}/embed/canvas`}
-          title="LixSketch canvas"
-          className="absolute inset-0 w-full h-full border-0"
-          // Allow the canvas to use clipboard, downloads, fullscreen — no top-nav.
-          allow="clipboard-read; clipboard-write; fullscreen"
-          // sandbox kept off for now — the canvas needs to use globals + workers
-          // and we trust the sketch.elixpo origin. Tighten later if needed.
+      {/* Canvas — mounted directly via the package (no iframe). */}
+      <div className="relative flex-1 min-h-0">
+        <LixSketchCanvas
+          initialScene={initialContent}
+          onSceneChange={handleSceneChange}
+          onUploadImage={handleUploadImage}
+          onExit={handleExit}
         />
       </div>
     </div>
