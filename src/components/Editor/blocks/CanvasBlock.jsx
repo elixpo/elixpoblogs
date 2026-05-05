@@ -2,6 +2,7 @@
 
 import { createReactBlockSpec } from '@blocknote/react';
 import { useCallback, useEffect, useState } from 'react';
+import { confirmSubpageDelete } from '../../../utils/subpageDelete';
 
 // A dedicated card for canvas sub-pages. Visually heavier than the regular
 // subpage chip so authors can tell at a glance there's a sketch behind it.
@@ -57,8 +58,10 @@ export const CanvasBlock = createReactBlockSpec(
       }, [subpageId]);
 
       const remove = useCallback(async (e) => {
-        e.stopPropagation();
+        e?.stopPropagation?.();
         if (subpageId) {
+          const ok = await confirmSubpageDelete(subpageId, { fallbackKind: 'canvas' });
+          if (!ok) return;
           try { await fetch(`/api/subpages?id=${subpageId}`, { method: 'DELETE' }); } catch {}
         }
         try { editor.removeBlocks([block.id]); } catch {}
