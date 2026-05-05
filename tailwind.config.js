@@ -13,26 +13,26 @@ export default {
       // Custom theme tokens the canvas components reference (mirrors
       // sketch.elixpo's @theme block). Tweak these to retheme the canvas
       // toward the blog's palette without forking the components.
-      // Canvas chrome tokens — kept on the dark sketch palette so the
-      // toolbar / shape sidebars / modals retain contrast against the
-      // working canvas surface (also dark). The host's header above the
-      // canvas is the only piece that tracks the blog's light theme.
+      // Canvas chrome tokens — driven by blogs' theme variables so the
+      // toolbar / sidebars / modals match the rest of the app and pick up
+      // light/dark mode automatically. Tailwind's color() resolver lets
+      // it use `var(...)` references directly.
       colors: {
-        surface: '#232329',
-        'surface-hover': '#343448',
-        'surface-active': '#444480',
-        'surface-dark': '#1a1a20',
-        'surface-card': '#1e1e28',
-        accent: '#c873e4',
-        'accent-dim': '#444480',
+        surface: 'var(--bg-elevated)',
+        'surface-hover': 'var(--bg-active)',
+        'surface-active': 'var(--bg-active)',
+        'surface-dark': 'var(--bg-surface)',
+        'surface-card': 'var(--bg-elevated)',
+        accent: '#9b7bf7',
+        'accent-dim': '#c2b3f5',
         'accent-blue': '#9b7bf7',
         'accent-blue-hover': '#b69aff',
-        'text-primary': '#fff',
-        'text-secondary': '#e8e8ee',
-        'text-muted': '#a0a0b0',
-        'text-dim': '#787888',
-        'border-light': '#3a3a50',
-        'border-accent': '#5555a0',
+        'text-primary': 'var(--text-primary)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-muted': 'var(--text-body)',
+        'text-dim': 'var(--text-faint)',
+        'border-light': 'var(--border-default)',
+        'border-accent': '#9b7bf7',
       },
       fontFamily: {
         sans: ['lixFont', 'sans-serif'],
