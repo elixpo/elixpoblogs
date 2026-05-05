@@ -17,6 +17,34 @@ export async function POST(request) {
     const { getDB } = await import('../../../lib/cloudflare');
     const db = getDB();
 
+    // The blogs table has a foreign key on author_id → users(id). If the
+    // user authenticated before D1 was available, the auth callback's user
+    // upsert was silently skipped and we now hold a session referencing a
+    // userId that has no row. Recover by upserting from the session-cookie
+    // profile so the FK doesn't fail when we create the parent blog stub.
+    if (session.profile) {
+      const p = session.profile;
+      const fallbackUsername = (p.username || p.email?.split('@')[0] || session.userId)
+        .toLowerCase().replace(/[^\w-]/g, '');
+      const now = Math.floor(Date.now() / 1000);
+      try {
+        await db.prepare(`
+          INSERT OR IGNORE INTO users (id, email, username, display_name, avatar_url, locale, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 'en', ?, ?)
+        `).bind(
+          session.userId,
+          p.email || '',
+          fallbackUsername,
+          p.display_name || '',
+          p.avatar_url || '',
+          now,
+          now
+        ).run();
+      } catch (e) {
+        console.warn('[subpages] user upsert failed (continuing):', e.message);
+      }
+    }
+
     // Verify blog ownership. If the parent blog doesn't exist yet — typical
     // when the author is still on /new-blog and hasn't triggered a draft
     // autosave — create a stub row owned by the current user. The next
@@ -30,7 +58,7 @@ export async function POST(request) {
         await db.prepare(`
           INSERT INTO blogs (id, slug, title, content, author_id, status, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)
-        `).bind(blogId, blogId, '', '[]', session.userId, now, now).run();
+        `).bind(blogId, blogId, blogId, '[]', session.userId, now, now).run();
         blog = { author_id: session.userId };
       } catch (e) {
         return NextResponse.json({ error: 'Could not create parent blog stub: ' + e.message }, { status: 500 });
