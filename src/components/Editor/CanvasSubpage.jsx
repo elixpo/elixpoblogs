@@ -169,7 +169,10 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
       <div
         className="relative flex-1 min-h-0"
         style={{
-          '--lixsketch-bg': '#13171C',
+          // Light canvas surface (matches sketch's light mode); toolbar /
+          // sidebars stay on the sketch dark palette so controls remain
+          // readable against the white drawing area.
+          '--lixsketch-bg': '#ffffff',
           '--lixsketch-fg': '#e6e8ec',
           '--lixsketch-fg-muted': 'rgba(230, 232, 236, 0.7)',
           '--lixsketch-toolbar-bg': 'rgba(20, 22, 28, 0.95)',
