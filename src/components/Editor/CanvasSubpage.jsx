@@ -100,9 +100,15 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
   }[syncStatus];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black text-white">
-      {/* Slim header */}
-      <header className="flex items-center justify-between h-12 px-4 border-b border-[var(--border-default)] bg-[var(--bg-app)]/90 backdrop-blur-md">
+    <div
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ background: 'var(--bg-app)', color: 'var(--text-primary)' }}
+    >
+      {/* Slim header — same chrome as the rest of the editor. */}
+      <header
+        className="flex items-center justify-between h-12 px-4 border-b backdrop-blur-md"
+        style={{ borderColor: 'var(--border-default)', background: 'var(--bg-app)' }}
+      >
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href={`/edit/${slugid}`}
@@ -156,8 +162,23 @@ export default function CanvasSubpage({ slugid, subpageId, initialTitle, initial
         </div>
       </header>
 
-      {/* Canvas — mounted directly via the package (no iframe). */}
-      <div className="relative flex-1 min-h-0">
+      {/* Canvas — mounted directly via the package (no iframe).
+          The CSS-variable overrides below retheme the canvas root, SVG
+          background, and toolbar to the blog's light palette without
+          forking the package's components. */}
+      <div
+        className="relative flex-1 min-h-0"
+        style={{
+          '--lixsketch-bg': 'var(--bg-app)',
+          '--lixsketch-fg': 'var(--text-primary)',
+          '--lixsketch-fg-muted': 'var(--text-muted)',
+          '--lixsketch-toolbar-bg': 'var(--bg-elevated)',
+          '--lixsketch-border': 'var(--border-default)',
+          '--lixsketch-hover': 'var(--bg-hover)',
+          '--lixsketch-accent': '#9b7bf7',
+          '--lixsketch-accent-bg': 'rgba(155,123,247,0.12)',
+        }}
+      >
         <LixSketchCanvas
           initialScene={initialContent}
           onSceneChange={handleSceneChange}
